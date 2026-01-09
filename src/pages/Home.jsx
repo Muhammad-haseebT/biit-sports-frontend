@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import SportFilter from "../components/SportFilter";
 import MatchCard from "../components/MatchCard";
 import { getMatchByStatus } from "../api/matchApi";
+import Cookies from "js-cookie";
 
 export default function Home() {
   const [live, setLive] = useState([]);
@@ -16,6 +17,7 @@ export default function Home() {
 
         response = await getMatchByStatus("upcoming");
         setUpcoming(response.data);
+        setUsername(JSON.parse(Cookies.get("account")).username);
       } catch (err) {
         console.error(err);
       }
@@ -23,7 +25,7 @@ export default function Home() {
     fetchMatches();
   }, []);
 
-  const username = "Your Name";
+  const [username, setUsername] = useState("");
 
   return (
     <div className="bg-gray-100 min-h-screen">
