@@ -1,7 +1,8 @@
 import axios from "axios";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 export const getMatches = () => {
-  return axios.get("http://localhost:8080/match");
+  return axios.get(`${BASE_URL}/match`);
 };
 export const getMatchByStatus = (status) => {
-  return axios.get(`http://localhost:8080/match/status/${status}`);
+  return axios.get(`${BASE_URL}/match/status/${status}`);
 };

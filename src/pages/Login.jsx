@@ -3,11 +3,13 @@ import { login } from "../api/authApi";
 import Cookies from "js-cookie";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
+  const navigate = useNavigate();
   const handleLogin = async () => {
     if (!username || !password) {
       toast.error("Please enter both username and password");
@@ -21,7 +23,7 @@ function Login() {
       if (res.status === 200) {
         toast.success("Login successful!");
         setTimeout(() => {
-          window.location.href = "/home";
+          navigate("/home");
         }, 1000);
       }
     } catch (err) {
