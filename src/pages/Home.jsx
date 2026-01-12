@@ -12,10 +12,10 @@ export default function Home() {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        let response = await getMatchByStatus("live");
+        let response = await getMatchByStatus("LIVE");
         setLive(response.data);
 
-        response = await getMatchByStatus("upcoming");
+        response = await getMatchByStatus("UPCOMING");
         setUpcoming(response.data);
         setUsername(JSON.parse(Cookies.get("account")).name);
       } catch (err) {
@@ -31,11 +31,11 @@ export default function Home() {
     try {
       let live, upcomming;
       if (sport === "All") {
-        live = await getMatchByStatus("live");
-        upcomming = await getMatchByStatus("upcoming")
+        live = await getMatchByStatus("LIVE");
+        upcomming = await getMatchByStatus("UPCOMING")
       } else {
-        live = await getMatchBySportAndStatus(sport, "live")
-        upcomming = await getMatchBySportAndStatus(sport, "upcoming")
+        live = await getMatchBySportAndStatus(sport, "LIVE")
+        upcomming = await getMatchBySportAndStatus(sport, "UPCOMING")
       }
       console.log(live.data);
       console.log(upcomming.data);
