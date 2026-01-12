@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import SportFilter from "../components/SportFilter";
 import MatchCard from "../components/MatchCard";
-import { getMatchByStatus } from "../api/matchApi";
+import { getMatchByStatus, getMatchBySportAndStatus } from "../api/matchApi";
 import Cookies from "js-cookie";
 
 export default function Home() {
   const [live, setLive] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
-
+  const [username, setUsername] = useState("");
   useEffect(() => {
     const fetchMatches = async () => {
       try {
@@ -17,7 +17,7 @@ export default function Home() {
 
         response = await getMatchByStatus("upcoming");
         setUpcoming(response.data);
-        setUsername(JSON.parse(Cookies.get("account")).username);
+        setUsername(JSON.parse(Cookies.get("account")).name);
       } catch (err) {
         console.error(err);
       }
@@ -25,13 +25,32 @@ export default function Home() {
     fetchMatches();
   }, []);
 
-  const [username, setUsername] = useState("");
+
+
+  const handleSportFilter = async (sport) => {
+    try {
+      let live, upcomming;
+      if (sport === "All") {
+        live = await getMatchByStatus("live");
+        upcomming = await getMatchByStatus("upcoming")
+      } else {
+        live = await getMatchBySportAndStatus(sport, "live")
+        upcomming = await getMatchBySportAndStatus(sport, "upcoming")
+      }
+      console.log(live.data);
+      console.log(upcomming.data);
+      setLive(live.data);
+      setUpcoming(upcomming.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="bg-gray-100 min-h-screen">
       <Navbar username={username} />
       <div className="p-4 md:p-6">
-        <SportFilter />
+        <SportFilter onFilter={handleSportFilter} />
 
         <h3 className="text-xl font-bold mb-4">Live Matches</h3>
         <div className="overflow-x-auto mb-8">

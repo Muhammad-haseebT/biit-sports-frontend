@@ -41,7 +41,7 @@ export default function Navbar({ username }) {
 
         {/* Hamburger menu */}
         <button
-          className="md:hidden p-2 border border-gray-300 rounded"
+          className="p-2 border border-gray-300 rounded"
           onClick={() => setDrawerOpen(true)}
         >
           <svg

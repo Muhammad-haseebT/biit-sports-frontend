@@ -4,7 +4,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Welcome from "../pages/Welcome";
 import Login from "../pages/Login";
 import Home from "../pages/Home";
-
+import Sports from "../pages/Sports";
+import Seasons from "../pages/Seasons";
 function AppRoutes() {
   return (
     <Routes>
@@ -19,6 +20,9 @@ function AppRoutes() {
 
       {/* Fallback: agar ghalat URL ho */}
       <Route path="*" element={<Navigate to="/" />} />
+      <Route path="/logout" element={<Navigate to="/" />} />
+      <Route path="/sports" element={<Sports />} />
+      <Route path="/seasons" element={<Seasons />} />
     </Routes>
   );
 }

@@ -28,17 +28,15 @@ export default function DrawerMenu({ open, setOpen, username }) {
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity ${
-          open ? "opacity-100 visible" : "opacity-0 invisible"
-        }`}
+        className={`fixed inset-0 bg-black/50 z-40 transition-opacity ${open ? "opacity-100 visible" : "opacity-0 invisible"
+          }`}
         onClick={() => setOpen(false)}
       ></div>
 
       {/* Drawer panel */}
       <div
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-md transform transition-transform duration-300 ${
-          open ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 z-50 h-full w-64 bg-white shadow-md transform transition-transform duration-300 ${open ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         <div className="p-4 border-b flex items-center space-x-2">
           <FaUserCircle className="w-10 h-10 text-gray-700" />
@@ -53,9 +51,8 @@ export default function DrawerMenu({ open, setOpen, username }) {
                 navigate(item.path);
                 setOpen(false);
               }}
-              className={`flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-100 transition ${
-                item.red ? "text-red-600" : "text-gray-800"
-              }`}
+              className={`flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-100 transition ${item.red ? "text-red-600" : "text-gray-800"
+                }`}
             >
               <span>{item.icon}</span>
               <span>{item.name}</span>
