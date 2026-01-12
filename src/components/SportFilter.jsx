@@ -1,14 +1,14 @@
-export default function SportFilter({ onFilter }) {
+export default function SportFilter({ onFilter, selectedSport }) {
   const sports = [
-    "All",
-    "Cricket",
-    "Futsal",
-    "VolleyBall",
-    "TableTennis",
-    "Badminton",
-    "TugOfWar",
-    "Ludo",
-    "Chess",
+    { name: "All", value: "All" },
+    { name: "Cricket", value: "Cricket" },
+    { name: "Futsal", value: "Futsal" },
+    { name: "VolleyBall", value: "VolleyBall" },
+    { name: "TableTennis", value: "TableTennis" },
+    { name: "Badminton", value: "Badminton" },
+    { name: "TugOfWar", value: "TugOfWar" },
+    { name: "Ludo", value: "Ludo" },
+    { name: "Chess", value: "Chess" },
   ];
 
   return (
@@ -16,11 +16,16 @@ export default function SportFilter({ onFilter }) {
       <div className="flex space-x-3 min-w-max px-2">
         {sports.map((sport) => (
           <button
-            onClick={() => onFilter(sport)}
-            key={sport}
-            className="shrink-0 min-w-[5rem] px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition whitespace-nowrap flex justify-center items-center text-sm font-medium"
+            type="button"
+            onClick={() => onFilter(sport.value)}
+            key={sport.value}
+            className={`shrink-0 min-w-[5rem] px-4 py-2 rounded-full transition whitespace-nowrap flex justify-center items-center text-sm font-medium ${selectedSport === sport.value
+                ? "bg-red-800 text-white ring-2 ring-red-300"
+                : "bg-red-600 text-white hover:bg-red-700"
+              }`}
+            aria-pressed={selectedSport === sport.value}
           >
-            {sport}
+            {sport.name}
           </button>
         ))}
       </div>

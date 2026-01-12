@@ -9,13 +9,13 @@ export const getMatchByStatus = (status) => {
 
 //sport is optional and status is required bot are passed as parameters
 export const getMatchBySportAndStatus = (sport, status) => {
-  if (sport) {
+  const params = { status };
+
+  if (sport !== "All") {
     console.log(sport);
-    return axios.get(`${BASE_URL}/match/sport`, {
-      params: { name: sport, status }
-    });
+    params.name = sport;
   }
-  return axios.get(`${BASE_URL}/match/sport`, {
-    params: { status }
-  });
+
+  return axios.get(`${BASE_URL}/match/sport`, { params });
 };
+
