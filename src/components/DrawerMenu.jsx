@@ -18,7 +18,7 @@ export default function DrawerMenu({ open, setOpen, username }) {
     { name: "Seasons", icon: <FaCalendarAlt />, path: "/seasons" },
     { name: "Stats", icon: <FaChartBar />, path: "/stats" },
     { name: "Matches", icon: <FaListAlt />, path: "/matches" },
-    { name: "Manage Account", icon: <FaUserShield />, path: "/manage-account" },
+    { name: "Manage Account", icon: <FaUserShield />, path: "/manage-accounts" },
     { name: "My Scorer", icon: <FaClipboardList />, path: "/my-scorer" },
     { name: "Requests", icon: <FaClipboardList />, path: "/requests" },
     { name: "Logout", icon: <FaSignOutAlt />, path: "/logout", red: true },
