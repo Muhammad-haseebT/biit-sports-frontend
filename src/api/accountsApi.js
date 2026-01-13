@@ -9,3 +9,6 @@ export const updateAccount = (id, account) => {
 export const deleteAccount = (id) => {
     return axios.delete(`${API_URL}/account/${id}`);
 }
+export const addAccount = (account) => {
+    return axios.post(`${API_URL}/account`, account);
+}

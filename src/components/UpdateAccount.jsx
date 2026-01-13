@@ -2,11 +2,12 @@
 import { ToastContainer, toast } from "react-toastify";
 import { useState } from "react";
 import { updateAccount } from "../api/accountsApi";
-import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
-const UpdateAccount = ({ accountname, accountusername, accountid, onClose }) => {
+import { addAccount } from "../api/accountsApi";
 
-    const navigate = useNavigate();
+
+const AccountForm = ({ accountname, accountusername, accountid, onClose, check }) => {
+
+
     const [account, setAccount] = useState({
         name: accountname,
         username: accountusername,
@@ -29,13 +30,29 @@ const UpdateAccount = ({ accountname, accountusername, accountid, onClose }) => 
             }, 1000);
         }
     };
+    const handleAddAccount = async (e) => {
+        e.preventDefault();
+        try {
+            await addAccount(account);
+            toast.success("Account added successfully");
+            setTimeout(() => {
+                onClose();
+            }, 1000);
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to add account");
+            setTimeout(() => {
+                onClose();
+            }, 1000);
+        }
+    };
 
 
     return (
         <div>
 
             <h1 className="text-2xl font-bold mb-4 text-center text-red-500 mt-4">Update Account</h1>
-            <form onSubmit={handleUpdateAccount} className="space-y-4">
+            <form onSubmit={check == "Update" ? handleUpdateAccount : handleAddAccount} className="space-y-4">
                 <input type="text" placeholder="Name" value={account.name} onChange={(e) => setAccount({ ...account, name: e.target.value })} className="border border-red-500 rounded p-2 mb-2" />
 
 
@@ -51,7 +68,7 @@ const UpdateAccount = ({ accountname, accountusername, accountid, onClose }) => 
                 <br />
 
 
-                <button className="bg-red-500 text-white p-2 rounded hover:bg-red-600 hover:scale-105 transition-all" type="submit">Update</button>
+                <button className="bg-red-500 text-white p-2 rounded hover:bg-red-600 hover:scale-105 transition-all" type="submit">{check}</button>
             </form>
 
 
@@ -59,4 +76,4 @@ const UpdateAccount = ({ accountname, accountusername, accountid, onClose }) => 
     );
 };
 
-export default UpdateAccount;
+export default AccountForm;

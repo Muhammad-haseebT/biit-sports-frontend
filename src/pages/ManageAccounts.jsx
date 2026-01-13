@@ -3,7 +3,7 @@ import { getAccounts } from "../api/accountsApi";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
-import UpdateAccount from "../components/UpdateAccount";
+import AccountForm from "../components/UpdateAccount";
 import { ToastContainer } from "react-toastify";
 import Swal from "sweetalert2";
 import { deleteAccount } from "../api/accountsApi";
@@ -12,6 +12,8 @@ export default function ManageAccounts() {
     const navigate = useNavigate();
     const [accounts, setAccounts] = useState([]);
     const [showUpdate, setShowUpdate] = useState(false);
+    const [showAdd, setShowAdd] = useState(false);
+
     const [selectedAccount, setSelectedAccount] = useState(null);
     const [filteredAccounts, setFilteredAccounts] = useState([]);
 
@@ -41,6 +43,7 @@ export default function ManageAccounts() {
     const handleClose = () => {
         setShowUpdate(false);
         setSelectedAccount(null);
+        setShowAdd(false);
     };
     const handleDelete = async (account) => {
         // Confirmation dialog
@@ -72,6 +75,9 @@ export default function ManageAccounts() {
                 toast.error("Failed to delete account");
             }
         }
+    };
+    const handleAdd = () => {
+        setShowAdd(true);
     };
 
 
@@ -153,7 +159,7 @@ export default function ManageAccounts() {
             </div>
 
             <div className="mt-6 px-4 fixed bottom-4 right-4">
-                <button className="bg-red-500 text-white text-3xl px-4 py-2 rounded-lg hover:bg-red-600 hover:scale-110 transition-all">
+                <button className="bg-red-500 text-white text-3xl px-4 py-2 rounded-lg hover:bg-red-600 hover:scale-110 transition-all" onClick={handleAdd}>
                     +
                 </button>
             </div>
@@ -170,13 +176,40 @@ export default function ManageAccounts() {
                             className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl font-bold"
                             onClick={handleClose}
                         >
-                            ×
+                            X
                         </button>
-                        <UpdateAccount
+                        <AccountForm
                             accountname={selectedAccount.name}
                             accountusername={selectedAccount.username}
                             accountid={selectedAccount.id}
                             onClose={handleClose}
+                            check={"Update"}
+                        />
+                    </div>
+                </div>
+            )}
+
+
+            {showAdd && (
+                <div
+                    className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 transition-opacity duration-300"
+                >
+                    <div
+                        className={`bg-white p-6 rounded shadow-lg w-96 transform transition-all duration-300 ease-out relative ${showAdd ? "scale-100 opacity-100" : "scale-95 opacity-0"
+                            }`}
+                    >
+                        <button
+                            className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                            onClick={handleClose}
+                        >
+                            X
+                        </button>
+                        <AccountForm
+                            accountname={""}
+                            accountusername={""}
+                            accountid={""}
+                            onClose={handleClose}
+                            check={"Add"}
                         />
                     </div>
                 </div>
