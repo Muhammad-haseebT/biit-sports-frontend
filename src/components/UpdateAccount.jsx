@@ -51,7 +51,7 @@ const AccountForm = ({ accountname, accountusername, accountid, onClose, check }
     return (
         <div>
 
-            <h1 className="text-2xl font-bold mb-4 text-center text-red-500 mt-4">Update Account</h1>
+            <h1 className="text-2xl font-bold mb-4 text-center text-red-500 mt-4">{check} Account</h1>
             <form onSubmit={check == "Update" ? handleUpdateAccount : handleAddAccount} className="space-y-4">
                 <input type="text" placeholder="Name" value={account.name} onChange={(e) => setAccount({ ...account, name: e.target.value })} className="border border-red-500 rounded p-2 mb-2" />
 
