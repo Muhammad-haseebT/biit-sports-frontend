@@ -19,3 +19,6 @@ export const getMatchBySportAndStatus = (sport, status) => {
   return axios.get(`${BASE_URL}/match/sport`, { params });
 };
 
+export const getMatchScorer = (s) => {
+  return axios.get(`${BASE_URL}/match/scorer/${s}`);
+};

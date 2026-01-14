@@ -8,6 +8,7 @@ import Sports from "../pages/Sports";
 import Seasons from "../pages/Seasons";
 import Matches from "../pages/Matches";
 import ManageAccounts from "../pages/ManageAccounts";
+import MyScorer from "../pages/MyScorer";
 
 function AppRoutes() {
   return (
@@ -28,6 +29,7 @@ function AppRoutes() {
       <Route path="/seasons" element={<Seasons />} />
       <Route path="/matches" element={<Matches />} />
       <Route path="/manage-accounts" element={<ManageAccounts />} />
+      <Route path="/my-scorer" element={<MyScorer />} />
     </Routes>
   );
 }

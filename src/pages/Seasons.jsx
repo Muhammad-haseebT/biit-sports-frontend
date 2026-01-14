@@ -23,12 +23,13 @@ export default function Seasons() {
             >
                 <FaArrowLeft size={20} />
             </button>
-            <h1 className="text-xl font-bold text-center mb-6 text-[#E31212]">Seasons</h1>
+            <h1 className="text-2xl font-bold text-center mb-6 text-[#E31212]">Seasons</h1>
             <div className="flex flex-col items-center">
                 {seasons.map((season, index) => (
                     <div
                         key={index}
-                        className="group bg-white rounded-xl shadow-md p-6 flex items-center justify-center border border-red-500 hover:bg-red-600 hover:scale-105 transition-all duration-300 cursor-pointer w-1/2 mb-4"
+                        className="group bg-white rounded-xl shadow-md p-3 flex items-center justify-center border border-red-500 hover:bg-red-600 hover:scale-105 transition-all duration-300 cursor-pointer w-4/5  mb-4"
+                        
                     >
                         <span className="text-lg font-bold text-red-600 group-hover:text-white text-center transition-colors duration-300">
                             {season.name}

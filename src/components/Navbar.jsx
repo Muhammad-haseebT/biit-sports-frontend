@@ -2,7 +2,7 @@ import { useState } from "react";
 import DrawerMenu from "./DrawerMenu";
 import logo from "../assets/logo.png"; // apna logo yahan daal do
 
-export default function Navbar({ username }) {
+export default function Navbar({ username, onSearch }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
@@ -20,6 +20,7 @@ export default function Navbar({ username }) {
             type="text"
             placeholder="Search..."
             className="bg-transparent flex-1 outline-none text-gray-700"
+            onChange={(e) => onSearch(e.target.value)}
           />
           <button className="text-gray-500">
             <svg
