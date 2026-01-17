@@ -9,6 +9,11 @@ import Seasons from "../pages/Seasons";
 import Matches from "../pages/Matches";
 import ManageAccounts from "../pages/ManageAccounts";
 import MyScorer from "../pages/MyScorer";
+import DetailedTournament from "../pages/DetailedTournament";
+import CreateTournament from "../pages/CreateTournament";
+import SportSelection from "../pages/SportSelection";
+import TournamentDetail from "../pages/TournamentDetail";
+
 
 function AppRoutes() {
   return (
@@ -30,6 +35,10 @@ function AppRoutes() {
       <Route path="/matches" element={<Matches />} />
       <Route path="/manage-accounts" element={<ManageAccounts />} />
       <Route path="/my-scorer" element={<MyScorer />} />
+      <Route path="/tournament-detail" element={<TournamentDetail />} />
+      <Route path="/detailed-tournament" element={<DetailedTournament />} />
+      <Route path="/create-tournament" element={<CreateTournament />} />
+      <Route path="/sports-selection" element={<SportSelection />} />
     </Routes>
   );
 }

@@ -79,6 +79,8 @@ export default function Home() {
       console.error("Search error:", err);
     }
   }
+
+  
   return (
     <div className="bg-gray-100 min-h-screen">
       <Navbar username={username} onSearch={onSearch} />
@@ -87,7 +89,7 @@ export default function Home() {
 
         <h3 className="text-xl font-bold mb-4">Live Matches</h3>
         <div className="overflow-x-auto mb-8">
-          <div className="flex space-x-4 min-w-max px-2">
+          <div >
             {searchLive.slice(0, 3).map((match) => (
               <MatchCard
                 key={match.id}
