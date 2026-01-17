@@ -3,6 +3,7 @@ import { getMatches, getMatchBySportAndStatus, getMatchByStatus } from "../api/m
 import SportFilter from "../components/SportFilter";
 import StatusFilter from "../components/StatusFilter";
 import MatchCard from "../components/MatchCard"; // Assuming MatchCard import is needed
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 
@@ -11,9 +12,11 @@ export default function Matches() {
     const [matches, setMatches] = useState([]);
     const [selectedSport, setSelectedSport] = useState("All");
     const [selectedStatus, setSelectedStatus] = useState("All");
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const fetchMatches = async () => {
+            setLoading(true);
             try {
                 let response;
 
@@ -36,6 +39,8 @@ export default function Matches() {
             } catch (err) {
                 console.error(err);
                 setMatches([]);
+            } finally {
+                setLoading(false);
             }
         };
         fetchMatches();
@@ -53,18 +58,22 @@ export default function Matches() {
 
             <SportFilter onFilter={setSelectedSport} selectedSport={selectedSport} />
             <StatusFilter onFilter={setSelectedStatus} selectedStatus={selectedStatus} />
-            <div className="flex flex-col gap-4">
-                {matches.map((match) => (
-                    <MatchCard
-                        key={match.id}
-                        title={match.tournamentName}
-                        team1={match.team1Name}
-                        team2={match.team2Name}
-                        extra={match.date + " " + match.time}
-                        live={match.status === "live" || match.status === "LIVE"}
-                    />
-                ))}
-            </div>
+            {loading ? (
+                <LoadingSpinner size="large" />
+            ) : (
+                <div className="flex flex-col gap-4">
+                    {matches.map((match) => (
+                        <MatchCard
+                            key={match.id}
+                            title={match.tournamentName}
+                            team1={match.team1Name}
+                            team2={match.team2Name}
+                            extra={match.date + " " + match.time}
+                            live={match.status === "live" || match.status === "LIVE"}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

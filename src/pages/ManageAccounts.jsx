@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import AccountForm from "../components/UpdateAccount";
 import { ToastContainer } from "react-toastify";
+import LoadingSpinner from "../components/LoadingSpinner";
 import Swal from "sweetalert2";
 import { deleteAccount } from "../api/accountsApi";
 
@@ -15,15 +16,19 @@ export default function ManageAccounts() {
 
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [filteredAccounts, setFilteredAccounts] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchAccounts = async () => {
+      setLoading(true);
       try {
         const response = await getAccounts();
         setAccounts(response.data);
         setFilteredAccounts(response.data);
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchAccounts();
@@ -122,64 +127,68 @@ export default function ManageAccounts() {
         </button>
       </div>
 
-      <div className="mt-6 px-4 space-y-4">
-        {filteredAccounts.map((account) => (
-          <div
-            key={account.id}
-            className="bg-white p-4 rounded-lg shadow-md border border-red-500 flex items-center justify-between hover:bg-red-100 hover:scale-105 transition-all"
-          >
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-              <h3 className="font-semibold text-gray-900">{account.name}</h3>
-              <p className="text-sm text-gray-500">{account.username}</p>
-            </div>
+      {loading ? (
+        <LoadingSpinner size="large" />
+      ) : (
+        <div className="mt-6 px-4 space-y-4">
+          {filteredAccounts.map((account) => (
+            <div
+              key={account.id}
+              className="bg-white p-4 rounded-lg shadow-md border border-red-500 flex items-center justify-between hover:bg-red-100 hover:scale-105 transition-all"
+            >
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                <h3 className="font-semibold text-gray-900">{account.name}</h3>
+                <p className="text-sm text-gray-500">{account.username}</p>
+              </div>
 
-            {/* update Account */}
-            <div className="flex items-center space-x-4">
-              <button
-                className="text-blue-600 hover:text-blue-800"
-                onClick={() => handleUpdate(account)}
-              >
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
+              {/* update Account */}
+              <div className="flex items-center space-x-4">
+                <button
+                  className="text-blue-600 hover:text-blue-800"
+                  onClick={() => handleUpdate(account)}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                </button>
 
-              {/* delete Account */}
+                {/* delete Account */}
 
-              <button
-                className="text-red-600 hover:text-red-800"
-                onClick={() => handleDelete(account)}
-              >
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
+                <button
+                  className="text-red-600 hover:text-red-800"
+                  onClick={() => handleDelete(account)}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       <div className="mt-6 px-4 fixed bottom-4 right-4">
         <button
@@ -193,9 +202,8 @@ export default function ManageAccounts() {
       {showUpdate && selectedAccount && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 transition-opacity duration-300">
           <div
-            className={`bg-white p-6 rounded shadow-lg w-96 transform transition-all duration-300 ease-out relative ${
-              showUpdate ? "scale-100 opacity-100" : "scale-95 opacity-0"
-            }`}
+            className={`bg-white p-6 rounded shadow-lg w-96 transform transition-all duration-300 ease-out relative ${showUpdate ? "scale-100 opacity-100" : "scale-95 opacity-0"
+              }`}
           >
             <button
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl font-bold"
@@ -217,9 +225,8 @@ export default function ManageAccounts() {
       {showAdd && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 transition-opacity duration-300">
           <div
-            className={`bg-white p-6 rounded shadow-lg w-96 transform transition-all duration-300 ease-out relative ${
-              showAdd ? "scale-100 opacity-100" : "scale-95 opacity-0"
-            }`}
+            className={`bg-white p-6 rounded shadow-lg w-96 transform transition-all duration-300 ease-out relative ${showAdd ? "scale-100 opacity-100" : "scale-95 opacity-0"
+              }`}
           >
             <button
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl font-bold"

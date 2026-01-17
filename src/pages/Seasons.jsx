@@ -2,22 +2,31 @@ import { useEffect } from "react";
 import { getSeasons } from "../api/seasonApi";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { FaArrowLeft } from "react-icons/fa";
+import { ArrowLeft, Plus } from "lucide-react";
 import { createSeason } from "../api/seasonApi";
 import { ToastContainer, toast } from "react-toastify";
+import LoadingSpinner from "../components/LoadingSpinner";
 import Cookies from "js-cookie";
 export default function Seasons() {
   const navigate = useNavigate();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [seasons, setSeasons] = useState([]);
   const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchSeasons();
   }, []);
   const fetchSeasons = async () => {
-    const response = await getSeasons();
-    setSeasons(response);
+    setLoading(true);
+    try {
+      const response = await getSeasons();
+      setSeasons(response);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCreateSeason = () => {
@@ -52,38 +61,40 @@ export default function Seasons() {
 
       {/* back arrow button  at corner */}
       <button
-        className="absolute top-4 left-4 bg-[#E31212] text-white p-2 rounded-full hover:bg-opacity-90 transition-colors shadow-md z-10"
-        onClick={() => navigate("/home")}
+        className="absolute top-4 left-4 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors shadow-md z-10"
+        onClick={() => navigate(-1)}
       >
-        <FaArrowLeft size={20} />
+        <ArrowLeft size={20} />
       </button>
       <h1 className="text-2xl font-bold text-center mb-6 text-[#E31212]">
         Seasons
       </h1>
-      <div className="flex flex-col items-center">
-        {seasons.map((season, index) => (
-          <div
-            key={index}
-            className="group bg-white rounded-xl shadow-md p-3 flex items-center justify-center border border-red-500 hover:bg-red-600 hover:scale-105 transition-all duration-300 cursor-pointer w-4/5  mb-4"
-            onClick={() => {
-              navigate("/tournament-detail", { state: { seasonID: season.id, seasonName: season.name } });
-            }}
-          >
-            <span className="text-lg font-bold text-red-600 group-hover:text-white text-center transition-colors duration-300">
-              {season.name}
-            </span>
-          </div>
-        ))}
-      </div>
+      {loading ? (
+        <LoadingSpinner size="large" />
+      ) : (
+        <div className="flex flex-col items-center">
+          {seasons.map((season, index) => (
+            <div
+              key={index}
+              className="group bg-white rounded-xl shadow-md p-3 flex items-center justify-center border border-red-300 hover:bg-red-500 hover:scale-105 transition-all duration-300 cursor-pointer w-4/5  mb-4"
+              onClick={() => {
+                navigate("/tournament-detail", { state: { seasonID: season.id, seasonName: season.name } });
+              }}
+            >
+              <span className="text-lg font-bold text-red-600 group-hover:text-white text-center transition-colors duration-300">
+                {season.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
       {/* border radius circle */}
       <div className="mt-4">
         <button
-          className="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition-colors fixed bottom-4 right-4 shadow-md
-                font-bold text-2xl  pt-1
-                "
+          className="bg-red-600 text-white p-4 rounded-full hover:bg-red-700 transition-colors fixed bottom-4 right-4 shadow-lg"
           onClick={() => setCreateModalOpen(true)}
         >
-          +
+          <Plus size={28} strokeWidth={3} />
         </button>
       </div>
 

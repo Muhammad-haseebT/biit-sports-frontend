@@ -1,6 +1,6 @@
 import { Home, Play, ChevronLeft, Plus } from 'lucide-react';
 import React, { useState } from 'react';
-import { useNavigate,useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Futsal from '../assets/Futsal.png';
 import VolleyBall from '../assets/VolleyBall.png';
 import TableTennis from '../assets/TableTennis.png';
@@ -10,32 +10,32 @@ import TugOfWar from '../assets/Tug Of War.png';
 import Chess from '../assets/Chess.png';
 import Cricket from '../assets/Cricket.png';
 import { add_Sports_To_Season } from '../api/seasonApi';
-import { ToastContainer,toast } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 
 export default function SportSelection() {
   const navigate = useNavigate();
   const { state } = useLocation();
   const [sports, setSports] = useState([
-    {id: 1, name: 'Cricket', img: Cricket, selected: false },
-    {id: 2, name: 'Futsal', img: Futsal, selected: false },
-    {id: 3, name: 'Volleyball', img: VolleyBall, selected: false },
-    {id: 4, name: 'Table Tennis', img: TableTennis, selected: false },
-    {id: 5, name: 'Badminton', img: Badminton, selected: false },
-    {id: 6, name: 'Ludo', img: Ludo, selected: false },
-    {id: 7, name: 'Tug Of War', img: TugOfWar, selected: false },
-    {id: 8, name: 'Chess', img: Chess, selected: false },
+    { id: 1, name: 'Cricket', img: Cricket, selected: false },
+    { id: 2, name: 'Futsal', img: Futsal, selected: false },
+    { id: 3, name: 'Volleyball', img: VolleyBall, selected: false },
+    { id: 4, name: 'Table Tennis', img: TableTennis, selected: false },
+    { id: 5, name: 'Badminton', img: Badminton, selected: false },
+    { id: 6, name: 'Ludo', img: Ludo, selected: false },
+    { id: 7, name: 'Tug Of War', img: TugOfWar, selected: false },
+    { id: 8, name: 'Chess', img: Chess, selected: false },
   ]);
 
   // Selected sports ki alag array
   const selectedSports = sports.filter(sport => sport.selected);
 
   const toggleSport = (id) => {
-    setSports(sports.map(sport => 
+    setSports(sports.map(sport =>
       sport.id === id ? { ...sport, selected: !sport.selected } : sport
     ));
   };
 
-  const handleAdd = async() => {
+  const handleAdd = async () => {
     console.log('Selected Sports:', selectedSports);
     try {
       const sportsData = {
@@ -46,7 +46,7 @@ export default function SportSelection() {
       toast.success('Sports added successfully!');
       setTimeout(() => {
         navigate('/tournament-detail', { state: { seasonID: state.seasonID, seasonName: state.seasonName } });
-        
+
       }, 1500);
     }
     catch (error) {
@@ -54,16 +54,16 @@ export default function SportSelection() {
         error.message || 'An error occurred while adding sports to the season.',
       );
     }
-    
 
-    
+
+
   };
 
   return (
     <div className="">
       <ToastContainer />
-      
-      
+
+
       <div className="w-full bg-white shadow-xl overflow-hidden">
         {/* Header */}
         <div className="bg-red-600 p-6">
@@ -84,12 +84,11 @@ export default function SportSelection() {
 
           <div className="grid grid-cols-2 gap-4">
             {sports.map((sport) => (
-              <div 
+              <div
                 key={sport.id}
                 onClick={() => toggleSport(sport.id)}
-                className={`relative bg-white border-2 rounded-2xl p-6 cursor-pointer hover:shadow-lg transition ${
-                  sport.selected ? 'border-red-600' : 'border-gray-200'
-                }`}
+                className={`relative bg-white border-2 rounded-2xl p-6 cursor-pointer hover:shadow-lg transition ${sport.selected ? 'border-red-600' : 'border-gray-200'
+                  }`}
               >
                 {/* Tick Mark */}
                 {sport.selected && (
@@ -97,7 +96,7 @@ export default function SportSelection() {
                     <span className="text-white text-sm font-bold">✓</span>
                   </div>
                 )}
-                
+
                 <div className="flex flex-col items-center gap-2">
                   <img src={sport.img} alt={sport.name} className="w-full h-auto" />
                 </div>
@@ -106,14 +105,13 @@ export default function SportSelection() {
           </div>
 
           {/* Add Button */}
-          <button 
+          <button
             onClick={handleAdd}
             disabled={selectedSports.length === 0}
-            className={`w-full mt-6 py-3 rounded-xl font-semibold transition ${
-              selectedSports.length > 0
-                ? 'bg-red-600 text-white hover:bg-red-700'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+            className={`w-full mt-6 py-3 rounded-xl font-semibold transition ${selectedSports.length > 0
+              ? 'bg-red-600 text-white hover:bg-red-700'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
           >
             Add {selectedSports.length > 0 && `(${selectedSports.length})`}
           </button>

@@ -12,7 +12,11 @@ export const getTournamentsBySeason = async (seasonID) => {
     const response = await axios.get(`${API_URL}/season/${seasonID}`);
     return response.data;
 }
-export const add_Sports_To_Season = async ( sportsData) => {
+export const add_Sports_To_Season = async (sportsData) => {
     const response = await axios.post(`${API_URL}/add-sports`, sportsData);
+    return response.data;
+}
+export const getTournamentsBySport = async (sportID, seasonID) => {
+    const response = await axios.get(`${API_URL}/season/tournaments/${seasonID}/${sportID}`);
     return response.data;
 }

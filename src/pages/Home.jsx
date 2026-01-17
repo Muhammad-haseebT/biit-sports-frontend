@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import SportFilter from "../components/SportFilter";
 import MatchCard from "../components/MatchCard";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { getMatchByStatus, getMatchBySportAndStatus } from "../api/matchApi";
 import Cookies from "js-cookie";
 
@@ -12,8 +13,11 @@ export default function Home() {
   const [username, setUsername] = useState("");
   const [searchLive, setSearchLive] = useState([]);
   const [searchUpcoming, setSearchUpcoming] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     const fetchMatches = async () => {
+      setLoading(true);
       try {
         let response = await getMatchByStatus("LIVE");
         setLive(response.data);
@@ -25,6 +29,8 @@ export default function Home() {
         setSearchUpcoming(response.data);
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchMatches();
@@ -33,6 +39,7 @@ export default function Home() {
 
 
   const handleSportFilter = async (sport) => {
+    setLoading(true);
     try {
       let live, upcomming;
       if (sport === "All") {
@@ -50,6 +57,8 @@ export default function Home() {
       setSearchUpcoming(upcomming.data);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   }
   const onSearch = (search) => {
@@ -80,42 +89,48 @@ export default function Home() {
     }
   }
 
-  
+
   return (
     <div className="bg-gray-100 min-h-screen">
       <Navbar username={username} onSearch={onSearch} />
       <div className="p-4 md:p-6">
         <SportFilter onFilter={handleSportFilter} />
 
-        <h3 className="text-xl font-bold mb-4">Live Matches</h3>
-        <div className="overflow-x-auto mb-8">
-          <div >
-            {searchLive.slice(0, 3).map((match) => (
-              <MatchCard
-                key={match.id}
-                title={match.tournamentName}
-                team1={match.team1Name}
-                team2={match.team2Name}
-                extra={match.status}
-                live={true}
-              />
-            ))}
-          </div>
-        </div>
+        {loading ? (
+          <LoadingSpinner size="large" />
+        ) : (
+          <>
+            <h3 className="text-xl font-bold mb-4">Live Matches</h3>
+            <div className="overflow-x-auto mb-8">
+              <div >
+                {searchLive.slice(0, 3).map((match) => (
+                  <MatchCard
+                    key={match.id}
+                    title={match.tournamentName}
+                    team1={match.team1Name}
+                    team2={match.team2Name}
+                    extra={match.status}
+                    live={true}
+                  />
+                ))}
+              </div>
+            </div>
 
-        <h3 className="text-xl font-bold mb-4">Upcoming Matches</h3>
-        <div>
-          {searchUpcoming.map((match) => (
-            <MatchCard
-              key={match.id}
-              title={match.tournamentName}
-              team1={match.team1Name}
-              team2={match.team2Name}
-              extra={match.date + " " + match.time}
-              live={false}
-            />
-          ))}
-        </div>
+            <h3 className="text-xl font-bold mb-4">Upcoming Matches</h3>
+            <div>
+              {searchUpcoming.map((match) => (
+                <MatchCard
+                  key={match.id}
+                  title={match.tournamentName}
+                  team1={match.team1Name}
+                  team2={match.team2Name}
+                  extra={match.date + " " + match.time}
+                  live={false}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

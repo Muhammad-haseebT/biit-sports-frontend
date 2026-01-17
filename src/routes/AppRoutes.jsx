@@ -13,6 +13,7 @@ import DetailedTournament from "../pages/DetailedTournament";
 import CreateTournament from "../pages/CreateTournament";
 import SportSelection from "../pages/SportSelection";
 import TournamentDetail from "../pages/TournamentDetail";
+import SportTournamentDetail from "../pages/sport_tournamentDetail";
 
 
 function AppRoutes() {
@@ -39,6 +40,7 @@ function AppRoutes() {
       <Route path="/detailed-tournament" element={<DetailedTournament />} />
       <Route path="/create-tournament" element={<CreateTournament />} />
       <Route path="/sports-selection" element={<SportSelection />} />
+      <Route path="/sport-tournament-detail" element={<SportTournamentDetail />} />
     </Routes>
   );
 }

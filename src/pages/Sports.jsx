@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft } from 'react-icons/fa';
+import { ArrowLeft } from 'lucide-react';
 import Cricket from '../assets/Cricket.png';
 import Futsal from '../assets/Futsal.png';
 import VolleyBall from '../assets/VolleyBall.png';
@@ -28,13 +28,13 @@ export default function Sports() {
         <div className="p-4 pb-24">
             {/* back arrow button  at corner */}
             <button
-                className="absolute top-4 left-4 bg-emerald-700 text-white p-2 rounded-full hover:bg-emerald-600 transition-colors shadow-md z-10"
-                onClick={() => navigate("/home")}
+                className="absolute top-4 left-4 bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors shadow-md z-10"
+                onClick={() => navigate(-1)}
             >
-                <FaArrowLeft size={20} />
+                <ArrowLeft size={20} />
             </button>
 
-            <h1 className="text-xl font-bold text-center mb-4 text-emerald-700">Sports</h1>
+            <h1 className="text-2xl font-bold text-center mb-4 text-red-600">Sports</h1>
             <div className="grid grid-cols-2 gap-3">
                 {sports.map((sport, index) => (
                     <div
