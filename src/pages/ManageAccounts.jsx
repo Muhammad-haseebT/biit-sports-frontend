@@ -102,7 +102,7 @@ export default function ManageAccounts() {
         Manage Accounts
       </h1>
 
-      <div className="flex items-center bg-gray-100 px-3 py-1 rounded-full flex-1 mx-4 max-w-md">
+      <div className="flex items-center bg-gray-100 px-3 py-1 rounded-full flex-1 mx-4 ">
         <input
           type="text"
           placeholder="Search by Arid No/Email..."
@@ -134,7 +134,7 @@ export default function ManageAccounts() {
           {filteredAccounts.map((account) => (
             <div
               key={account.id}
-              className="bg-white p-4 rounded-lg shadow-md border border-red-500 flex items-center justify-between hover:bg-red-100 hover:scale-105 transition-all"
+              className="bg-white p-2 rounded-lg shadow-md border border-red-500 flex items-center justify-between gap-3 hover:bg-red-100  "
             >
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                 <h3 className="font-semibold text-gray-900">{account.name}</h3>
