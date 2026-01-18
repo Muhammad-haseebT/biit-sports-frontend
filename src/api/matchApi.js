@@ -23,8 +23,9 @@ export const getMatchScorer = (s) => {
   return axios.get(`${BASE_URL}/match/scorer/${s}`);
 };
 
-export const getMatchesByTournamentId = (tournamentId) => {
-  const r = axios.get(`${BASE_URL}/match/tournament/${tournamentId}`);
+export const getMatchesByTournamentId = async (tournamentId) => {
+  const r = await axios.get(`${BASE_URL}/match/tournament/${tournamentId}`);
+  console.log('API Response:', r);
   if (r.status === 200) {
     return r.data;
   }
