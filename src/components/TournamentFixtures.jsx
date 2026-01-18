@@ -32,6 +32,8 @@ export default function TournamentFixtures({ tournamentId }) {
         try {
             setLoading(true);
             const response = await getMatchesByTournamentId(tournamentId);
+            console.log('Fetched fixtures:', response);
+            console.log('Tournament ID:', tournamentId);
             setFixtures(response ?? []);
 
         } catch (error) {
