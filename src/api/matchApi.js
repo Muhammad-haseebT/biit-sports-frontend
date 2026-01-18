@@ -22,3 +22,13 @@ export const getMatchBySportAndStatus = (sport, status) => {
 export const getMatchScorer = (s) => {
   return axios.get(`${BASE_URL}/match/scorer/${s}`);
 };
+
+export const getMatchesByTournamentId = (tournamentId) => {
+  const r = axios.get(`${BASE_URL}/match/tournament/${tournamentId}`);
+  if (r.status === 200) {
+    return r.data;
+  }
+  else {
+    return [];
+  }
+};
