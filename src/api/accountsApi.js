@@ -12,3 +12,18 @@ export const deleteAccount = (id) => {
 export const addAccount = (account) => {
     return axios.post(`${API_URL}/account`, account);
 }
+// accountsApi.js mein
+export const GetAllPlayers = async (tournamentId) => {
+    try {
+        const r = await axios.get(`${API_URL}/account/players/${tournamentId}`);
+
+
+        if (r.status === 200) {
+            return r.data;
+        }
+        return [];
+    } catch (error) {
+
+        return [];
+    }
+}

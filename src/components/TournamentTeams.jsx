@@ -21,6 +21,7 @@ export default function TournamentTeams({ tournamentId, onCreateTeam }) {
     const [tab, setTab] = useState("teams"); // 'teams' | 'myTeam'
     const [loading, setLoading] = useState(false);
     const [createModalOpen, setCreateModalOpen] = useState(false);
+    const [players, setPlayers] = useState([]);
 
     const [teams, setTeams] = useState([]);
     const [form, setForm] = useState({
@@ -34,6 +35,7 @@ export default function TournamentTeams({ tournamentId, onCreateTeam }) {
         if (!tournamentId) return;
         fetchTeams();
         fetchMyTeam();
+        fetchPlayers();
     }, [tournamentId]); // refetch when tournament changes [web:162]
 
     const fetchTeams = async () => {
@@ -83,6 +85,17 @@ export default function TournamentTeams({ tournamentId, onCreateTeam }) {
         } catch (e) {
             console.error("Error creating team:", e);
             toast.error("Error creating team");
+        } finally {
+            setLoading(false);
+        }
+    };
+    const fetchPlayers = async () => {
+        try {
+            setLoading(true);
+            const res = await GetAllPlayers();
+            setPlayers(res ?? []);
+        } catch (e) {
+            setPlayers([]);
         } finally {
             setLoading(false);
         }
