@@ -24,9 +24,9 @@ export default function TournamentOverview({ overview }) {
                 <h2 className="text-xl font-bold mb-4">Top 3</h2>
                 <div className="space-y-3 border border-red-600 shadow-lg rounded-xl">
                     {overview?.top && overview.top.length > 0 ? (
-                        overview.top.map((team) => (
+                        overview.top.map((team, index) => (
                             <div
-                                key={team.rank}
+                                key={team.rank || index}
                                 className="bg-gray-50 rounded-xl p-4 flex items-center justify-between"
                             >
                                 <div className="flex items-center gap-3">

@@ -33,3 +33,9 @@ export const getMatchesByTournamentId = async (tournamentId) => {
     return [];
   }
 };
+
+export const createMatch = async (matchData) => {
+  const r = await axios.post(`${BASE_URL}/match`, matchData);
+  return r.data; // object
+};
+
