@@ -8,7 +8,7 @@ export const getTeamsByTournamentId = async (tournamentId) => {
 };
 
 export const getMyTeamByTournamentIdAndPlayerId = async (tournamentId, playerId) => {
-    const r = await axios.get(`${url}${tournamentId}/${playerId}`);
+    const r = await axios.get(`${url}/team/tournament/account/${tournamentId}/${playerId}`);
     return r.data; // object
 };
 export const createTeam = async (teamData, playerId, tournamentId) => {
