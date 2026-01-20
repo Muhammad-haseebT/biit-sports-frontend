@@ -51,13 +51,13 @@ const MediaViewer = ({ isOpen, onClose, mediaData, initialIndex = 0 }) => {
                 {mediaData.length > 1 && (
                     <>
                         <button
-                            className="absolute left-4 text-white hover:text-red-500 transition-colors p-2 bg-black/50 rounded-full"
+                            className="absolute left-2 md:left-4 text-white hover:text-red-500 transition-colors p-2 bg-black/50 rounded-full z-10"
                             onClick={handlePrev}
                         >
                             <ChevronLeft size={32} />
                         </button>
                         <button
-                            className="absolute right-4 text-white hover:text-red-500 transition-colors p-2 bg-black/50 rounded-full"
+                            className="absolute right-2 md:right-4 text-white hover:text-red-500 transition-colors p-2 bg-black/50 rounded-full z-10"
                             onClick={handleNext}
                         >
                             <ChevronRight size={32} />
