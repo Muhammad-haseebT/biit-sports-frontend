@@ -46,14 +46,14 @@ export default function DetailedTournament() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b">
+      <div className="flex border-b overflow-x-auto whitespace-nowrap no-scrollbar">
         {['overview', 'fixtures', 'teams', 'stats', 'Points'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-3 text-lg font-semibold capitalize ${activeTab === tab
+            className={`px-6 py-3 text-lg font-semibold capitalize min-w-fit ${activeTab === tab
               ? 'text-red-600 border-b-2 border-red-600'
-              : 'text-gray-500'
+              : 'text-gray-500 hover:text-red-400'
               }`}
           >
             {tab}
