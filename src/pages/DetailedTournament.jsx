@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import TournamentOverview from '../components/TournamentOverview';
 import TournamentFixtures from '../components/TournamentFixtures';
 import TournamentTeams from '../components/TournamentTeams';
+import TournamentPoints from '../components/TournamentPoints';
 
 export default function DetailedTournament() {
   const { state } = useLocation();
@@ -46,7 +47,7 @@ export default function DetailedTournament() {
 
       {/* Tabs */}
       <div className="flex border-b">
-        {['overview', 'fixtures', 'teams', 'stats'].map(tab => (
+        {['overview', 'fixtures', 'teams', 'stats', 'Points'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -74,8 +75,11 @@ export default function DetailedTournament() {
             )}
 
             {activeTab === 'teams' && (
-
               <TournamentTeams tournamentId={state.tournamentId} />
+            )}
+
+            {activeTab === 'Points' && (
+              <TournamentPoints tournamentId={state.tournamentId} />
             )}
 
             {activeTab === 'stats' && (

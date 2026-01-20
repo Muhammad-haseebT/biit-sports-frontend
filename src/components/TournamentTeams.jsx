@@ -11,6 +11,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Loading from "../components/LoadingSpinner";
 import { createPlayerRequest } from "../api/playerRequestApi";
+import { createTeamRequest } from "../api/teamApi";
 
 
 export const PlayerRow = ({ player }) => (
@@ -19,6 +20,7 @@ export const PlayerRow = ({ player }) => (
         <div className="text-sm text-gray-700">{player.status}</div>
     </div>
 );
+
 
 
 export default function TournamentTeams({ tournamentId, onCreateTeam }) {
@@ -203,11 +205,30 @@ export default function TournamentTeams({ tournamentId, onCreateTeam }) {
             toast.success("Player request sent successfully");
             setPlayerText("");
 
-            // Refetch only my team
             await fetchMyTeam();
         } catch (e) {
             console.error("Error creating player request:", e);
             toast.error(e.response?.data?.error || "Error creating player request");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSendRequest = async () => {
+        try {
+            setLoading(true);
+            await createTeamRequest({
+                teamId: myTeam.teamId,
+                tournamentId: tournamentId,
+                playerId: JSON.parse(Cookies.get("account")).playerId,
+            });
+            toast.success("Team request sent successfully");
+            setPlayerText("");
+
+            await fetchMyTeam();
+        } catch (e) {
+            console.error("Error creating team request:", e);
+            toast.error(e.response?.data?.error || "Error creating team request");
         } finally {
             setLoading(false);
         }
@@ -311,7 +332,7 @@ export default function TournamentTeams({ tournamentId, onCreateTeam }) {
                             ))}
                         </div>
 
-                        <button className="bg-red-600 text-white rounded-full p-3 shadow-lg absolute bottom-0 left-1/2 transform -translate-x-1/2 w-11/12 mb-4">
+                        <button className="bg-red-600 text-white rounded-full p-3 shadow-lg absolute bottom-0 left-1/2 transform -translate-x-1/2 w-11/12 mb-4" onClick={handleSendRequest}>
                             Send Request
                         </button>
                     </div>

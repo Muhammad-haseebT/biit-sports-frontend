@@ -16,3 +16,23 @@ export const createTeam = async (teamData, playerId, tournamentId) => {
     return r.data; // object
 };
 
+export const getTeamRequests = async () => {
+    const r = await axios.get(`${url}/teamRequest`);
+    return r.data ?? []; // array
+};
+//approve team request
+export const approveTeamRequest = async (teamRequestId) => {
+    const r = await axios.put(`${url}/teamRequest/approve/${teamRequestId}`);
+    return r.data;
+};
+//reject team request
+export const rejectTeamRequest = async (teamRequestId) => {
+    const r = await axios.put(`${url}/teamRequest/reject/${teamRequestId}`);
+    return r.data;
+};
+export const createTeamRequest = async (object) => {
+    const r = await axios.post(`${url}/teamRequest`, object);
+    return r.data;
+};
+
+

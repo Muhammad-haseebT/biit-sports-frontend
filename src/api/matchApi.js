@@ -39,3 +39,8 @@ export const createMatch = async (matchData) => {
   return r.data; // object
 };
 
+export const updateMatch = async (matchData, matchId) => {
+  const r = await axios.put(`${BASE_URL}/match/${matchId}`, matchData);
+  return r.data; // object
+};
+

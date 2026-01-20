@@ -7,3 +7,6 @@ export const createTournamentAPi = (formData) => {
 export const getTournamentOverviewApi = (tournamentId) => {
     return axios.get(`${API_URL}/tournament/overview/${tournamentId}`);
 }
+export const getTournamentPointsApi = (tournamentId) => {
+    return axios.get(`${API_URL}/ptsTable/tournament/${tournamentId}`);
+}
