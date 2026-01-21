@@ -18,9 +18,9 @@ export const createMedia = async (matchId, file) => {
     }
 };
 //get by tournament id
-export const getMediaByTournamentId = async (tournamentId) => {
+export const getMediaBySportId = async (sportId) => {
     try {
-        const response = await axios.get(`${BASE_URL}/media/tournament/${tournamentId}`);
+        const response = await axios.get(`${BASE_URL}/media/sport/${sportId}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching media:", error);
@@ -31,6 +31,16 @@ export const getMediaByTournamentId = async (tournamentId) => {
 export const getMediaBySeasonId = async (seasonId) => {
     try {
         const response = await axios.get(`${BASE_URL}/media/season/${seasonId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching media:", error);
+        throw error;
+    }
+};
+//get by tournament id
+export const getMediaByTournamentId = async (tournamentId) => {
+    try {
+        const response = await axios.get(`${BASE_URL}/media/tournament/${tournamentId}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching media:", error);

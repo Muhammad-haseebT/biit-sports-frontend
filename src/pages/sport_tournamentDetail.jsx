@@ -5,7 +5,7 @@ import { getTournamentsBySport } from "../api/seasonApi";
 import TournamentDetailComponent from "../components/TournamentDetailComponent";
 import { useState } from "react";
 import MediaViewer from "../components/MediaViewer";
-import { getMediaByTournamentId } from "../api/mediaApi";
+import { getMediaBySportId } from "../api/mediaApi";
 
 export default function SportTournamentDetail() {
     const { state } = useLocation();
@@ -31,7 +31,7 @@ export default function SportTournamentDetail() {
         const fetchMedia = async () => {
             try {
                 // Using sportID as inferred tournamentID based on user context
-                const response = await getMediaByTournamentId(state.sportID);
+                const response = await getMediaBySportId(state.sportID);
                 setMediaData(response);
             } catch (error) {
                 console.error("Error fetching media:", error);

@@ -8,6 +8,9 @@ import TournamentOverview from '../components/TournamentOverview';
 import TournamentFixtures from '../components/TournamentFixtures';
 import TournamentTeams from '../components/TournamentTeams';
 import TournamentPoints from '../components/TournamentPoints';
+import { getMediaByTournamentId } from '../api/mediaApi';
+import MediaViewer from '../components/MediaViewer';
+import { ImageIcon } from 'lucide-react';
 
 export default function DetailedTournament() {
   const { state } = useLocation();
@@ -17,11 +20,17 @@ export default function DetailedTournament() {
   });
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [mediaData, setMediaData] = useState([]);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState(0);
 
   useEffect(() => {
-    fetchTournamentOverview();
+    if (activeTab === 'overview')
+      fetchTournamentOverview();
+    if (activeTab === 'Media')
+      fetchMedia();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeTab]);
 
   const fetchTournamentOverview = async () => {
     try {
@@ -32,7 +41,25 @@ export default function DetailedTournament() {
       console.error('Error fetching tournament overview:', error);
     } finally {
       setLoading(false);
+
     }
+
+  };
+  const fetchMedia = async () => {
+    try {
+      setLoading(true);
+      const response = await getMediaByTournamentId(state.tournamentId);
+      setMediaData(response);
+    } catch (error) {
+      console.error('Error fetching media:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openMediaViewer = (index) => {
+    setViewerIndex(index);
+    setIsViewerOpen(true);
   };
 
   return (
@@ -47,7 +74,7 @@ export default function DetailedTournament() {
 
       {/* Tabs */}
       <div className="flex border-b overflow-x-auto whitespace-nowrap no-scrollbar">
-        {['overview', 'fixtures', 'teams', 'stats', 'Points'].map(tab => (
+        {['overview', 'fixtures', 'teams', 'stats', 'Points', 'Media'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -88,9 +115,45 @@ export default function DetailedTournament() {
                 <p className="text-gray-600">(Put stats UI here)</p>
               </div>
             )}
+            {activeTab === 'Media' && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {mediaData && mediaData.length > 0 ? (
+                  mediaData.map((media, index) => (
+                    <div
+                      key={index}
+                      className="aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow relative group"
+                      onClick={() => openMediaViewer(index)}
+                    >
+                      <img
+                        src={media.url}
+                        alt={`Media ${index}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                        <ImageIcon className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" size={32} />
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full py-10 text-center">
+                    <div className="flex justify-center mb-3">
+                      <ImageIcon className="text-gray-300" size={48} />
+                    </div>
+                    <h3 className="text-gray-500 font-medium">No media available</h3>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
+      <MediaViewer
+        isOpen={isViewerOpen}
+        onClose={() => setIsViewerOpen(false)}
+        mediaData={mediaData}
+        initialIndex={viewerIndex}
+      />
     </div>
   );
 }
