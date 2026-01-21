@@ -23,12 +23,16 @@ export default function DetailedTournament() {
   const [mediaData, setMediaData] = useState([]);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
+  const [mediaPage, setMediaPage] = useState(0);
+  const [hasMoreMedia, setHasMoreMedia] = useState(true);
+  const [loadingMoreMedia, setLoadingMoreMedia] = useState(false);
+  const MEDIA_PAGE_SIZE = 6;
 
   useEffect(() => {
     if (activeTab === 'overview')
       fetchTournamentOverview();
-    if (activeTab === 'Media')
-      fetchMedia();
+    if (activeTab === 'Media' && mediaData.length === 0)
+      loadMoreMedia();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
@@ -45,15 +49,28 @@ export default function DetailedTournament() {
     }
 
   };
-  const fetchMedia = async () => {
+
+  const loadMoreMedia = async () => {
+    if (loadingMoreMedia || !hasMoreMedia) return;
+
+    setLoadingMoreMedia(true);
     try {
-      setLoading(true);
-      const response = await getMediaByTournamentId(state.tournamentId);
-      setMediaData(response);
+      const response = await getMediaByTournamentId(state.tournamentId, mediaPage, MEDIA_PAGE_SIZE);
+
+      if (response && response.length > 0) {
+        setMediaData(prev => [...prev, ...response]);
+        setMediaPage(prev => prev + 1);
+        if (response.length < MEDIA_PAGE_SIZE) {
+          setHasMoreMedia(false);
+        }
+      } else {
+        setHasMoreMedia(false);
+      }
     } catch (error) {
       console.error('Error fetching media:', error);
+      setHasMoreMedia(false);
     } finally {
-      setLoading(false);
+      setLoadingMoreMedia(false);
     }
   };
 
@@ -116,31 +133,58 @@ export default function DetailedTournament() {
               </div>
             )}
             {activeTab === 'Media' && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {mediaData && mediaData.length > 0 ? (
-                  mediaData.map((media, index) => (
-                    <div
-                      key={index}
-                      className="aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow relative group"
-                      onClick={() => openMediaViewer(index)}
-                    >
-                      <img
-                        src={media.url}
-                        alt={`Media ${index}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                        <ImageIcon className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" size={32} />
+              <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {mediaData && mediaData.length > 0 ? (
+                    mediaData.map((media, index) => (
+                      <div
+                        key={index}
+                        className="aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow relative group"
+                        onClick={() => openMediaViewer(index)}
+                      >
+                        <img
+                          src={media.url}
+                          alt={`Media ${index}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                          <ImageIcon className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" size={32} />
+                        </div>
                       </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="col-span-full py-10 text-center">
-                    <div className="flex justify-center mb-3">
-                      <ImageIcon className="text-gray-300" size={48} />
-                    </div>
-                    <h3 className="text-gray-500 font-medium">No media available</h3>
+                    ))
+                  ) : (
+                    !loadingMoreMedia && (
+                      <div className="col-span-full py-10 text-center">
+                        <div className="flex justify-center mb-3">
+                          <ImageIcon className="text-gray-300" size={48} />
+                        </div>
+                        <h3 className="text-gray-500 font-medium">No media available</h3>
+                      </div>
+                    )
+                  )}
+                </div>
+
+                {/* Sentinel for Infinite Scroll */}
+                {hasMoreMedia && (
+                  <div
+                    className="h-10 w-full flex items-center justify-center mt-4"
+                    ref={(el) => {
+                      if (el) {
+                        const observer = new IntersectionObserver(
+                          (entries) => {
+                            if (entries[0].isIntersecting && !loadingMoreMedia) {
+                              loadMoreMedia();
+                            }
+                          },
+                          { threshold: 1.0 }
+                        );
+                        observer.observe(el);
+                        return () => observer.disconnect();
+                      }
+                    }}
+                  >
+                    {loadingMoreMedia && <LoadingSpinner size="small" />}
                   </div>
                 )}
               </div>

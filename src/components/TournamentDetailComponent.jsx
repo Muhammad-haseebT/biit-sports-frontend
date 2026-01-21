@@ -7,7 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import LoadingSpinner from "./LoadingSpinner";
 import MediaViewer from "./MediaViewer";
 
-export default function TournamentDetailComponent({ option, navigate, name, tournaments, seasonID, loading, sportID, mediaData = [] }) {
+export default function TournamentDetailComponent({ option, navigate, name, tournaments, seasonID, loading, sportID, mediaData = [], onLoadMore, hasMore, loadingMore }) {
     const [activeTab, setActiveTab] = useState('tournaments'); // 'tournaments' | 'media'
     const [isViewerOpen, setIsViewerOpen] = useState(false);
     const [viewerIndex, setViewerIndex] = useState(0);
@@ -117,31 +117,58 @@ export default function TournamentDetailComponent({ option, navigate, name, tour
                         </>
                     ) : (
                         /* Media Gallery Grid */
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {mediaData && mediaData.length > 0 ? (
-                                mediaData.map((media, index) => (
-                                    <div
-                                        key={index}
-                                        className="aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow relative group"
-                                        onClick={() => openMediaViewer(index)}
-                                    >
-                                        <img
-                                            src={media.url}
-                                            alt={`Media ${index}`}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            loading="lazy"
-                                        />
-                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                                            <ImageIcon className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" size={32} />
+                        <div className="flex flex-col gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {mediaData && mediaData.length > 0 ? (
+                                    mediaData.map((media, index) => (
+                                        <div
+                                            key={index}
+                                            className="aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow relative group"
+                                            onClick={() => openMediaViewer(index)}
+                                        >
+                                            <img
+                                                src={media.url}
+                                                alt={`Media ${index}`}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                loading="lazy"
+                                            />
+                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                                <ImageIcon className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md" size={32} />
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="col-span-full py-10 text-center">
-                                    <div className="flex justify-center mb-3">
-                                        <ImageIcon className="text-gray-300" size={48} />
-                                    </div>
-                                    <h3 className="text-gray-500 font-medium">No media available</h3>
+                                    ))
+                                ) : (
+                                    !loadingMore && (
+                                        <div className="col-span-full py-10 text-center">
+                                            <div className="flex justify-center mb-3">
+                                                <ImageIcon className="text-gray-300" size={48} />
+                                            </div>
+                                            <h3 className="text-gray-500 font-medium">No media available</h3>
+                                        </div>
+                                    )
+                                )}
+                            </div>
+
+                            {/* Sentinel for Infinite Scroll */}
+                            {onLoadMore && hasMore && (
+                                <div
+                                    className="h-10 w-full flex items-center justify-center mt-4"
+                                    ref={(el) => {
+                                        if (el) {
+                                            const observer = new IntersectionObserver(
+                                                (entries) => {
+                                                    if (entries[0].isIntersecting && !loadingMore) {
+                                                        onLoadMore();
+                                                    }
+                                                },
+                                                { threshold: 1.0 }
+                                            );
+                                            observer.observe(el);
+                                            return () => observer.disconnect();
+                                        }
+                                    }}
+                                >
+                                    {loadingMore && <LoadingSpinner size="small" />}
                                 </div>
                             )}
                         </div>

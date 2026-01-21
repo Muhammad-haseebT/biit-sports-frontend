@@ -13,6 +13,10 @@ export default function SportTournamentDetail() {
     const [tournaments, setTournaments] = useState([]);
     const [loading, setLoading] = useState(false);
     const [mediaData, setMediaData] = useState([]);
+    const [mediaPage, setMediaPage] = useState(0);
+    const [hasMoreMedia, setHasMoreMedia] = useState(true);
+    const [loadingMoreMedia, setLoadingMoreMedia] = useState(false);
+    const MEDIA_PAGE_SIZE = 6;
 
     useEffect(() => {
 
@@ -28,19 +32,35 @@ export default function SportTournamentDetail() {
             }
         };
 
-        const fetchMedia = async () => {
-            try {
-                // Using sportID as inferred tournamentID based on user context
-                const response = await getMediaBySportId(state.sportID);
-                setMediaData(response);
-            } catch (error) {
-                console.error("Error fetching media:", error);
-            }
-        }
-
         fetchTournaments();
-        fetchMedia();
+        // Initial media load
+        loadMoreMedia();
     }, []);
+
+    const loadMoreMedia = async () => {
+        if (loadingMoreMedia || !hasMoreMedia) return;
+
+        setLoadingMoreMedia(true);
+        try {
+            // Using sportID as inferred tournamentID based on user context
+            const response = await getMediaBySportId(state.sportID, mediaPage, MEDIA_PAGE_SIZE);
+
+            if (response && response.length > 0) {
+                setMediaData(prev => [...prev, ...response]);
+                setMediaPage(prev => prev + 1);
+                if (response.length < MEDIA_PAGE_SIZE) {
+                    setHasMoreMedia(false);
+                }
+            } else {
+                setHasMoreMedia(false);
+            }
+        } catch (error) {
+            console.error("Error fetching media:", error);
+            setHasMoreMedia(false);
+        } finally {
+            setLoadingMoreMedia(false);
+        }
+    }
 
     return (
         <TournamentDetailComponent
@@ -52,6 +72,9 @@ export default function SportTournamentDetail() {
             loading={loading}
             sportID={state.sportID}
             mediaData={mediaData}
+            onLoadMore={loadMoreMedia}
+            hasMore={hasMoreMedia}
+            loadingMore={loadingMoreMedia}
         />
     );
 }

@@ -18,9 +18,9 @@ export const createMedia = async (matchId, file) => {
     }
 };
 //get by tournament id
-export const getMediaBySportId = async (sportId) => {
+export const getMediaBySportId = async (sportId, page, size) => {
     try {
-        const response = await axios.get(`${BASE_URL}/media/sport/${sportId}`);
+        const response = await axios.get(`${BASE_URL}/media/sport/${sportId}/${page}/${size}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching media:", error);
@@ -28,9 +28,9 @@ export const getMediaBySportId = async (sportId) => {
     }
 };
 //get by season id
-export const getMediaBySeasonId = async (seasonId) => {
+export const getMediaBySeasonId = async (seasonId, page, size) => {
     try {
-        const response = await axios.get(`${BASE_URL}/media/season/${seasonId}`);
+        const response = await axios.get(`${BASE_URL}/media/season/${seasonId}/${page}/${size}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching media:", error);
@@ -38,9 +38,9 @@ export const getMediaBySeasonId = async (seasonId) => {
     }
 };
 //get by tournament id
-export const getMediaByTournamentId = async (tournamentId) => {
+export const getMediaByTournamentId = async (tournamentId, page, size) => {
     try {
-        const response = await axios.get(`${BASE_URL}/media/tournament/${tournamentId}`);
+        const response = await axios.get(`${BASE_URL}/media/tournament/${tournamentId}/${page}/${size}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching media:", error);
@@ -48,12 +48,12 @@ export const getMediaByTournamentId = async (tournamentId) => {
     }
 };
 //get all
-export const getAllMedia = async () => {
-    try {
-        const response = await axios.get(`${BASE_URL}/media`);
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching media:", error);
-        throw error;
-    }
-};
+// export const getAllMedia = async () => {
+//     try {
+//         const response = await axios.get(`${BASE_URL}/media`);
+//         return response.data;
+//     } catch (error) {
+//         console.error("Error fetching media:", error);
+//         throw error;
+//     }
+// };
