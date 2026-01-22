@@ -144,6 +144,7 @@ export default function TournamentDetailComponent({ option, navigate, name, tour
                                                 <ImageIcon className="text-gray-300" size={48} />
                                             </div>
                                             <h3 className="text-gray-500 font-medium">No media available</h3>
+
                                         </div>
                                     )
                                 )}

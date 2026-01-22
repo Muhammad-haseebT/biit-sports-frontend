@@ -1,0 +1,1315 @@
+n
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stats Dashboard - Mobile Friendly</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-light: #f9fafb;
+            --bg-white: #ffffff;
+            --text-dark: #111827;
+            --text-gray: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        /* Mobile Container */
+        .mobile-wrapper {
+            max-width: 480px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            min-height: 100vh;
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .nav-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .menu-icon {
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        /* Screen Selector Tabs */
+        .screen-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .screen-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .screen-tab {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .screen-tab.active {
+            background: white;
+            color: var(--primary);
+        }
+
+        /* Sport Filter */
+        .sport-filter {
+            padding: 12px 16px;
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 88px;
+            z-index: 50;
+        }
+
+        .sport-filter-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-gray);
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .sport-chips {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            padding-bottom: 4px;
+        }
+
+        .sport-chips::-webkit-scrollbar {
+            display: none;
+        }
+
+        .sport-chip {
+            padding: 6px 14px;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--bg-white);
+            color: var(--text-gray);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sport-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .sport-chip.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Content Area */
+        .content {
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Player Profile Card */
+        .player-profile {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .player-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .player-details h2 {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .player-role {
+            font-size: 13px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            margin-bottom: 16px;
+            padding-bottom: 4px;
+        }
+
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: var(--bg-white);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-gray);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Stat Cards */
+        .stat-card {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--bg-light);
+        }
+
+        .stat-card-icon {
+            font-size: 20px;
+        }
+
+        .stat-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-gray);
+            letter-spacing: 0.5px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-gray);
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .stat-value.highlight {
+            color: var(--primary);
+            font-size: 24px;
+        }
+
+        /* Dropdown */
+        .select-group {
+            margin-bottom: 16px;
+        }
+
+        .select-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-gray);
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+        }
+
+        .select-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 14px;
+            color: var(--text-dark);
+            background: var(--bg-white);
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232563eb' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 36px;
+        }
+
+        /* Table */
+        .table-card {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .table-header {
+            background: var(--bg-light);
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-gray);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th {
+            padding: 12px 8px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            background: var(--bg-light);
+            position: sticky;
+            top: 0;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: #e5e7eb;
+        }
+
+        th .sort-icon {
+            margin-left: 4px;
+            font-size: 10px;
+        }
+
+        td {
+            padding: 12px 8px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--bg-light);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rank-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rank-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            color: white;
+        }
+
+        .rank-1 {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        }
+
+        .rank-2 {
+            background: linear-gradient(135deg, #c0c0c0, #9ca3af);
+        }
+
+        .rank-3 {
+            background: linear-gradient(135deg, #cd7f32, #b45309);
+        }
+
+        .rank-other {
+            background: var(--text-gray);
+        }
+
+        .player-name {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        /* Award Cards */
+        .award-card {
+            background: linear-gradient(135deg, var(--warning), #dc2626);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .award-label {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .award-value {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .award-subtitle {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        /* Quick Stats Grid */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .quick-stat-card {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .quick-stat-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .quick-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .quick-stat-label {
+            font-size: 12px;
+            color: var(--text-gray);
+            font-weight: 500;
+        }
+
+        /* Coming Soon */
+        .coming-soon {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .coming-soon-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.6;
+        }
+
+        .coming-soon h3 {
+            font-size: 20px;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .coming-soon p {
+            color: var(--text-gray);
+            font-size: 14px;
+        }
+
+        /* Award List */
+        .award-list {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .award-list-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-gray);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--bg-light);
+        }
+
+        .award-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--bg-light);
+        }
+
+        .award-item:last-child {
+            border-bottom: none;
+        }
+
+        .award-item-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .award-item-text {
+            font-size: 13px;
+            color: var(--text-dark);
+            flex: 1;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 480px;
+            width: 100%;
+            background: var(--bg-white);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            cursor: pointer;
+            color: var(--text-gray);
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-item-icon {
+            font-size: 22px;
+        }
+
+        /* Responsive */
+        @media (min-width: 481px) {
+            .mobile-wrapper {
+                border-radius: 12px;
+                margin: 20px auto;
+                min-height: calc(100vh - 40px);
+            }
+
+            .bottom-nav {
+                border-radius: 0 0 12px 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="mobile-wrapper">
+        <!-- Top Navigation -->
+        <div class="top-nav">
+            <div class="nav-header">
+                <div class="nav-title">📊 Stats Dashboard</div>
+                <div class="menu-icon">☰</div>
+            </div>
+            <div class="screen-tabs">
+                <button class="screen-tab active" onclick="switchScreen('player')">My Stats</button>
+                <button class="screen-tab" onclick="switchScreen('tournament')">Tournament</button>
+            </div>
+        </div>
+
+        <!-- Sport Filter -->
+        <div class="sport-filter">
+            <span class="sport-filter-label">Select Sport</span>
+            <div class="sport-chips">
+                <button class="sport-chip active" onclick="switchSport('cricket')">
+                    <span>🏏</span> Cricket
+                </button>
+                <button class="sport-chip disabled" onclick="alert('Coming Soon!')">
+                    <span>⚽</span> Football
+                </button>
+                <button class="sport-chip disabled" onclick="alert('Coming Soon!')">
+                    <span>🏀</span> Basketball
+                </button>
+                <button class="sport-chip disabled" onclick="alert('Coming Soon!')">
+                    <span>🏐</span> Volleyball
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content">
+            <!-- Player Stats Screen -->
+            <div id="player-screen" class="screen active">
+                <!-- Player Profile -->
+                <div class="player-profile">
+                    <div class="player-avatar">MH</div>
+                    <div class="player-details">
+                        <h2>Muhammad Haseeb</h2>
+                        <div class="player-role">
+                            <span>🏏</span> All-rounder
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab active" onclick="switchPlayerTab('overall')">Overall</button>
+                    <button class="tab" onclick="switchPlayerTab('tournament')">By Tournament</button>
+                </div>
+
+                <!-- Overall Tab -->
+                <div id="overall-tab" class="tab-content active">
+                    <!-- Quick Stats -->
+                    <div class="quick-stats">
+                        <div class="quick-stat-card">
+                            <div class="quick-stat-icon">🏏</div>
+                            <div class="quick-stat-value">24</div>
+                            <div class="quick-stat-label">Matches</div>
+                        </div>
+                        <div class="quick-stat-card">
+                            <div class="quick-stat-icon">🏃</div>
+                            <div class="quick-stat-value">856</div>
+                            <div class="quick-stat-label">Runs</div>
+                        </div>
+                        <div class="quick-stat-card">
+                            <div class="quick-stat-icon">⚡</div>
+                            <div class="quick-stat-value">18</div>
+                            <div class="quick-stat-label">Wickets</div>
+                        </div>
+                        <div class="quick-stat-card">
+                            <div class="quick-stat-icon">🏆</div>
+                            <div class="quick-stat-value">3</div>
+                            <div class="quick-stat-label">Man of Match</div>
+                        </div>
+                    </div>
+
+                    <!-- Batting Stats -->
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <span class="stat-card-icon">🏏</span>
+                            <span class="stat-card-title">Batting Stats</span>
+                        </div>
+                        <div class="stat-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">Runs</span>
+                                <span class="stat-value highlight">856</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Balls Faced</span>
+                                <span class="stat-value">642</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Strike Rate</span>
+                                <span class="stat-value">133.3</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Highest</span>
+                                <span class="stat-value">89*</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Fours</span>
+                                <span class="stat-value">72</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Sixes</span>
+                                <span class="stat-value">34</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Not Out</span>
+                                <span class="stat-value">5</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Average</span>
+                                <span class="stat-value">45.1</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bowling Stats -->
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <span class="stat-card-icon">⚡</span>
+                            <span class="stat-card-title">Bowling Stats</span>
+                        </div>
+                        <div class="stat-grid">
+                            <div class="stat-item">
+                                <span class="stat-label">Wickets</span>
+                                <span class="stat-value highlight">18</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Balls Bowled</span>
+                                <span class="stat-value">384</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Runs Conceded</span>
+                                <span class="stat-value">456</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Economy</span>
+                                <span class="stat-value">7.12</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Average</span>
+                                <span class="stat-value">25.3</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Best Figures</span>
+                                <span class="stat-value">4/28</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Awards -->
+                    <div class="award-list">
+                        <div class="award-list-title">🏆 Awards & Achievements</div>
+                        <div class="award-item">
+                            <span class="award-item-icon">🥇</span>
+                            <span class="award-item-text">Man of the Match: <strong>3 times</strong></span>
+                        </div>
+                        <div class="award-item">
+                            <span class="award-item-icon">🏏</span>
+                            <span class="award-item-text">Best Batsman: <strong>1 time</strong></span>
+                        </div>
+                        <div class="award-item">
+                            <span class="award-item-icon">⚡</span>
+                            <span class="award-item-text">Best Bowler: <strong>1 time</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- By Tournament Tab -->
+                <div id="tournament-tab" class="tab-content">
+                    <div class="select-group">
+                        <label class="select-label">Select Tournament</label>
+                        <select class="select-input" onchange="loadTournamentStats(this.value)">
+                            <option value="">Choose tournament...</option>
+                            <option value="1">BIIT Championship 2024</option>
+                            <option value="2">Summer League 2024</option>
+                            <option value="3">Cricket Fest 2023</option>
+                        </select>
+                    </div>
+
+                    <div id="tournament-stats-container">
+                        <div class="coming-soon">
+                            <div class="coming-soon-icon">📊</div>
+                            <h3>Select a Tournament</h3>
+                            <p>Choose a tournament from the dropdown to view your stats</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tournament Screen -->
+            <div id="tournament-screen" class="screen">
+                <!-- Tournament Header -->
+                <div class="award-card" style="background: linear-gradient(135deg, #2563eb, #8b5cf6);">
+                    <div class="award-label">Current Tournament</div>
+                    <div class="award-value">BIIT Championship 2024</div>
+                    <div class="award-subtitle">10 matches played • 4 teams</div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTournamentTab('overview')">Overview</button>
+                    <button class="tab" onclick="switchTournamentTab('batting')">Batting</button>
+                    <button class="tab" onclick="switchTournamentTab('bowling')">Bowling</button>
+                    <button class="tab" onclick="switchTournamentTab('awards')">Awards</button>
+                </div>
+
+                <!-- Overview Tab -->
+                <div id="overview-tab" class="tab-content active">
+                    <!-- Man of Tournament -->
+                    <div class="award-card">
+                        <div class="award-label">🏆 Man of the Tournament</div>
+                        <div class="award-value">Muhammad Haseeb</div>
+                        <div class="award-subtitle">Outstanding all-round performance</div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="quick-stats">
+                        <div class="quick-stat-card">
+                            <div class="quick-stat-icon">🏏</div>
+                            <div class="quick-stat-value">Ahmed Ali</div>
+                            <div class="quick-stat-label">Best Batsman • 456 runs</div>
+                        </div>
+                        <div class="quick-stat-card">
+                            <div class="quick-stat-icon">⚡</div>
+                            <div class="quick-stat-value">Zain Khan</div>
+                            <div class="quick-stat-label">Best Bowler • 23 wickets</div>
+                        </div>
+                        <div class="quick-stat-card">
+                            <div class="quick-stat-icon">🎯</div>
+                            <div class="quick-stat-value">112*</div>
+                            <div class="quick-stat-label">Highest Score • Ali Raza</div>
+                        </div>
+                        <div class="quick-stat-card">
+                            <div class="quick-stat-icon">🔥</div>
+                            <div class="quick-stat-value">5/18</div>
+                            <div class="quick-stat-label">Best Bowling • Usman Shah</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Batting Leaders Tab -->
+                <div id="batting-tab" class="tab-content">
+                    <div class="table-card">
+                        <div class="table-header">🏏 Batting Leaderboard</div>
+                        <div class="table-wrapper">
+                            <table id="batting-table">
+                                <thead>
+                                    <tr>
+                                        <th onclick="sortTable('batting-table', 0)">Rank <span
+                                                class="sort-icon">⇅</span></th>
+                                        <th onclick="sortTable('batting-table', 1)">Player <span
+                                                class="sort-icon">⇅</span></th>
+                                        <th onclick="sortTable('batting-table', 2)">M <span class="sort-icon">⇅</span>
+                                        </th>
+                                        <th onclick="sortTable('batting-table', 3)">Runs <span
+                                                class="sort-icon">⇅</span></th>
+                                        <th onclick="sortTable('batting-table', 4)">Avg <span class="sort-icon">⇅</span>
+                                        </th>
+                                        <th onclick="sortTable('batting-table', 5)">SR <span class="sort-icon">⇅</span>
+                                        </th>
+                                        <th onclick="sortTable('batting-table', 6)">4s <span class="sort-icon">⇅</span>
+                                        </th>
+                                        <th onclick="sortTable('batting-table', 7)">6s <span class="sort-icon">⇅</span>
+                                        </th>
+                                        <th onclick="sortTable('batting-table', 8)">HS <span class="sort-icon">⇅</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="rank-cell">
+                                                <div class="rank-badge rank-1">1</div>
+                                            </div>
+                                        </td>
+                                        <td class="player-name">Ahmed Ali</td>
+                                        <td>10</td>
+                                        <td><strong>456</strong></td>
+                                        <td>45.6</td>
+                                        <td>142.5</td>
+                                        <td>38</td>
+                                        <td>18</td>
+                                        <td>89</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="rank-cell">
+                                                <div class="rank-badge rank-2">2</div>
+                                            </div>
+                                        </td>
+                                        <td class="player-name">Muhammad Haseeb</td>
+                                        <td>10</td>
+                                        <td><strong>423</strong></td>
+                                        <td>42.3</td>
+                                        <td>138.2</td>
+                                        <td>35</td>
+                                        <td>16</td>
+                                        <td>78*</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="rank-cell">
+                                                <div class="rank-badge rank-3">3</div>
+                                            </div>
+                                        </td>
+                                        <td class="player-name">Ali Raza</td>
+                                        <td>9</td>
+                                        <td><strong>398</strong></td>
+                                        <td>44.2</td>
+                                        <td>151.3</td>
+                                        <td>32</td>
+                                        <td>22</td>
+                                        <td>112*</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="rank-cell">
+                                                <div class="rank-badge rank-other">4</div>
+                                            </div>
+                                        </td>
+                                        <td class="player-name">Bilal Khan</td>
+                                        <td>10</td>
+                                        <td><strong>367</strong></td>
+                                        <td>36.7</td>
+                                        <td>129.8</td>
+                                        <td>41</td>
+                                        <td>12</td>
+                                        <td>65</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="rank-cell">
+                                                <div class="rank-badge rank-other">5</div>
+                                            </div>
+                                        </td>
+                                        <td class="player-name">Zain Ahmed</td>
+                                        <td>8</td>
+                                        <td><strong>312</strong></td>
+                                        <td>39.0</td>
+                                        <td>145.3</td>
+                                        <td>28</td>
+                                        <td>15</td>
+                                        <td>72</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bowling Leaders Tab -->
+                <div id="bowling-tab" class="tab-content">
+                    <div class="table-card">
+                        <div class="table-header">⚡ Bowling Leaderboard</div>
+                        <div class="table-wrapper">
+                            <table id="bowling-table">
+                                <thead>
+                                    <tr>
+                                        <th onclick="sortTable('bowling-table', 0)">Rank <span
+                                                class="sort-icon">⇅</span></th>
+                                        <th onclick="sortTable('bowling-table', 1)">Player <span
+                                                class="sort-icon">⇅</span></th>
+                                        <th onclick="sortTable('bowling-table', 2)">M <span class="sort-icon">⇅</span>
+                                        </th>
+                                        <th onclick="sortTable('bowling-table', 3)">Wkts <span
+                                                class="sort-icon">⇅</span></th>
+                                        <th onclick="sortTable('bowling-table', 4)">Runs <span
+                                                class="sort-icon">⇅</span></th>
+                                        <th onclick="sortTable('bowling-table', 5)">Avg <span class="sort-icon">⇅</span>
+                                        </th>
+                                        <th onclick="sortTable('bowling-table', 6)">Econ <span
+                                                class="sort-icon">⇅</span></th>
+                                        <th onclick="sortTable('bowling-table', 7)">Balls <span
+                                                class="sort-icon">⇅</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="rank-cell">
+                                                <div class="rank-badge rank-1">1</div>
+                                            </div>
+                                        </td>
+                                        <td class="player-name">Zain Khan</td>
+                                        <td>10</td>
+                                        <td><strong>23</strong></td>
+                                        <td>412</td>
+                                        <td>17.9</td>
+                                        <td>6.85</td>
+                                        <td>361</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="rank-cell">
+                                                <div class="rank-badge rank-2">2</div>
+                                            </div>
+                                        </td>
+                                        <td class="player-name">Usman Shah</td>
+                                        <td>9</td>
+                                        <td><strong>19</strong></td>
+                                        <td>356</td>
+                                        <td>18.7</td>
+                                        <td>7.12</td>
+                                        <td>300</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="rank-cell">
+                                                <div class="rank-badge rank-3">3</div>
+                                            </div>
+                                        </td>
+                                        <td class="player-name">Hassan Ali</td>
+                                        <td>10</td>
+                                        <td><strong>18</strong></td>
+                                        <td>389</td>
+                                        <td>21.6</td>
+                                        <td>7.45</td>
+                                        <td>314</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="rank-cell">
+                                                <div class="rank-badge rank-other">4</div>
+                                            </div>
+                                        </td>
+                                        <td class="player-name">Fahad Malik</td>
+                                        <td>8</td>
+                                        <td><strong>15</strong></td>
+                                        <td>298</td>
+                                        <td>19.9</td>
+                                        <td>6.92</td>
+                                        <td>258</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="rank-cell">
+                                                <div class="rank-badge rank-other">5</div>
+                                            </div>
+                                        </td>
+                                        <td class="player-name">Saad Ahmed</td>
+                                        <td>9</td>
+                                        <td><strong>14</strong></td>
+                                        <td>312</td>
+                                        <td>22.3</td>
+                                        <td>7.68</td>
+                                        <td>244</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Awards Tab -->
+                <div id="awards-tab" class="tab-content">
+                    <div class="award-list">
+                        <div class="award-list-title">🏆 Man of the Match Awards</div>
+                        <div class="award-item">
+                            <span class="award-item-icon">⭐</span>
+                            <span class="award-item-text"><strong>Match 1:</strong> Ahmed Ali (Team A vs Team B)</span>
+                        </div>
+                        <div class="award-item">
+                            <span class="award-item-icon">⭐</span>
+                            <span class="award-item-text"><strong>Match 2:</strong> Zain Khan (Team C vs Team D)</span>
+                        </div>
+                        <div class="award-item">
+                            <span class="award-item-icon">⭐</span>
+                            <span class="award-item-text"><strong>Match 3:</strong> Muhammad Haseeb (Team A vs Team
+                                C)</span>
+                        </div>
+                        <div class="award-item">
+                            <span class="award-item-icon">⭐</span>
+                            <span class="award-item-text"><strong>Match 4:</strong> Ali Raza (Team B vs Team D)</span>
+                        </div>
+                        <div class="award-item">
+                            <span class="award-item-icon">⭐</span>
+                            <span class="award-item-text"><strong>Match 5:</strong> Usman Shah (Team A vs Team D)</span>
+                        </div>
+                    </div>
+
+                    <div class="award-list">
+                        <div class="award-list-title">🥇 Most Awards</div>
+                        <div class="award-item">
+                            <span class="award-item-icon">🏆</span>
+                            <span class="award-item-text"><strong>Muhammad Haseeb</strong> - 3 Man of the Match
+                                awards</span>
+                        </div>
+                        <div class="award-item">
+                            <span class="award-item-icon">🥈</span>
+                            <span class="award-item-text"><strong>Ahmed Ali</strong> - 2 Man of the Match awards</span>
+                        </div>
+                        <div class="award-item">
+                            <span class="award-item-icon">🥉</span>
+                            <span class="award-item-text"><strong>Zain Khan</strong> - 2 Man of the Match awards</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active">
+                <div class="nav-item-icon">📊</div>
+                <div>Stats</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-item-icon">🏏</div>
+                <div>Matches</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-item-icon">🏆</div>
+                <div>Tournaments</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-item-icon">👤</div>
+                <div>Profile</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Screen switching
+        function switchScreen(screenName) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenName + '-screen').classList.add('active');
+
+            document.querySelectorAll('.screen-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        // Sport switching
+        function switchSport(sport) {
+            document.querySelectorAll('.sport-chip').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Sport-specific logic here
+            console.log('Switched to:', sport);
+        }
+
+        // Player tabs
+        function switchPlayerTab(tabName) {
+            document.querySelectorAll('#player-screen .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.querySelectorAll('#player-screen .tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // Tournament tabs
+        function switchTournamentTab(tabName) {
+            document.querySelectorAll('#tournament-screen .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.querySelectorAll('#tournament-screen .tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // Load tournament stats
+        function loadTournamentStats(tournamentId) {
+            if (!tournamentId) return;
+
+            const container = document.getElementById('tournament-stats-container');
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-icon">🏏</span>
+                        <span class="stat-card-title">Batting Stats - BIIT Championship 2024</span>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Matches</span>
+                            <span class="stat-value">8</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Runs</span>
+                            <span class="stat-value highlight">342</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Strike Rate</span>
+                            <span class="stat-value">145.2</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Highest</span>
+                            <span class="stat-value">89*</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span class="stat-card-icon">⚡</span>
+                        <span class="stat-card-title">Bowling Stats - BIIT Championship 2024</span>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Wickets</span>
+                            <span class="stat-value highlight">7</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Economy</span>
+                            <span class="stat-value">6.85</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Average</span>
+                            <span class="stat-value">22.1</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Best</span>
+                            <span class="stat-value">4/28</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Table sorting
+        function sortTable(tableId, columnIndex) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            // Toggle sort direction
+            const isAscending = table.dataset.sortDir !== 'asc';
+            table.dataset.sortDir = isAscending ? 'asc' : 'desc';
+
+            rows.sort((a, b) => {
+                let aVal = a.cells[columnIndex].textContent.trim();
+                let bVal = b.cells[columnIndex].textContent.trim();
+
+                // Remove * from values like "78*"
+                aVal = aVal.replace('*', '');
+                bVal = bVal.replace('*', '');
+
+                // Try to parse as number
+                const aNum = parseFloat(aVal);
+                const bNum = parseFloat(bVal);
+
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return isAscending ? aNum - bNum : bNum - aNum;
+                }
+
+                // String comparison
+                return isAscending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            });
+
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+
+            // Update rank badges after sorting
+            rows.forEach((row, index) => {
+                const badge = row.querySelector('.rank-badge');
+                if (badge) {
+                    badge.textContent = index + 1;
+                    badge.className = 'rank-badge';
+                    if (index === 0) badge.classList.add('rank-1');
+                    else if (index === 1) badge.classList.add('rank-2');
+                    else if (index === 2) badge.classList.add('rank-3');
+                    else badge.classList.add('rank-other');
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

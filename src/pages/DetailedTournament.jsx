@@ -11,6 +11,7 @@ import TournamentPoints from '../components/TournamentPoints';
 import { getMediaByTournamentId } from '../api/mediaApi';
 import MediaViewer from '../components/MediaViewer';
 import { ImageIcon } from 'lucide-react';
+import TournamentStatsTab from '../components/TournamentStatsTab';
 
 export default function DetailedTournament() {
   const { state } = useLocation();
@@ -127,10 +128,10 @@ export default function DetailedTournament() {
             )}
 
             {activeTab === 'stats' && (
-              <div>
-                <h2 className="text-xl font-bold">Stats</h2>
-                <p className="text-gray-600">(Put stats UI here)</p>
-              </div>
+              <TournamentStatsTab
+                tournamentId={state.tournamentId}
+                sport={state.sport || overview.sport || 'cricket'}
+              />
             )}
             {activeTab === 'Media' && (
               <div className="flex flex-col gap-4">

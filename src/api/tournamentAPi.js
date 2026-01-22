@@ -10,3 +10,4 @@ export const getTournamentOverviewApi = (tournamentId) => {
 export const getTournamentPointsApi = (tournamentId) => {
     return axios.get(`${API_URL}/ptsTable/tournament/${tournamentId}`);
 }
+
