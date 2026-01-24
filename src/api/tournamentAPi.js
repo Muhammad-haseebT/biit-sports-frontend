@@ -11,3 +11,6 @@ export const getTournamentPointsApi = (tournamentId) => {
     return axios.get(`${API_URL}/ptsTable/tournament/${tournamentId}`);
 }
 
+export const updateTournamentAPi = (tournamentId, formData) => {
+    return axios.put(`${API_URL}/tournament/${tournamentId}`, formData);
+};

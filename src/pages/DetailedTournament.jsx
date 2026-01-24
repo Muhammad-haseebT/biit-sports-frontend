@@ -10,8 +10,9 @@ import TournamentTeams from '../components/TournamentTeams';
 import TournamentPoints from '../components/TournamentPoints';
 import { getMediaByTournamentId } from '../api/mediaApi';
 import MediaViewer from '../components/MediaViewer';
-import { ImageIcon } from 'lucide-react';
+import { ImageIcon, Pencil } from 'lucide-react';
 import TournamentStatsTab from '../components/TournamentStatsTab';
+import CreateTournament from './CreateTournament';
 
 export default function DetailedTournament() {
   const { state } = useLocation();
@@ -27,6 +28,7 @@ export default function DetailedTournament() {
   const [mediaPage, setMediaPage] = useState(0);
   const [hasMoreMedia, setHasMoreMedia] = useState(true);
   const [loadingMoreMedia, setLoadingMoreMedia] = useState(false);
+
   const MEDIA_PAGE_SIZE = 6;
 
   useEffect(() => {
@@ -80,6 +82,11 @@ export default function DetailedTournament() {
     setIsViewerOpen(true);
   };
 
+  const handleEditClick = () => {
+    console.log(state.tournamentId);
+    navigate('/create-tournament', { state: { tournamentId: state.tournamentId, type: 'edit' } });
+  };
+
   return (
     <div>
       {/* Header */}
@@ -87,6 +94,9 @@ export default function DetailedTournament() {
         <div className="flex items-center gap-3">
           <ArrowLeft className="text-white cursor-pointer" size={24} onClick={() => navigate(-1)} />
           <h1 className="text-white font-bold text-2xl">{state.tournamentName || 'Tournament'}</h1>
+          <button className="text-white cursor-pointer" onClick={handleEditClick}>
+            <Pencil className="text-white cursor-pointer absolute right-10 top-7" size={24} />
+          </button>
         </div>
       </div>
 
@@ -193,6 +203,7 @@ export default function DetailedTournament() {
           </>
         )}
       </div>
+
       <MediaViewer
         isOpen={isViewerOpen}
         onClose={() => setIsViewerOpen(false)}

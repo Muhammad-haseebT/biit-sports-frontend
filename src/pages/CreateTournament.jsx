@@ -4,9 +4,10 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Banner from '../assets/banner.png';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { createTournamentAPi } from '../api/tournamentAPi';
+import { createTournamentAPi, updateTournamentAPi } from '../api/tournamentAPi';
 
 export default function CreateTournament() {
+
   const today = new Date().toISOString().split('T')[0];
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -23,12 +24,19 @@ export default function CreateTournament() {
     sportsId: state.sportID,
 
   });
+  const type = state.type;
+  const tournamentId = state.tournamentId;
+
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
       console.log('Tournament Data:', formData);
-      await createTournamentAPi(formData);
+      if (type === 'edit') {
+        await updateTournamentAPi(tournamentId, formData);
+      } else {
+        await createTournamentAPi(formData);
+      }
       navigate(-1);
     } catch (error) {
       console.error('Error creating tournament:', error);
@@ -44,7 +52,7 @@ export default function CreateTournament() {
         <div className="bg-red-600 p-6">
           <div className="flex items-center gap-3 mb-4">
             <ArrowLeft className="text-white cursor-pointer" size={24} onClick={() => navigate(-1)} />
-            <h1 className="text-white font-bold text-2xl">Create Tournament</h1>
+            <h1 className="text-white font-bold text-2xl">{type === 'edit' ? 'Edit Tournament' : 'Create Tournament'}</h1>
           </div>
           {/* Image */}
           <div className="w-full h-32 bg-green-700 rounded-lg overflow-hidden">
