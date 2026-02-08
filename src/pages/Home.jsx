@@ -20,11 +20,11 @@ export default function Home() {
     const fetchMatches = async () => {
       setLoading(true);
       try {
-        let response = await getMatchByStatus("LIVE");
+        let response = await getMatchBySportAndStatus("All", "LIVE");
         setLive(response.data);
         setSearchLive(response.data);
 
-        response = await getMatchByStatus("UPCOMING");
+        response = await getMatchBySportAndStatus("All", "UPCOMING");
         setUpcoming(response.data);
         setUsername(JSON.parse(Cookies.get("account")).name);
         setSearchUpcoming(response.data);
@@ -41,13 +41,8 @@ export default function Home() {
     setLoading(true);
     try {
       let live, upcomming;
-      if (sport === "All") {
-        live = await getMatchByStatus("LIVE");
-        upcomming = await getMatchByStatus("UPCOMING");
-      } else {
-        live = await getMatchBySportAndStatus(sport, "LIVE");
-        upcomming = await getMatchBySportAndStatus(sport, "UPCOMING");
-      }
+      live = await getMatchBySportAndStatus(sport, "LIVE");
+      upcomming = await getMatchBySportAndStatus(sport, "UPCOMING");
       console.log(live.data);
       console.log(upcomming.data);
       setLive(live.data);
