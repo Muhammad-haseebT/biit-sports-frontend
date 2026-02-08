@@ -68,8 +68,19 @@ export default function Matches() {
                             title={match.tournamentName}
                             team1={match.team1Name}
                             team2={match.team2Name}
+                            team1Id={match.team1Id}
+                            team2Id={match.team2Id}
                             extra={match.date + " " + match.time}
                             live={match.status === "live" || match.status === "LIVE"}
+                            onClick={() => navigate("/matchDetail", {
+                                state: {
+                                    matchId: match.id,
+                                    status: match.status,
+                                    team1Id: match.team1Id,
+                                    team2Id: match.team2Id,
+                                    battingTeamId: match.team1Id
+                                }
+                            })}
                         />
                     ))}
                 </div>

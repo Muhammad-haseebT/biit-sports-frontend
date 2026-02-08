@@ -35,4 +35,7 @@ export const createTeamRequest = async (object) => {
     return r.data;
 };
 
-
+export const getPlayersByTeamId = async (teamId) => {
+    const r = await axios.get(`${url}/team/${teamId}/players`);
+    return r.data ?? []; // array
+};

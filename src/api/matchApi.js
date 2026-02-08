@@ -25,11 +25,10 @@ export const getMatchScorer = (s) => {
 
 export const getMatchesByTournamentId = async (tournamentId) => {
   const r = await axios.get(`${BASE_URL}/match/tournament/${tournamentId}`);
-  console.log('API Response:', r);
+  console.log("API Response:", r);
   if (r.status === 200) {
     return r.data;
-  }
-  else {
+  } else {
     return [];
   }
 };
@@ -43,4 +42,3 @@ export const updateMatch = async (matchData, matchId) => {
   const r = await axios.put(`${BASE_URL}/match/${matchId}`, matchData);
   return r.data; // object
 };
-
