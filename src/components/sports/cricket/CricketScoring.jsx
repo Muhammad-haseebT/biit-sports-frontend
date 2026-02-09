@@ -6,6 +6,7 @@ import { BiCricketBall } from "react-icons/bi";
 import { handleRuns, handleUndo } from "./scoring";
 import { getPlayersByTeamId } from "../../../api/teamApi";
 import Extras from "./modals/Extras";
+import Out from "./modals/Out";
 
 export default function CricketScoring({
   matchId,
@@ -83,6 +84,7 @@ export default function CricketScoring({
   });
 
   const [extraModal, setExtraModal] = useState(false);
+  const [outModal, setOutModal] = useState(false);
 
   useEffect(() => {
     try {
@@ -179,7 +181,12 @@ export default function CricketScoring({
   }, []);
 
   const handleModalLogic = (receivedData) => {
-    if (receivedData.balls === 0 && receivedData.overs === 0) {
+    if (
+      receivedData.balls === 0 &&
+      receivedData.overs === 0 &&
+      receivedData.wickets === 0 &&
+      receivedData.runs === 0
+    ) {
       setMainModal(false);
       setPlayerSelectModal(true);
       setBowlerModal(false);
@@ -270,6 +277,11 @@ export default function CricketScoring({
       ...prev,
       extraType: extraType,
     }));
+  };
+
+  const handleOutModal = () => {
+    setOutModal(true);
+    setMainModal(false);
   };
 
   return (
@@ -530,7 +542,12 @@ export default function CricketScoring({
                 >
                   UNDO
                 </button>
-                <button className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20">
+                <button
+                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20"
+                  onClick={() => {
+                    handleOutModal();
+                  }}
+                >
                   Out
                 </button>
               </div>
@@ -619,6 +636,22 @@ export default function CricketScoring({
             setExtraModal={setExtraModal}
             setData={setData}
             socket={socketRef.current}
+          />
+        )}
+
+        {outModal && (
+          <Out
+            mainModal={setMainModal}
+            outModal={setOutModal}
+            setData={setData}
+            socket={socketRef.current}
+            strikerId={strikerId}
+            nonStrikerId={nonStrikerId}
+            team1Players={team1Players}
+            team2Players={team2Players}
+            battingTeamId={battingTeamId}
+            team1Id={team1Id}
+            team2Id={team2Id}
           />
         )}
       </div>
