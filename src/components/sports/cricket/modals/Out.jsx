@@ -81,7 +81,7 @@ export default function Out({
     });
   };
   return (
-    <div className="bg-red-600 p-3 h-full mt-4.5 ">
+    <div className="bg-red-600 p-3 h-full mt-3 ">
       {aModal && (
         <div className="flex justify-between">
           <button
@@ -138,7 +138,7 @@ export default function Out({
               setCaughtModal(false);
               setAModal(true);
             }}
-            className="bg-white text-red-600 p-1 rounded-lg text-xl h-10  mb-5 absolute bottom-70 right-10"
+            className="bg-white text-red-600 p-1 rounded-lg text-xl h-10  mb-3 absolute bottom-70 right-10"
           >
             Close
           </button>
@@ -146,7 +146,7 @@ export default function Out({
           <select
             name="fielder"
             id="fielder"
-            className="bg-white text-red-600 p-1 rounded-lg text-2xl h-18 w-full mb-1 mt-10"
+            className="bg-white text-red-600 p-1 rounded-lg text-2xl h-18 w-full mb-1 mt-3"
             onChange={(e) => setFielderId(e.target.value)}
           >
             <option value="">Select Fielder</option>
@@ -166,7 +166,7 @@ export default function Out({
           <select
             name="newBatsman"
             id="newBatsman"
-            className="bg-white text-red-600 p-1 rounded-lg text-2xl h-18 w-full mb-5"
+            className="bg-white text-red-600 p-1 rounded-lg text-2xl h-18 w-full mb-3"
             onChange={(e) => setNewBatsmanId(e.target.value)}
           >
             <option value="">Select New Batsman</option>

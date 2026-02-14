@@ -31,7 +31,7 @@ export default function Extras({
   };
 
   return (
-    <div className="bg-red-600 p-3 h-89.5 mt-5">
+    <div className="bg-red-600 p-3 h-74.5 mt-3">
       <div className="flex justify-between">
         <button
           onClick={() => {

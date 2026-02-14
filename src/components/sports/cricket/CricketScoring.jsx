@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 import { ArrowLeft, Dot, Camera, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BiCricketBall } from "react-icons/bi";
-import { handleRuns, handleUndo } from "./scoring";
+import { handleRuns, handleUndo, handleEndInnings } from "./scoring";
 import { getPlayersByTeamId } from "../../../api/teamApi";
 import Extras from "./modals/Extras";
 import Out from "./modals/Out";
@@ -45,6 +45,7 @@ export default function CricketScoring({
   const [playerSelectModal, setPlayerSelectModal] = useState(false);
   const [bowlerModal, setBowlerModal] = useState(false);
   const [batsmanModal, setBatsmanModal] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [data, setData] = useState({
     runs: 0,
@@ -81,10 +82,12 @@ export default function CricketScoring({
     batsman1Stats: null,
     batsman2Stats: null,
     bowlerStats: null,
+    cricketBalls: null,
   });
 
   const [extraModal, setExtraModal] = useState(false);
   const [outModal, setOutModal] = useState(false);
+  const [end_InningsModal, setEnd_InningsModal] = useState(false);
 
   useEffect(() => {
     try {
@@ -92,6 +95,12 @@ export default function CricketScoring({
       if (account) {
         const parsedUser = JSON.parse(account);
         setUser(parsedUser);
+        if (
+          parsedUser.role == "ADMIN" ||
+          parsedUser.username == match.scorerId
+        ) {
+          setIsAdmin(true);
+        }
       }
     } catch (error) {
       console.error("Error parsing user cookie:", error);
@@ -99,16 +108,22 @@ export default function CricketScoring({
   }, []);
 
   const fetchTeamPlayers = async () => {
-    const team1Players = await getPlayersByTeamId(battingTeamId);
-    if (team1Id == battingTeamId) {
-      const team2Players = await getPlayersByTeamId(team2Id);
-      setTeam1Players(team1Players);
-      setTeam2Players(team2Players);
+    let team1Players;
+    let team2Players;
+    if (data.firstInnings) {
+      team1Players = await getPlayersByTeamId(battingTeamId);
+      team2Players = await getPlayersByTeamId(
+        battingTeamId == team1Id ? team2Id : team1Id,
+      );
     } else {
-      const team2Players = await getPlayersByTeamId(team1Id);
-      setTeam1Players(team1Players);
-      setTeam2Players(team2Players);
+      team1Players = await getPlayersByTeamId(
+        battingTeamId == team1Id ? team2Id : team1Id,
+      );
+      team2Players = await getPlayersByTeamId(battingTeamId);
     }
+
+    setTeam1Players(team1Players);
+    setTeam2Players(team2Players);
   };
 
   // ✅ Normalize: rows fixed, sirf batsmanId (star) change hota hai
@@ -181,6 +196,15 @@ export default function CricketScoring({
   }, []);
 
   const handleModalLogic = (receivedData) => {
+    if (receivedData.comment == "End_Innings") {
+      console.log("End Innings");
+      setEnd_InningsModal(true);
+      setMainModal(false);
+      setPlayerSelectModal(false);
+      setBowlerModal(false);
+      setBatsmanModal(false);
+      return;
+    }
     if (
       receivedData.balls === 0 &&
       receivedData.overs === 0 &&
@@ -283,6 +307,13 @@ export default function CricketScoring({
     setOutModal(true);
     setMainModal(false);
   };
+  var a = {
+    wicket: "W",
+    bye: "B",
+    legbye: "LB",
+    noball: "NB",
+    wide: "WD",
+  };
 
   return (
     <>
@@ -325,7 +356,11 @@ export default function CricketScoring({
         {activeTab == "Scoring" && (
           <div>
             <h1 className="text-3xl font-semibold text-red-600">
-              {battingTeamName}
+              {data.firstInnings
+                ? battingTeamName
+                : battingTeamName == team1Name
+                  ? team2Name
+                  : team1Name}
             </h1>
             <h2 className="text-xl font-semibold mt-2">
               {data.firstInnings ? "First Innings" : "Second Innings"}
@@ -342,7 +377,7 @@ export default function CricketScoring({
                 Overs {data.overs}.{data.balls}
               </h3>
               <h3 className="text-xl font-semibold">
-                CRR {data.crr != "NaN" ? data.crr : "0"}
+                CRR {data.crr != "NaN" ? data.crr.toFixed(2) : "0"}
               </h3>
             </span>
             <hr />
@@ -457,10 +492,26 @@ export default function CricketScoring({
           </div>
         )}
 
-        {activeTab == "Scoring" && mainModal && user.role == "ADMIN" && (
-          <div className="mt-5">
-            <div className="bg-red-600 p-3 h-89.5">
-              <div className="grid grid-cols-5 space-y-2 space-x-2 mt-5">
+        <span className="flex flex-wrap gap-2">
+          {data.cricketBalls?.map((ball, index) => (
+            <span
+              key={index}
+              className={`${ball.eventType == "wicket" ? "bg-red-600" : ball.eventType == "bye" || ball.eventType == "legbye" || ball.eventType == "noball" || ball.eventType == "wide" ? "bg-blue-600" : ball.eventType == "run" ? "bg-green-600" : "bg-yellow-600"} p-2 rounded-full text-white w-15 h-15 flex items-center justify-center `}
+            >
+              {ball.eventType != "run" && ball.eventType != "boundary"
+                ? ball.event
+                : ""}{" "}
+              {ball.eventType != "run" && ball.eventType != "boundary"
+                ? a[ball.eventType]
+                : ball.event}
+            </span>
+          ))}
+        </span>
+
+        {activeTab == "Scoring" && mainModal && isAdmin && (
+          <div className="mt-3">
+            <div className="bg-red-600 p-3 h-74.5">
+              <div className="grid grid-cols-5 space-y-2 space-x-2 mt-4">
                 {["1", "2", "3", "4", "6"].map((run) => (
                   <button
                     key={run}
@@ -653,6 +704,38 @@ export default function CricketScoring({
             team1Id={team1Id}
             team2Id={team2Id}
           />
+        )}
+
+        {end_InningsModal && (
+          <div className="mt-5">
+            <div className="bg-red-600 p-3 h-89.5">
+              <div className="flex flex-col space-y-2 space-x-2 mt-5">
+                <button
+                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
+                  onClick={() => {
+                    socketRef.current.send(
+                      JSON.stringify(handleEndInnings(data)),
+                    );
+                    setEndInningsModal(false);
+                    setMainModal(true);
+                  }}
+                >
+                  End Innings
+                </button>
+                <button
+                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
+                  onClick={() => {
+                    socketRef.current.send(JSON.stringify(handleUndo(data)));
+                    setData((prev) => ({ ...prev, eventType: "" }));
+                    setEndInningsModal(false);
+                    setMainModal(true);
+                  }}
+                >
+                  Undo
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </>
