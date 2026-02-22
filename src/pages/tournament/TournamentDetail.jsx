@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getTournamentsBySeason } from "../api/seasonApi";
-import { getMediaBySeasonId } from "../api/mediaApi";
-import TournamentDetailComponent from "../components/TournamentDetailComponent";
+import { getTournamentsBySeason } from "../../api/seasonApi";
+import { getMediaBySeasonId } from "../../api/mediaApi";
+import TournamentDetailComponent from "../../components/features/tournament/TournamentDetailComponent";
 
+import MediaViewer from "../../components/common/MediaViewer";
 export default function TournamentDetail() {
   const navigate = useNavigate();
   const { state } = useLocation();
@@ -37,11 +38,15 @@ export default function TournamentDetail() {
 
     setLoadingMoreMedia(true);
     try {
-      const response = await getMediaBySeasonId(state.seasonID, mediaPage, MEDIA_PAGE_SIZE);
+      const response = await getMediaBySeasonId(
+        state.seasonID,
+        mediaPage,
+        MEDIA_PAGE_SIZE,
+      );
 
       if (response && response.length > 0) {
-        setMediaData(prev => [...prev, ...response]);
-        setMediaPage(prev => prev + 1);
+        setMediaData((prev) => [...prev, ...response]);
+        setMediaPage((prev) => prev + 1);
         if (response.length < MEDIA_PAGE_SIZE) {
           setHasMoreMedia(false);
         }
@@ -57,7 +62,6 @@ export default function TournamentDetail() {
   };
 
   return (
-
     <TournamentDetailComponent
       option="season"
       navigate={navigate}
@@ -66,10 +70,9 @@ export default function TournamentDetail() {
       seasonID={state.seasonID}
       loading={loading}
       mediaData={mediaData}
-      hasMore={hasMoreMedia}           // Changed from hasMoreMedia
-      loadingMore={loadingMoreMedia}   // Changed from loadingMoreMedia
-      onLoadMore={loadMoreMedia}       // Changed from loadMoreMedia
+      hasMore={hasMoreMedia} // Changed from hasMoreMedia
+      loadingMore={loadingMoreMedia} // Changed from loadingMoreMedia
+      onLoadMore={loadMoreMedia} // Changed from loadMoreMedia
     />
-
   );
 }

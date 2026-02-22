@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import { getSeasons } from "../api/seasonApi";
+import { getSeasons } from "../../api/seasonApi";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { ArrowLeft, Plus } from "lucide-react";
-import { createSeason } from "../api/seasonApi";
+import { createSeason } from "../../api/seasonApi";
 import { ToastContainer, toast } from "react-toastify";
-import LoadingSpinner from "../components/LoadingSpinner";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Cookies from "js-cookie";
 export default function Seasons() {
   const navigate = useNavigate();
@@ -78,7 +78,9 @@ export default function Seasons() {
               key={index}
               className="group bg-white rounded-xl shadow-md p-3 flex items-center justify-center border border-red-300 hover:bg-red-500 hover:scale-105 transition-all duration-300 cursor-pointer w-4/5  mb-4"
               onClick={() => {
-                navigate("/tournament-detail", { state: { seasonID: season.id, seasonName: season.name } });
+                navigate("/tournament-detail", {
+                  state: { seasonID: season.id, seasonName: season.name },
+                });
               }}
             >
               <span className="text-lg font-bold text-red-600 group-hover:text-white text-center transition-colors duration-300">

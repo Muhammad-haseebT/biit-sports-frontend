@@ -24,12 +24,14 @@ export const getMatchScorer = (s) => {
 };
 
 export const getMatchesByTournamentId = async (tournamentId) => {
-  const r = await axios.get(`${BASE_URL}/match/tournament/${tournamentId}`);
-  console.log("API Response:", r);
-  if (r.status === 200) {
+  try {
+    const r = await axios.get(`${BASE_URL}/match/tournament/${tournamentId}`);
     return r.data;
-  } else {
-    return [];
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      return []; // silently ignore 404
+    }
+    throw error; // rethrow other errors
   }
 };
 
@@ -41,4 +43,15 @@ export const createMatch = async (matchData) => {
 export const updateMatch = async (matchData, matchId) => {
   const r = await axios.put(`${BASE_URL}/match/${matchId}`, matchData);
   return r.data; // object
+};
+
+export const getScoreCard = async (matchId, teamId, opponentTeamId) => {
+  const r = await axios.get(
+    `${BASE_URL}/match/scoreCard/${matchId}/${teamId}/${opponentTeamId}`,
+  );
+  return r.data;
+};
+export const startmatch = async (matchId, data) => {
+  const r = await axios.put(`${BASE_URL}/match/start/${matchId}`, data);
+  return r.data;
 };

@@ -244,13 +244,13 @@ export default function Out({
             <option value="">Select Out Player</option>
             <option value={strikerId}>
               {battingTeamId == team1Id
-                ? team1Players.find((item) => item.id == strikerId).name
-                : team2Players.find((item) => item.id == strikerId).name}
+                ? team1Players.find((item) => item.id == strikerId)?.name
+                : team2Players.find((item) => item.id == strikerId)?.name}
             </option>
             <option value={nonStrikerId}>
               {battingTeamId == team1Id
-                ? team1Players.find((item) => item.id == nonStrikerId).name
-                : team2Players.find((item) => item.id == nonStrikerId).name}
+                ? team1Players.find((item) => item.id == nonStrikerId)?.name
+                : team2Players.find((item) => item.id == nonStrikerId)?.name}
             </option>
           </select>
           <br />

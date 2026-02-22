@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
-import SportFilter from "../components/SportFilter";
-import MatchCard from "../components/MatchCard";
-import LoadingSpinner from "../components/LoadingSpinner";
+import Navbar from "../components/layout/Navbar";
+import SportFilter from "../components/common/SportFilter";
+import MatchCard from "../components/common/MatchCard";
+import LoadingSpinner from "../components/common/LoadingSpinner";
 import { getMatchByStatus, getMatchBySportAndStatus } from "../api/matchApi";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";

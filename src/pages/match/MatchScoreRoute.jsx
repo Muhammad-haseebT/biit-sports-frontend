@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import Swal from "sweetalert2";
+import { startmatch } from "../../api/matchApi";
 import {
   Trophy,
   MapPin,
@@ -13,7 +14,7 @@ import {
   ChevronRight,
   Zap,
 } from "lucide-react";
-import CricketScoring from "../components/sports/cricket/CricketScoring";
+import CricketScoring from "../../components/sports/cricket/CricketScoring";
 
 export default function MatchScoreRoute() {
   const location = useLocation();
@@ -34,6 +35,7 @@ export default function MatchScoreRoute() {
   } = location.state || {};
 
   const [tossWinner, setTossWinner] = useState(null);
+  const [tossWinnerId, setTossWinnerId] = useState(null);
   const [decision, setDecision] = useState(null);
 
   const sports = [
@@ -48,6 +50,7 @@ export default function MatchScoreRoute() {
   ];
 
   const isCricket = sports[sportId - 1] === "Cricket";
+  const [scorerUsername, setScorerUsername] = useState("");
 
   if (!location.state) {
     return (
@@ -57,6 +60,15 @@ export default function MatchScoreRoute() {
     );
   }
 
+  const handleStartMatch = () => {
+    startmatch(matchId, {
+      tossWinnerId,
+      decision,
+      scorerId: scorerUsername,
+      sportId,
+      inningsId,
+    });
+  };
   return (
     <div className="h-screen w-full bg-[#f8f9fa] dark:bg-[#0f172a] text-[#1e293b] dark:text-[#f1f5f9] overflow-hidden flex flex-col">
       {isCricket && status === "LIVE" && (
@@ -66,7 +78,7 @@ export default function MatchScoreRoute() {
             status={status}
             team1Id={team1Id}
             team2Id={team2Id}
-            battingTeamId={battingTeamId}
+            bTeamId={battingTeamId}
             team1Name={team1Name}
             team2Name={team2Name}
             battingTeamName={battingTeamName}
@@ -154,7 +166,11 @@ export default function MatchScoreRoute() {
                 {[team1Name, team2Name].map((team, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setTossWinner(team)}
+                    onClick={() => {
+                      setTossWinnerId(team == team1Name ? team1Id : team2Id);
+                      console.log(tossWinnerId);
+                      setTossWinner(team);
+                    }}
                     className={`flex-1 py-3 px-2 rounded-2xl text-xs font-bold transition-all duration-300 border-2 ${
                       tossWinner === team
                         ? "bg-red-600 border-red-600 text-white shadow-lg shadow-red-500/30"
@@ -192,6 +208,18 @@ export default function MatchScoreRoute() {
               </div>
             </div>
           </div>
+          {/* scorer username */}
+          <div className="space-y-2">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <User size={14} className="text-green-500" /> Scorer Username
+            </label>
+            <input
+              type="text"
+              value={scorerUsername}
+              onChange={(e) => setScorerUsername(e.target.value)}
+              className="w-full py-3 px-4 rounded-2xl text-sm font-bold transition-all duration-300 border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+            />
+          </div>
 
           {/* Bottom Actions */}
           <div className="pt-2 flex flex-col gap-2">
@@ -202,6 +230,9 @@ export default function MatchScoreRoute() {
                   ? "bg-red-600 text-white shadow-xl shadow-red-500/40 hover:-translate-y-1 active:scale-95"
                   : "bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed"
               }`}
+              onClick={() => {
+                handleStartMatch();
+              }}
             >
               Start Match <ChevronRight size={18} />
             </button>

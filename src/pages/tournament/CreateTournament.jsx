@@ -1,9 +1,13 @@
 import React, { useState } from "react";
+import { add_Sports_To_Season } from "../../api/seasonApi";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import Banner from "../assets/banner.png";
-import LoadingSpinner from "../components/LoadingSpinner";
-import { createTournamentAPi, updateTournamentAPi } from "../api/tournamentAPi";
+import Banner from "../../assets/banner.png";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import {
+  createTournamentAPi,
+  updateTournamentAPi,
+} from "../../api/tournamentAPi";
 
 export default function CreateTournament() {
   const today = new Date().toISOString().split("T")[0];

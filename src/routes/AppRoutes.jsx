@@ -1,23 +1,22 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
 // Pages
-import Welcome from "../pages/Welcome";
-import Login from "../pages/Login";
+import Welcome from "../pages/auth/Welcome";
+import Login from "../pages/auth/Login";
 import Home from "../pages/Home";
-import Sports from "../pages/Sports";
-import Seasons from "../pages/Seasons";
-import Matches from "../pages/Matches";
-import ManageAccounts from "../pages/ManageAccounts";
-import MyScorer from "../pages/MyScorer";
-import DetailedTournament from "../pages/DetailedTournament";
-import CreateTournament from "../pages/CreateTournament";
-import SportSelection from "../pages/SportSelection";
-import TournamentDetail from "../pages/TournamentDetail";
-import SportTournamentDetail from "../pages/sport_tournamentDetail";
-import Request from "../pages/Request";
-import Stats from "../pages/Stats";
-import MatchScoreRoute from "../pages/MatchScoreRoute";
-
+import Sports from "../pages/sport/Sports";
+import Seasons from "../pages/seasons/Seasons";
+import Matches from "../pages/match/Matches";
+import ManageAccounts from "../pages/admin/ManageAccounts";
+import MyScorer from "../pages/match/MyScorer";
+import DetailedTournament from "../pages/tournament/DetailedTournament";
+import CreateTournament from "../pages/tournament/CreateTournament";
+import SportSelection from "../pages/sport/SportSelection";
+import TournamentDetail from "../pages/tournament/TournamentDetail";
+import SportTournamentDetail from "../pages/tournament/sport_tournamentDetail";
+import Request from "../pages/requests/Request";
+import Stats from "../pages/stats/Stats";
+import MatchScoreRoute from "../pages/match/MatchScoreRoute";
 
 function AppRoutes() {
   return (
@@ -43,7 +42,10 @@ function AppRoutes() {
       <Route path="/detailed-tournament" element={<DetailedTournament />} />
       <Route path="/create-tournament" element={<CreateTournament />} />
       <Route path="/sports-selection" element={<SportSelection />} />
-      <Route path="/sport-tournament-detail" element={<SportTournamentDetail />} />
+      <Route
+        path="/sport-tournament-detail"
+        element={<SportTournamentDetail />}
+      />
       <Route path="/stats" element={<Stats />} />
       <Route path="/request" element={<Request />} />
       <Route path="/match" element={<MatchScoreRoute />} />

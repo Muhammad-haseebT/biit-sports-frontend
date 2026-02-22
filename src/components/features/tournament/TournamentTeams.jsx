@@ -11,13 +11,13 @@ import {
   getTeamsByTournamentId,
   getMyTeamByTournamentIdAndPlayerId,
   createTeam,
-} from "../api/teamApi";
-import { GetAllPlayers } from "../api/accountsApi";
+} from "../../../api/teamApi";
+import { GetAllPlayers } from "../../../api/accountsApi";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Loading from "../components/LoadingSpinner";
-import { createPlayerRequest } from "../api/playerRequestApi";
-import { createTeamRequest } from "../api/teamApi";
+import Loading from "../../common/LoadingSpinner";
+import { createPlayerRequest } from "../../../api/playerRequestApi";
+import { createTeamRequest } from "../../../api/teamApi";
 
 export const PlayerRow = ({ player }) => (
   <div className="bg-gray-100 rounded-xl p-3 flex items-center justify-between border border-red-600">

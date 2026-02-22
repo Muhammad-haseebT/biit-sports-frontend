@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { login } from "../api/authApi";
+import { login } from "../../api/authApi";
 import Cookies from "js-cookie";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -28,7 +28,7 @@ function Login() {
       }
     } catch (err) {
       toast.error(
-        err.response?.data?.message || "Login failed! Check your credentials."
+        err.response?.data?.message || "Login failed! Check your credentials.",
       );
     }
   };

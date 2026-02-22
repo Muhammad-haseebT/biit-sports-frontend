@@ -1,12 +1,12 @@
-import { getAccounts } from "../api/accountsApi";
+import { getAccounts } from "../../api/accountsApi";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
-import AccountForm from "../components/UpdateAccount";
+import AccountForm from "../../components/features/accounts/UpdateAccount";
 import { ToastContainer } from "react-toastify";
-import LoadingSpinner from "../components/LoadingSpinner";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Swal from "sweetalert2";
-import { deleteAccount } from "../api/accountsApi";
+import { deleteAccount } from "../../api/accountsApi";
 
 export default function ManageAccounts() {
   const navigate = useNavigate();
@@ -37,8 +37,8 @@ export default function ManageAccounts() {
   const handleSearch = (e) => {
     setFilteredAccounts(
       accounts.filter((account) =>
-        account.username.toLowerCase().includes(e.target.value.toLowerCase())
-      )
+        account.username.toLowerCase().includes(e.target.value.toLowerCase()),
+      ),
     );
   };
 
@@ -76,7 +76,7 @@ export default function ManageAccounts() {
         // List se remove karo
         setAccounts(accounts.filter((acc) => acc.id !== account.id));
         setFilteredAccounts(
-          filteredAccounts.filter((acc) => acc.id !== account.id)
+          filteredAccounts.filter((acc) => acc.id !== account.id),
         );
       } catch (err) {
         console.error(err);
@@ -202,8 +202,9 @@ export default function ManageAccounts() {
       {showUpdate && selectedAccount && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 transition-opacity duration-300">
           <div
-            className={`bg-white p-6 rounded shadow-lg w-96 transform transition-all duration-300 ease-out relative ${showUpdate ? "scale-100 opacity-100" : "scale-95 opacity-0"
-              }`}
+            className={`bg-white p-6 rounded shadow-lg w-96 transform transition-all duration-300 ease-out relative ${
+              showUpdate ? "scale-100 opacity-100" : "scale-95 opacity-0"
+            }`}
           >
             <button
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl font-bold"
@@ -225,8 +226,9 @@ export default function ManageAccounts() {
       {showAdd && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 transition-opacity duration-300">
           <div
-            className={`bg-white p-6 rounded shadow-lg w-96 transform transition-all duration-300 ease-out relative ${showAdd ? "scale-100 opacity-100" : "scale-95 opacity-0"
-              }`}
+            className={`bg-white p-6 rounded shadow-lg w-96 transform transition-all duration-300 ease-out relative ${
+              showAdd ? "scale-100 opacity-100" : "scale-95 opacity-0"
+            }`}
           >
             <button
               className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl font-bold"

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import DrawerMenu from "./DrawerMenu";
-import logo from "../assets/logo.png"; // apna logo yahan daal do
+import logo from "../../assets/logo.png"; // apna logo yahan daal do
 import { useNavigate } from "react-router-dom";
 
 export default function Navbar({ username, onSearch }) {
@@ -11,9 +11,11 @@ export default function Navbar({ username, onSearch }) {
     <>
       <nav className="bg-white shadow-md px-4 py-2 flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate("/home")}>
+        <div
+          className="flex items-center space-x-2 cursor-pointer"
+          onClick={() => navigate("/home")}
+        >
           <img src={logo} alt="Logo" className="h-10 w-10 object-contain" />
-
         </div>
 
         {/* Search bar + icon */}

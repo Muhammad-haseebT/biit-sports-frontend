@@ -7,13 +7,14 @@ import { handleRuns, handleUndo, handleEndInnings } from "./scoring";
 import { getPlayersByTeamId } from "../../../api/teamApi";
 import Extras from "./modals/Extras";
 import Out from "./modals/Out";
+import { getScoreCard } from "../../../api/matchApi";
 
 export default function CricketScoring({
   matchId,
   status,
   team1Id,
   team2Id,
-  battingTeamId,
+  bTeamId,
   team1Name,
   team2Name,
   battingTeamName,
@@ -23,7 +24,7 @@ export default function CricketScoring({
   const [match, setMatch] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const nav = ["Scoring", "Scoreboard", "Balls", "Info"];
+  const nav = ["Scoring", "Scorecard", "Balls", "Info"];
   const [activeTab, setActiveTab] = useState("Scoring");
 
   const [user, setUser] = useState("");
@@ -88,6 +89,10 @@ export default function CricketScoring({
   const [extraModal, setExtraModal] = useState(false);
   const [outModal, setOutModal] = useState(false);
   const [end_InningsModal, setEnd_InningsModal] = useState(false);
+  const [team1Scorecard, setTeam1Scorecard] = useState([]);
+  const [team2Scorecard, setTeam2Scorecard] = useState([]);
+  const [cardFor, setCardFor] = useState(1);
+  const [battingTeamId, setBattingTeamId] = useState(bTeamId);
 
   useEffect(() => {
     try {
@@ -111,15 +116,15 @@ export default function CricketScoring({
     let team1Players;
     let team2Players;
     if (data.firstInnings) {
-      team1Players = await getPlayersByTeamId(battingTeamId);
+      team1Players = await getPlayersByTeamId(bTeamId);
       team2Players = await getPlayersByTeamId(
-        battingTeamId == team1Id ? team2Id : team1Id,
+        bTeamId == team1Id ? team2Id : team1Id,
       );
     } else {
       team1Players = await getPlayersByTeamId(
-        battingTeamId == team1Id ? team2Id : team1Id,
+        bTeamId == team1Id ? team2Id : team1Id,
       );
-      team2Players = await getPlayersByTeamId(battingTeamId);
+      team2Players = await getPlayersByTeamId(bTeamId);
     }
 
     setTeam1Players(team1Players);
@@ -158,6 +163,7 @@ export default function CricketScoring({
   // WebSocket setup
   useEffect(() => {
     fetchTeamPlayers();
+    setBattingTeamId(bTeamId);
 
     if (status === "LIVE") {
       const socketUrl = import.meta.env.VITE_SOCKET_URL + "?matchId=" + matchId;
@@ -232,6 +238,10 @@ export default function CricketScoring({
       setBowlerModal(true);
     }
     if (receivedData.firstInnings) {
+      console.log("First Innings");
+      console.log(battingTeamId);
+      console.log(team1Id);
+      console.log(team2Id);
       if (battingTeamId == team1Id) {
         setBattingTeamId(team2Id);
       } else {
@@ -315,6 +325,17 @@ export default function CricketScoring({
     wide: "WD",
   };
 
+  const fetchScorecard = async (team) => {
+    let team1Scorecard;
+    if (team == 1) {
+      team1Scorecard = await getScoreCard(matchId, team1Id, team2Id);
+    } else {
+      team1Scorecard = await getScoreCard(matchId, team2Id, team1Id);
+    }
+    setTeam1Scorecard(team1Scorecard);
+    console.log(team1Scorecard);
+    console.log("sdad");
+  };
   return (
     <>
       <div className="flex items-center bg-red-600 h-16 ">
@@ -334,7 +355,13 @@ export default function CricketScoring({
                 <button
                   key={item}
                   className="mx-2 bg-red-600 p-1 rounded-lg text-white w-32 font-semibold text-xl"
-                  onClick={() => setActiveTab(item)}
+                  onClick={() => {
+                    setActiveTab(item);
+                    console.log(item);
+                    if (item == "Scorecard") {
+                      fetchScorecard(1);
+                    }
+                  }}
                 >
                   {item}
                 </button>
@@ -343,7 +370,13 @@ export default function CricketScoring({
               <button
                 key={item}
                 className="mx-2 bg-red-600 p-1 rounded-lg text-white w-32 font-semibold text-xl"
-                onClick={() => setActiveTab(item)}
+                onClick={() => {
+                  setActiveTab(item);
+                  console.log(item);
+                  if (item == "Scorecard") {
+                    fetchScorecard(1);
+                  }
+                }}
               >
                 {item}
               </button>
@@ -491,23 +524,23 @@ export default function CricketScoring({
             </div>
           </div>
         )}
-
-        <span className="flex flex-wrap gap-2">
-          {data.cricketBalls?.map((ball, index) => (
-            <span
-              key={index}
-              className={`${ball.eventType == "wicket" ? "bg-red-600" : ball.eventType == "bye" || ball.eventType == "legbye" || ball.eventType == "noball" || ball.eventType == "wide" ? "bg-blue-600" : ball.eventType == "run" ? "bg-green-600" : "bg-yellow-600"} p-2 rounded-full text-white w-15 h-15 flex items-center justify-center `}
-            >
-              {ball.eventType != "run" && ball.eventType != "boundary"
-                ? ball.event
-                : ""}{" "}
-              {ball.eventType != "run" && ball.eventType != "boundary"
-                ? a[ball.eventType]
-                : ball.event}
-            </span>
-          ))}
-        </span>
-
+        {activeTab == "Scoring" && (
+          <span className="flex flex-wrap gap-2">
+            {data.cricketBalls?.map((ball, index) => (
+              <span
+                key={index}
+                className={`${ball.eventType == "wicket" ? "bg-red-600" : ball.eventType == "bye" || ball.eventType == "legbye" || ball.eventType == "noball" || ball.eventType == "wide" ? "bg-blue-600" : ball.eventType == "run" ? "bg-green-600" : "bg-yellow-600"} p-2 rounded-full text-white w-15 h-15 flex items-center justify-center `}
+              >
+                {ball.eventType != "run" && ball.eventType != "boundary"
+                  ? ball.event
+                  : ""}{" "}
+                {ball.eventType != "run" && ball.eventType != "boundary"
+                  ? a[ball.eventType]
+                  : ball.event}
+              </span>
+            ))}
+          </span>
+        )}
         {activeTab == "Scoring" && mainModal && isAdmin && (
           <div className="mt-3">
             <div className="bg-red-600 p-3 h-74.5">
@@ -605,8 +638,7 @@ export default function CricketScoring({
             </div>
           </div>
         )}
-
-        {playerSelectModal && (
+        {activeTab == "Scoring" && playerSelectModal && (
           <div className="mt-5">
             <div className="bg-red-600 p-3 h-89.5">
               <div className="flex flex-col space-y-2 space-x-2 mt-5">
@@ -615,33 +647,51 @@ export default function CricketScoring({
                   className="p-2 rounded-lg h-20 text-2xl bg-white text-red-600"
                 >
                   <option>Select Batsman 1</option>
-                  {team1Players.map((player) => (
-                    <option key={player.id} value={player.id}>
-                      {player.name}
-                    </option>
-                  ))}
+                  {battingTeamId == team1Id && data.firstInnings
+                    ? team2Players.map((player) => (
+                        <option key={player.id} value={player.id}>
+                          {player.name}
+                        </option>
+                      ))
+                    : team1Players.map((player) => (
+                        <option key={player.id} value={player.id}>
+                          {player.name}
+                        </option>
+                      ))}
                 </select>
                 <select
                   onChange={(e) => setNonStrikerId(e.target.value)}
                   className="p-2 rounded-lg h-20 text-2xl bg-white text-red-600"
                 >
                   <option>Select Batsman 2</option>
-                  {team1Players.map((player) => (
-                    <option key={player.id} value={player.id}>
-                      {player.name}
-                    </option>
-                  ))}
+                  {battingTeamId == team1Id && data.firstInnings
+                    ? team2Players.map((player) => (
+                        <option key={player.id} value={player.id}>
+                          {player.name}
+                        </option>
+                      ))
+                    : team1Players.map((player) => (
+                        <option key={player.id} value={player.id}>
+                          {player.name}
+                        </option>
+                      ))}
                 </select>
                 <select
                   onChange={(e) => setBowlerId(e.target.value)}
                   className="p-2 rounded-lg h-20 text-2xl bg-white text-red-600"
                 >
                   <option>Select Bowler</option>
-                  {team2Players.map((player) => (
-                    <option key={player.id} value={player.id}>
-                      {player.name}
-                    </option>
-                  ))}
+                  {battingTeamId == team1Id && !data.firstInnings
+                    ? team1Players.map((player) => (
+                        <option key={player.id} value={player.id}>
+                          {player.name}
+                        </option>
+                      ))
+                    : team2Players.map((player) => (
+                        <option key={player.id} value={player.id}>
+                          {player.name}
+                        </option>
+                      ))}
                 </select>
                 <button
                   className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
@@ -653,8 +703,7 @@ export default function CricketScoring({
             </div>
           </div>
         )}
-
-        {bowlerModal && (
+        {activeTab == "Scoring" && bowlerModal && (
           <div className="mt-5">
             <div className="bg-red-600 p-3 h-89.5">
               <div className="flex flex-col space-y-2 space-x-2 mt-5">
@@ -679,8 +728,7 @@ export default function CricketScoring({
             </div>
           </div>
         )}
-
-        {extraModal && (
+        {activeTab == "Scoring" && extraModal && (
           <Extras
             mainModal={setMainModal}
             extraType={data.extraType}
@@ -689,8 +737,7 @@ export default function CricketScoring({
             socket={socketRef.current}
           />
         )}
-
-        {outModal && (
+        {activeTab == "Scoring" && outModal && (
           <Out
             mainModal={setMainModal}
             outModal={setOutModal}
@@ -705,8 +752,7 @@ export default function CricketScoring({
             team2Id={team2Id}
           />
         )}
-
-        {end_InningsModal && (
+        {activeTab == "Scoring" && end_InningsModal && (
           <div className="mt-5">
             <div className="bg-red-600 p-3 h-89.5">
               <div className="flex flex-col space-y-2 space-x-2 mt-5">
@@ -716,7 +762,7 @@ export default function CricketScoring({
                     socketRef.current.send(
                       JSON.stringify(handleEndInnings(data)),
                     );
-                    setEndInningsModal(false);
+                    setEnd_InningsModal(false);
                     setMainModal(true);
                   }}
                 >
@@ -727,13 +773,150 @@ export default function CricketScoring({
                   onClick={() => {
                     socketRef.current.send(JSON.stringify(handleUndo(data)));
                     setData((prev) => ({ ...prev, eventType: "" }));
-                    setEndInningsModal(false);
+                    setEnd_InningsModal(false);
                     setMainModal(true);
                   }}
                 >
                   Undo
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+        {activeTab === "Scorecard" && (
+          <div className="max-w-4xl mx-auto p-4 bg-gray-50 rounded-xl shadow-sm">
+            <h1 className="text-3xl font-bold text-gray-800 mb-6 border-b-2 border-red-600 pb-2">
+              Match Scorecard
+            </h1>
+
+            {/* Team Selection Tabs */}
+            <div className="flex gap-2 mb-6 bg-gray-200 p-1 rounded-xl w-fit justify-center items-center">
+              <button
+                onClick={() => fetchScorecard(1)}
+                className="px-6 py-2 rounded-lg font-semibold transition-all duration-200 bg-white text-red-600 shadow-sm hover:bg-red-50 active:scale-95 border border-red-100"
+              >
+                {team1Name}
+              </button>
+              <button
+                onClick={() => fetchScorecard(2)}
+                className="px-6 py-2 rounded-lg font-semibold transition-all duration-200 bg-white text-red-600 shadow-sm hover:bg-red-50 active:scale-95 border border-red-100"
+              >
+                {team2Name}
+              </button>
+            </div>
+
+            {/* Batting Table */}
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white mb-8 shadow-sm">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-800 text-white text-sm uppercase tracking-wider">
+                    <th className="px-4 py-3 font-semibold">Batter</th>
+                    <th className="px-4 py-3 font-semibold text-center">R</th>
+                    <th className="px-4 py-3 font-semibold text-center">B</th>
+                    <th className="px-4 py-3 font-semibold text-center">4s</th>
+                    <th className="px-4 py-3 font-semibold text-center">6s</th>
+                    <th className="px-4 py-3 font-semibold text-center">SR</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {team1Scorecard.batsmanScores != null
+                    ? team1Scorecard.batsmanScores.map((player) => (
+                        <tr
+                          key={player.id}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-4 py-3 font-medium text-gray-700">
+                            {player.name}
+                          </td>
+                          <td className="px-4 py-3 text-center font-bold text-gray-900">
+                            {player.runs}
+                          </td>
+                          <td className="px-4 py-3 text-center text-gray-600">
+                            {player.balls}
+                          </td>
+                          <td className="px-4 py-3 text-center text-gray-600">
+                            {player.fours}
+                          </td>
+                          <td className="px-4 py-3 text-center text-gray-600">
+                            {player.sixes}
+                          </td>
+                          <td className="px-4 py-3 text-center text-blue-600 font-medium">
+                            {player.strikeRate}
+                          </td>
+                        </tr>
+                      ))
+                    : null}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Summary Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <div className="bg-white p-4 rounded-lg border-l-4 border-yellow-500 shadow-sm">
+                <p className="text-sm text-gray-500 uppercase font-bold">
+                  Extras
+                </p>
+                <h2 className="text-xl font-semibold text-gray-800">
+                  {team1Scorecard.extras}
+                </h2>
+              </div>
+              <div className="bg-red-600 p-4 rounded-lg shadow-md text-white">
+                <p className="text-sm opacity-80 uppercase font-bold">
+                  Total Runs
+                </p>
+                <h2 className="text-3xl font-black">
+                  {team1Scorecard.totalRuns}
+                </h2>
+              </div>
+              <div className="bg-white p-4 rounded-lg border-l-4 border-blue-500 shadow-sm">
+                <p className="text-sm text-gray-500 uppercase font-bold">
+                  Overs
+                </p>
+                <h2 className="text-xl font-semibold text-gray-800">
+                  {team1Scorecard.overs}.{team1Scorecard.balls}
+                </h2>
+              </div>
+            </div>
+
+            {/* Bowling Table */}
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-100 text-gray-700 text-sm uppercase tracking-wider">
+                    <th className="px-4 py-3 font-semibold">Bowler</th>
+                    <th className="px-4 py-3 font-semibold text-center">O</th>
+                    <th className="px-4 py-3 font-semibold text-center">W</th>
+                    <th className="px-4 py-3 font-semibold text-center">EC</th>
+                    <th className="px-4 py-3 font-semibold text-center">RC</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {team1Scorecard.bowlerScores != null
+                    ? team1Scorecard.bowlerScores.map((player) => (
+                        <tr
+                          key={player.id}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-4 py-3 font-medium text-gray-700">
+                            {player.name}
+                          </td>
+                          <td className="px-4 py-3 text-center text-gray-900">
+                            {player.overs}.{player.ballsBowled}
+                          </td>
+                          <td className="px-4 py-3 text-center font-bold text-red-600">
+                            {player.wickets}
+                          </td>
+                          <td className="px-4 py-3 text-center text-gray-600">
+                            {player.economy.toFixed(2)}
+                          </td>
+                          <td className="px-4 py-3 text-center text-gray-600">
+                            {player.runsConceded}
+                          </td>
+                        </tr>
+                      ))
+                    : null}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
