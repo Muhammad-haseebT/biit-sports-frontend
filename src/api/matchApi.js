@@ -45,10 +45,8 @@ export const updateMatch = async (matchData, matchId) => {
   return r.data; // object
 };
 
-export const getScoreCard = async (matchId, teamId, opponentTeamId) => {
-  const r = await axios.get(
-    `${BASE_URL}/match/scoreCard/${matchId}/${teamId}/${opponentTeamId}`,
-  );
+export const getScoreCard = async (matchId, teamId) => {
+  const r = await axios.get(`${BASE_URL}/match/scoreCard/${matchId}/${teamId}`);
   return r.data;
 };
 export const startmatch = async (matchId, data) => {
