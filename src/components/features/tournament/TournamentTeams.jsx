@@ -375,7 +375,7 @@ export default function TournamentTeams({ tournamentId, onCreateTeam }) {
 
       {createModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 transition-opacity duration-300">
-          <div className="bg-white p-6 rounded shadow-lg w-96 transform transition-all duration-300 ease-out relative">
+          <div className="bg-white p-6 rounded shadow-lg w-[90vw] max-w-sm md:w-96 transform transition-all duration-300 ease-out relative">
             <div
               className="relative mb-4 text-right cursor-pointer"
               onClick={() => setCreateModalOpen(false)}

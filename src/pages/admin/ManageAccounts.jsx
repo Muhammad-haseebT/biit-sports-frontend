@@ -202,7 +202,7 @@ export default function ManageAccounts() {
       {showUpdate && selectedAccount && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 transition-opacity duration-300">
           <div
-            className={`bg-white p-6 rounded shadow-lg w-96 transform transition-all duration-300 ease-out relative ${
+            className={`bg-white p-6 rounded shadow-lg w-[90vw] max-w-sm md:w-96 transform transition-all duration-300 ease-out relative ${
               showUpdate ? "scale-100 opacity-100" : "scale-95 opacity-0"
             }`}
           >
@@ -226,7 +226,7 @@ export default function ManageAccounts() {
       {showAdd && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 transition-opacity duration-300">
           <div
-            className={`bg-white p-6 rounded shadow-lg w-96 transform transition-all duration-300 ease-out relative ${
+            className={`bg-white p-6 rounded shadow-lg w-[90vw] max-w-sm md:w-96 transform transition-all duration-300 ease-out relative ${
               showAdd ? "scale-100 opacity-100" : "scale-95 opacity-0"
             }`}
           >

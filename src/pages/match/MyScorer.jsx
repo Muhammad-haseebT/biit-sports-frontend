@@ -36,6 +36,7 @@ export default function MyScorer() {
           team1={scorer.team1Name}
           team2={scorer.team2Name}
           extra={scorer.status}
+          sportId={scorer.sportId}
         />
       ))}
     </div>

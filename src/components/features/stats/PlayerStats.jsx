@@ -192,7 +192,7 @@ export default function PlayerStats() {
       {activeView === "tournament" &&
         !selectedTournament &&
         !tournamentLoading && (
-          <div className="bg-white rounded-lg shadow-md p-12 text-center">
+          <div className="bg-white rounded-lg shadow-md p-6 md:p-12 text-center">
             <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-700 mb-2">
               Select a Tournament
@@ -209,7 +209,7 @@ export default function PlayerStats() {
           {selectedSport === "cricket" ? (
             <CricketPlayerStats stats={stats} />
           ) : (
-            <div className="bg-white rounded-lg shadow-md p-12 text-center">
+            <div className="bg-white rounded-lg shadow-md p-6 md:p-12 text-center">
               <div className="text-6xl mb-4">🏃‍♂️</div>
               <h3 className="text-xl font-semibold text-gray-700 mb-2">
                 Coming Soon!

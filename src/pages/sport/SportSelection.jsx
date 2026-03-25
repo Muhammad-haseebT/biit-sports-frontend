@@ -68,7 +68,11 @@ export default function SportSelection() {
         {/* Header */}
         <div className="bg-red-600 p-6">
           <div className="flex items-center gap-3">
-            <ChevronLeft className="text-white" size={24} />
+            <ChevronLeft
+              className="text-white"
+              size={24}
+              onClick={() => navigate(-1)}
+            />
             <h1 className="text-white font-bold text-2xl">Sports</h1>
           </div>
         </div>

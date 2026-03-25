@@ -11,8 +11,10 @@ export const handleUndo = (data) => {
   return data;
 };
 export const handleEndInnings = (data) => {
-  data.eventType = "End_Innings";
-  data.undo = false;
-
-  return data;
+  return {
+    ...data,
+    eventType: "End_Innings",
+    comment: null,
+    undo: false,
+  };
 };

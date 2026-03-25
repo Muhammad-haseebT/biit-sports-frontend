@@ -54,7 +54,7 @@ export default function TournamentDetailComponent({
             {name}
           </span>
 
-          <div className="flex justify-between gap-3 mb-4 mt-10 px-12">
+          <div className="flex justify-between gap-3 mb-4 mt-10 px-4 md:px-12">
             <div
               className={`flex flex-col items-center cursor-pointer transition-all ${activeTab === "tournaments" ? "scale-110 text-white" : "text-red-200 hover:text-white"}`}
               onClick={() => setActiveTab("tournaments")}
@@ -180,7 +180,7 @@ export default function TournamentDetailComponent({
                       </div>
                     ))
                   : !loadingMore && (
-                      <div className="col-span-full py-10 text-center">
+                      <div className="col-span-full py-6 md:py-10 text-center">
                         <div className="flex justify-center mb-3">
                           <ImageIcon className="text-gray-300" size={48} />
                         </div>

@@ -55,6 +55,97 @@ export default function Matches() {
     fetchMatches();
   }, [selectedSport, selectedStatus]);
 
+  const handleClick = (
+    matchId,
+    status,
+    team1Id,
+    team2Id,
+    decision,
+    tossWinnerId,
+    team1Name,
+    team2Name,
+    sportId,
+    inningsId,
+    venue,
+    match,
+  ) => {
+    if (status === "LIVE" && decision == "BAT") {
+      let name = "";
+      if (tossWinnerId == team1Id) name = team1Name;
+      else name = team2Name;
+
+      navigate(`/match`, {
+        state: {
+          matchId: matchId,
+          status: status,
+          team1Id: team1Id,
+          team2Id: team2Id,
+          battingTeamId: tossWinnerId,
+          team1Name: team1Name,
+          team2Name: team2Name,
+          battingTeamName: name,
+          sportId: sportId,
+          inningsId: inningsId,
+          venue: venue,
+          match: match,
+        },
+      });
+    } else if (status === "LIVE" && decision == "BOWL") {
+      if (tossWinnerId == team1Id) {
+        navigate(`/match`, {
+          state: {
+            matchId: matchId,
+            status: status,
+            team1Id: team1Id,
+            team2Id: team2Id,
+            battingTeamId: team2Id,
+            team1Name: team1Name,
+            team2Name: team2Name,
+            battingTeamName: team2Name,
+            sportId: sportId,
+            inningsId: inningsId,
+            venue: venue,
+            match: match,
+          },
+        });
+      } else {
+        navigate(`/match`, {
+          state: {
+            matchId: matchId,
+            status: status,
+            team1Id: team1Id,
+            team2Id: team2Id,
+            battingTeamId: team1Id,
+            team1Name: team1Name,
+            team2Name: team2Name,
+            battingTeamName: team1Name,
+            sportId: sportId,
+            inningsId: inningsId,
+            venue: venue,
+            match: match,
+          },
+        });
+      }
+    } else {
+      navigate(`/match`, {
+        state: {
+          matchId: matchId,
+          status: status,
+          team1Id: team1Id,
+          team2Id: team2Id,
+          battingTeamId: 0,
+          team1Name: team1Name,
+          team2Name: team2Name,
+          battingTeamName: "",
+          sportId: sportId,
+          inningsId: 0,
+          venue: venue,
+          match: match,
+        },
+      });
+    }
+  };
+
   return (
     <div className="p-4 pb-24">
       <button
@@ -85,15 +176,20 @@ export default function Matches() {
               extra={match.date + " " + match.time}
               live={match.status === "live" || match.status === "LIVE"}
               onClick={() =>
-                navigate("/matchDetail", {
-                  state: {
-                    matchId: match.id,
-                    status: match.status,
-                    team1Id: match.team1Id,
-                    team2Id: match.team2Id,
-                    battingTeamId: match.team1Id,
-                  },
-                })
+                handleClick(
+                  match.id,
+                  match.status,
+                  match.team1Id,
+                  match.team2Id,
+                  match.decision,
+                  match.tossWinnerId,
+                  match.team1Name,
+                  match.team2Name,
+                  match.sportId,
+                  match.inningsId,
+                  match.venue,
+                  match,
+                )
               }
             />
           ))}

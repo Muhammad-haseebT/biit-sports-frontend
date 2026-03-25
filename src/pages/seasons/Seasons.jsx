@@ -103,7 +103,7 @@ export default function Seasons() {
       {createModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 bg-black/50 transition-opacity duration-300">
           <div
-            className={`bg-white p-6 rounded shadow-lg w-96 transform transition-all duration-300 ease-out relative
+            className={`bg-white p-6 rounded shadow-lg w-[90vw] max-w-sm md:w-96 transform transition-all duration-300 ease-out relative
             }`}
           >
             <div

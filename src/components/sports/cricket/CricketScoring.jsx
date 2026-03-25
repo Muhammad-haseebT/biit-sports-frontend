@@ -8,6 +8,8 @@ import { getPlayersByTeamId } from "../../../api/teamApi";
 import Extras from "./modals/Extras";
 import Out from "./modals/Out";
 import { getScoreCard } from "../../../api/matchApi";
+import MatchSummary from "./modals/Summary";
+import MatchBalls from "./modals/MatchBalls";
 
 export default function CricketScoring({
   matchId,
@@ -24,7 +26,7 @@ export default function CricketScoring({
   const [match, setMatch] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const nav = ["Scoring", "Scorecard", "Balls", "Info"];
+  const nav = ["Scoring", "Summary", "Scorecard", "Balls", "Info"];
   const [activeTab, setActiveTab] = useState("Scoring");
 
   const [user, setUser] = useState("");
@@ -107,6 +109,9 @@ export default function CricketScoring({
           setIsAdmin(true);
         }
       }
+      if (status == "COMPLETED") {
+        setActiveTab("Summary");
+      }
     } catch (error) {
       console.error("Error parsing user cookie:", error);
     }
@@ -162,10 +167,10 @@ export default function CricketScoring({
 
   // WebSocket setup
   useEffect(() => {
-    fetchTeamPlayers();
     setBattingTeamId(bTeamId);
 
     if (status === "LIVE") {
+      fetchTeamPlayers();
       const socketUrl = import.meta.env.VITE_SOCKET_URL + "?matchId=" + matchId;
       const ws = new WebSocket(socketUrl);
 
@@ -202,15 +207,18 @@ export default function CricketScoring({
   }, []);
 
   const handleModalLogic = (receivedData) => {
-    if (receivedData.comment == "End_Innings") {
-      console.log("End Innings");
+    if (receivedData.comment === "End_Innings") {
       setEnd_InningsModal(true);
       setMainModal(false);
       setPlayerSelectModal(false);
       setBowlerModal(false);
       setBatsmanModal(false);
-      return;
+      return; // ← yeh pehle se sahi hai
     }
+
+    // ✅ End_Innings nahi aaya toh modal band karo
+    setEnd_InningsModal(false); // ← yeh line ADD karo
+
     if (
       receivedData.balls === 0 &&
       receivedData.overs === 0 &&
@@ -221,6 +229,7 @@ export default function CricketScoring({
       setPlayerSelectModal(true);
       setBowlerModal(false);
       setBatsmanModal(false);
+      return;
     } else {
       setMainModal(true);
       setPlayerSelectModal(false);
@@ -366,21 +375,23 @@ export default function CricketScoring({
                   {item}
                 </button>
               ))
-          : nav.map((item) => (
-              <button
-                key={item}
-                className="mx-2 bg-red-600 p-1 rounded-lg text-white w-32 font-semibold text-xl"
-                onClick={() => {
-                  setActiveTab(item);
-                  console.log(item);
-                  if (item == "Scorecard") {
-                    fetchScorecard(1);
-                  }
-                }}
-              >
-                {item}
-              </button>
-            ))}
+          : nav
+              .filter((item) => item !== "Summary")
+              .map((item) => (
+                <button
+                  key={item}
+                  className="mx-2 bg-red-600 p-1 rounded-lg text-white w-32 font-semibold text-xl"
+                  onClick={() => {
+                    setActiveTab(item);
+                    console.log(item);
+                    if (item == "Scorecard") {
+                      fetchScorecard(1);
+                    }
+                  }}
+                >
+                  {item}
+                </button>
+              ))}
       </div>
 
       <hr className="my-4" />
@@ -501,10 +512,13 @@ export default function CricketScoring({
                 <tbody>
                   <tr>
                     <td>
-                      {data.bowlerStats?.playerName ||
-                        team2Players.find(
-                          (player) => player.id == data.bowlerId,
-                        )?.name}
+                      {data.bowlerStats?.playerName || battingTeamId == team1Id
+                        ? team2Players.find(
+                            (player) => player.id == data.bowlerId,
+                          )?.name
+                        : team1Players.find(
+                            (player) => player.id == data.bowlerId,
+                          )?.name}
                     </td>
                     <td>
                       {data.bowlerStats?.ballsBowled != null
@@ -648,12 +662,12 @@ export default function CricketScoring({
                 >
                   <option>Select Batsman 1</option>
                   {battingTeamId == team1Id && data.firstInnings
-                    ? team2Players.map((player) => (
+                    ? team1Players.map((player) => (
                         <option key={player.id} value={player.id}>
                           {player.name}
                         </option>
                       ))
-                    : team1Players.map((player) => (
+                    : team2Players.map((player) => (
                         <option key={player.id} value={player.id}>
                           {player.name}
                         </option>
@@ -665,12 +679,12 @@ export default function CricketScoring({
                 >
                   <option>Select Batsman 2</option>
                   {battingTeamId == team1Id && data.firstInnings
-                    ? team2Players.map((player) => (
+                    ? team1Players.map((player) => (
                         <option key={player.id} value={player.id}>
                           {player.name}
                         </option>
                       ))
-                    : team1Players.map((player) => (
+                    : team2Players.map((player) => (
                         <option key={player.id} value={player.id}>
                           {player.name}
                         </option>
@@ -841,7 +855,7 @@ export default function CricketScoring({
                             {player.sixes}
                           </td>
                           <td className="px-4 py-3 text-center text-blue-600 font-medium">
-                            {player.strikeRate}
+                            {player.strikeRate.toFixed(2)}
                           </td>
                         </tr>
                       ))
@@ -919,6 +933,17 @@ export default function CricketScoring({
               </table>
             </div>
           </div>
+        )}
+
+        {activeTab == "Summary" && <MatchSummary matchId={matchId} />}
+        {activeTab == "Balls" && (
+          <MatchBalls
+            matchId={matchId}
+            team1Name={team1Name}
+            team2Name={team2Name}
+            team1Id={team1Id}
+            team2Id={team2Id}
+          />
         )}
       </div>
     </>

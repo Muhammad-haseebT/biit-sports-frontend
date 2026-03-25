@@ -3,13 +3,14 @@ import axios from "axios";
 const url = import.meta.env.VITE_BASE_URL;
 
 export const getPlayerStats = async (playerId) => {
-    try {
-        const response = await axios.get(`${url}/player/${playerId}/stats`);
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching player stats:", error);
-        throw error;
-    }
+  try {
+    const response = await axios.get(`${url}/player/${playerId}/stats`);
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching player stats:", error);
+    throw error;
+  }
 };
 
 // Response
@@ -33,18 +34,15 @@ export const getPlayerStats = async (playerId) => {
 //   "pomCount": 0
 // }
 
-
-
-
-
 export const getTournamentStats = async (tournamentId) => {
-    try {
-        const response = await axios.get(`${url}/tournament/${tournamentId}/stats`);
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching tournament stats:", error);
-        throw error;
-    }
+  try {
+    const response = await axios.get(`${url}/tournament/${tournamentId}/stats`);
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching tournament stats:", error);
+    throw error;
+  }
 };
 // //repsonse{
 //   "tournamentId": 1,
@@ -214,16 +212,17 @@ export const getTournamentStats = async (tournamentId) => {
 //     }
 //   ]
 
-
-
 export const getPlayerTournamentStats = async (playerId, tournamentId) => {
-    try {
-        const response = await axios.get(`${url}/player/${playerId}/stats?tournamentId=${tournamentId}`);
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching player tournament stats:", error);
-        throw error;
-    }
+  try {
+    const response = await axios.get(
+      `${url}/player/${playerId}/stats?tournamentId=${tournamentId}`,
+    );
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching player tournament stats:", error);
+    throw error;
+  }
 };
 //response{
 
@@ -246,18 +245,14 @@ export const getPlayerTournamentStats = async (playerId, tournamentId) => {
 //   "pomCount": 0
 // }
 
-
-
-
-
 export const getTournamentNamesandIds = async () => {
-    try {
-        const response = await axios.get(`${url}/tournament/namesAndIds`);
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching tournament names and ids:", error);
-        throw error;
-    }
+  try {
+    const response = await axios.get(`${url}/tournament/namesAndIds`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching tournament names and ids:", error);
+    throw error;
+  }
 };
 //repsonse{
 // [

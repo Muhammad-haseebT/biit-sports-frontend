@@ -53,3 +53,15 @@ export const startmatch = async (matchId, data) => {
   const r = await axios.put(`${BASE_URL}/match/start/${matchId}`, data);
   return r.data;
 };
+
+export const getMatchSummary = async (matchId) => {
+  const r = await axios.get(`${BASE_URL}/match/summary/${matchId}`);
+  console.log(r.data);
+  return r.data;
+};
+
+export const getMatchBalls = async (mid, tid) => {
+  const r = await axios.get(`${BASE_URL}/match/balls/${mid}/${tid}`);
+  console.log(r.data);
+  return r.data;
+};

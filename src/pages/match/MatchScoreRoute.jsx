@@ -67,6 +67,7 @@ export default function MatchScoreRoute() {
       scorerId: scorerUsername,
       sportId,
       inningsId,
+      overs: match?.overs,
     });
   };
   return (
@@ -261,6 +262,22 @@ export default function MatchScoreRoute() {
               <AlertTriangle size={14} /> Abandon Match
             </button>
           </div>
+        </div>
+      )}
+
+      {isCricket && status === "COMPLETED" && (
+        <div className="flex-1 overflow-auto">
+          <CricketScoring
+            matchId={matchId}
+            status={status}
+            team1Id={team1Id}
+            team2Id={team2Id}
+            bTeamId={battingTeamId}
+            team1Name={team1Name}
+            team2Name={team2Name}
+            battingTeamName={battingTeamName}
+            inningsId={inningsId}
+          />
         </div>
       )}
     </div>

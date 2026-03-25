@@ -151,12 +151,12 @@ export default function Out({
           >
             <option value="">Select Fielder</option>
             {battingTeamId == team1Id
-              ? team2Players.map((item, index) => (
+              ? team1Players.map((item, index) => (
                   <option key={index} value={item.id}>
                     {item.name}
                   </option>
                 ))
-              : team1Players.map((item, index) => (
+              : team2Players.map((item, index) => (
                   <option key={index} value={item.id}>
                     {item.name}
                   </option>
@@ -171,12 +171,12 @@ export default function Out({
           >
             <option value="">Select New Batsman</option>
             {battingTeamId == team1Id
-              ? team1Players.map((item, index) => (
+              ? team2Players.map((item, index) => (
                   <option key={index} value={item.id}>
                     {item.name}
                   </option>
                 ))
-              : team2Players.map((item, index) => (
+              : team1Players.map((item, index) => (
                   <option key={index} value={item.id}>
                     {item.name}
                   </option>
@@ -308,7 +308,7 @@ export default function Out({
           >
             <option value="">Select New Batsman</option>
             {battingTeamId == team1Id
-              ? team1Players
+              ? team2Players
                   .filter(
                     (item) => item.id != strikerId || item.id != nonStrikerId,
                   )
@@ -317,7 +317,7 @@ export default function Out({
                       {item.name}
                     </option>
                   ))
-              : team2Players
+              : team1Players
                   .filter(
                     (item) => item.id != strikerId || item.id != nonStrikerId,
                   )

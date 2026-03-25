@@ -190,7 +190,7 @@ export default function DetailedTournament() {
                         </div>
                       ))
                     : !loadingMoreMedia && (
-                        <div className="col-span-full py-10 text-center">
+                        <div className="col-span-full py-6 md:py-10 text-center">
                           <div className="flex justify-center mb-3">
                             <ImageIcon className="text-gray-300" size={48} />
                           </div>

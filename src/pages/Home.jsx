@@ -186,7 +186,7 @@ export default function Home() {
         ) : (
           <>
             <h3 className="text-xl font-bold mb-4">Live Matches</h3>
-            <div className="overflow-x-auto mb-8">
+            <div className="overflow-x-auto mb-8 ">
               <div>
                 {searchLive.slice(0, 3).map((match) => (
                   <MatchCard
@@ -195,6 +195,7 @@ export default function Home() {
                     team1={match.team1Name}
                     team2={match.team2Name}
                     extra={match.status}
+                    sportId={match.sportId}
                     live={true}
                     onClick={() =>
                       handleClick(
@@ -226,6 +227,7 @@ export default function Home() {
                   team1={match.team1Name}
                   team2={match.team2Name}
                   team1Id={match.team1Id}
+                  sportId={match.sportId}
                   team2Id={match.team2Id}
                   extra={match.date + " " + match.time}
                   live={false}

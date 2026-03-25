@@ -24,10 +24,7 @@ export default function TournamentStatsTab({
         setLoading(false);
       }
     };
-
-    if (tournamentId) {
-      fetchStats();
-    }
+    if (tournamentId) fetchStats();
   }, [tournamentId]);
 
   if (loading) {
@@ -48,7 +45,7 @@ export default function TournamentStatsTab({
 
   if (!stats) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-12 text-center">
+      <div className="bg-white rounded-lg shadow-md p-6 md:p-12 text-center">
         <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
         <h3 className="text-xl font-semibold text-gray-700 mb-2">
           No Stats Available
@@ -60,19 +57,10 @@ export default function TournamentStatsTab({
     );
   }
 
-  // Show cricket stats or coming soon for other sports
   if (sport.toLowerCase() !== "cricket") {
     return (
-      <div className="bg-white rounded-lg shadow-md p-12 text-center">
-        <div className="text-6xl mb-4">
-          {sport.toLowerCase() === "football" && "⚽"}
-          {sport.toLowerCase() === "basketball" && "🏀"}
-          {sport.toLowerCase() === "volleyball" && "🏐"}
-          {sport.toLowerCase() !== "football" &&
-            sport.toLowerCase() !== "basketball" &&
-            sport.toLowerCase() !== "volleyball" &&
-            "🏃‍♂️"}
-        </div>
+      <div className="bg-white rounded-lg shadow-md p-6 md:p-12 text-center">
+        <div className="text-6xl mb-4">🏃‍♂️</div>
         <h3 className="text-xl font-semibold text-gray-700 mb-2">
           Coming Soon!
         </h3>
@@ -83,62 +71,64 @@ export default function TournamentStatsTab({
     );
   }
 
-  // Cricket stats display
   return (
     <div className="space-y-6">
-      {/* Man of the Tournament Card */}
+      {/* Man of the Tournament */}
       <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg shadow-lg p-6">
         <div className="flex items-center gap-3 mb-2">
           <Crown className="w-8 h-8" />
           <h3 className="text-lg font-semibold">Man of the Tournament</h3>
         </div>
-        <div className="text-3xl font-bold">{stats.manOfTournamentName}</div>
+        <div className="text-3xl font-bold">
+          {stats.manOfTournament?.playerName || "TBD"}
+        </div>
         <p className="text-yellow-100 mt-1">Outstanding Performance</p>
       </div>
 
       {/* Top Performers Grid */}
       <div className="grid md:grid-cols-3 gap-4">
-        {/* Best Batsman */}
         <div className="bg-white rounded-lg shadow-md p-5">
           <div className="flex items-center gap-2 text-red-500 mb-3">
             <TrendingUp className="w-5 h-5" />
             <h4 className="font-semibold">Best Batsman</h4>
           </div>
           <div className="text-2xl font-bold text-gray-800">
-            {stats.bestBatsmanName}
+            {stats.bestBatsman?.playerName || "TBD"}
           </div>
-          <div className="text-gray-600 mt-1">{stats.bestBatsmanRuns} runs</div>
+          <div className="text-gray-600 mt-1">
+            {stats.bestBatsman?.points || 0} runs
+          </div>
         </div>
 
-        {/* Best Bowler */}
         <div className="bg-white rounded-lg shadow-md p-5">
           <div className="flex items-center gap-2 text-red-500 mb-3">
             <Target className="w-5 h-5" />
             <h4 className="font-semibold">Best Bowler</h4>
           </div>
           <div className="text-2xl font-bold text-gray-800">
-            {stats.bestBowlerName}
+            {stats.bestBowler?.playerName || "TBD"}
           </div>
           <div className="text-gray-600 mt-1">
-            {stats.bestBowlerWickets} wickets
+            {stats.bestBowler?.reason || "—"}
           </div>
         </div>
 
-        {/* Highest Scorer */}
         <div className="bg-white rounded-lg shadow-md p-5">
           <div className="flex items-center gap-2 text-red-500 mb-3">
             <Award className="w-5 h-5" />
-            <h4 className="font-semibold">Highest Score</h4>
+            <h4 className="font-semibold">Best Fielder</h4>
           </div>
           <div className="text-2xl font-bold text-gray-800">
-            {stats.highestScorerName}
+            {stats.bestFielder?.playerName || "TBD"}
           </div>
-          <div className="text-gray-600 mt-1">{stats.highestRuns} runs</div>
+          <div className="text-gray-600 mt-1">
+            {stats.bestFielder?.reason || "—"}
+          </div>
         </div>
       </div>
 
-      {/* Top Batsmen Leaderboard */}
-      {stats.topBatsmen && stats.topBatsmen.length > 0 && (
+      {/* Top Batsmen */}
+      {stats.topRunScorers && stats.topRunScorers.length > 0 && (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 md:px-6 py-3 md:py-4">
             <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
@@ -146,12 +136,11 @@ export default function TournamentStatsTab({
               Top Batsmen
             </h3>
           </div>
-          {/* Mobile scroll hint */}
           <div className="px-4 py-2 text-xs text-gray-500 bg-gray-50 border-b border-gray-200 md:hidden">
             👉 Swipe to see all columns
           </div>
-          <div className="overflow-x-auto overflow-y-visible">
-            <table className="w-full" style={{ minWidth: "600px" }}>
+          <div className="overflow-x-auto">
+            <table className="w-full" style={{ minWidth: "550px" }}>
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-600 uppercase sticky left-0 bg-gray-50 z-10">
@@ -178,7 +167,7 @@ export default function TournamentStatsTab({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {stats.topBatsmen.map((player, index) => (
+                {stats.topRunScorers.map((player, index) => (
                   <tr
                     key={player.playerId}
                     className="hover:bg-gray-50 transition-colors"
@@ -203,7 +192,7 @@ export default function TournamentStatsTab({
                     </td>
                     <td className="px-2 md:px-4 py-3 md:py-4 text-center">
                       <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
-                        {player.pomCount}
+                        {player.playerOfMatchCount || 0}
                       </span>
                     </td>
                   </tr>
@@ -214,7 +203,7 @@ export default function TournamentStatsTab({
         </div>
       )}
 
-      {/* Top Bowlers Leaderboard */}
+      {/* Top Bowlers */}
       {stats.topBowlers && stats.topBowlers.length > 0 && (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 md:px-6 py-3 md:py-4">
@@ -223,12 +212,11 @@ export default function TournamentStatsTab({
               Top Bowlers
             </h3>
           </div>
-          {/* Mobile scroll hint */}
           <div className="px-4 py-2 text-xs text-gray-500 bg-gray-50 border-b border-gray-200 md:hidden">
             👉 Swipe to see all columns
           </div>
-          <div className="overflow-x-auto overflow-y-visible">
-            <table className="w-full" style={{ minWidth: "650px" }}>
+          <div className="overflow-x-auto">
+            <table className="w-full" style={{ minWidth: "600px" }}>
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-600 uppercase sticky left-0 bg-gray-50 z-10">
@@ -270,17 +258,24 @@ export default function TournamentStatsTab({
                       {player.wickets}
                     </td>
                     <td className="px-2 md:px-4 py-3 md:py-4 text-center text-gray-600 text-sm">
-                      {player.runsConceded}
+                      {player.runsConceded ?? 0}
                     </td>
                     <td className="px-2 md:px-4 py-3 md:py-4 text-center text-gray-600 text-sm">
                       {player.ballsBowled}
                     </td>
                     <td className="px-2 md:px-4 py-3 md:py-4 text-center text-gray-600 text-sm">
-                      {player.economy?.toFixed(2) || "0.00"}
+                      {player.economy != null
+                        ? Number(player.economy).toFixed(2)
+                        : player.ballsBowled > 0
+                          ? (
+                              (player.runsConceded / player.ballsBowled) *
+                              6
+                            ).toFixed(2)
+                          : "—"}
                     </td>
                     <td className="px-2 md:px-4 py-3 md:py-4 text-center">
                       <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
-                        {player.pomCount}
+                        {player.playerOfMatchCount || 0}
                       </span>
                     </td>
                   </tr>
@@ -294,7 +289,6 @@ export default function TournamentStatsTab({
   );
 }
 
-// Rank Badge Component
 function RankBadge({ rank }) {
   const getBadgeColor = (rank) => {
     switch (rank) {
@@ -308,12 +302,9 @@ function RankBadge({ rank }) {
         return "bg-gray-200 text-gray-700";
     }
   };
-
   return (
     <div
-      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${getBadgeColor(
-        rank,
-      )}`}
+      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${getBadgeColor(rank)}`}
     >
       {rank}
     </div>
