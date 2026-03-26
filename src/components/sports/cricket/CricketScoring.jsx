@@ -10,6 +10,7 @@ import Out from "./modals/Out";
 import { getScoreCard } from "../../../api/matchApi";
 import MatchSummary from "./modals/Summary";
 import MatchBalls from "./modals/MatchBalls";
+import Media from "./modals/Media";
 
 export default function CricketScoring({
   matchId,
@@ -95,6 +96,8 @@ export default function CricketScoring({
   const [team2Scorecard, setTeam2Scorecard] = useState([]);
   const [cardFor, setCardFor] = useState(1);
   const [battingTeamId, setBattingTeamId] = useState(bTeamId);
+
+  const [selectedBallId, setSelectedBallId] = useState(null);
 
   useEffect(() => {
     try {
@@ -538,22 +541,46 @@ export default function CricketScoring({
             </div>
           </div>
         )}
+
         {activeTab == "Scoring" && (
-          <span className="flex flex-wrap gap-2">
-            {data.cricketBalls?.map((ball, index) => (
-              <span
-                key={index}
-                className={`${ball.eventType == "wicket" ? "bg-red-600" : ball.eventType == "bye" || ball.eventType == "legbye" || ball.eventType == "noball" || ball.eventType == "wide" ? "bg-blue-600" : ball.eventType == "run" ? "bg-green-600" : "bg-yellow-600"} p-2 rounded-full text-white w-15 h-15 flex items-center justify-center `}
-              >
-                {ball.eventType != "run" && ball.eventType != "boundary"
-                  ? ball.event
-                  : ""}{" "}
-                {ball.eventType != "run" && ball.eventType != "boundary"
-                  ? a[ball.eventType]
-                  : ball.event}
-              </span>
-            ))}
-          </span>
+          <>
+            {/* ✅ Balls list */}
+            <span className="flex flex-wrap gap-2">
+              {data.cricketBalls?.map((ball, index) => (
+                <span
+                  key={index}
+                  className={`${
+                    ball.eventType == "wicket"
+                      ? "bg-red-600"
+                      : ["bye", "legbye", "noball", "wide"].includes(
+                            ball.eventType,
+                          )
+                        ? "bg-blue-600"
+                        : ball.eventType == "run"
+                          ? "bg-green-600"
+                          : "bg-yellow-600"
+                  } p-2 rounded-full text-white w-12 h-12 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform`}
+                  onClick={() => setSelectedBallId(ball.id)}
+                >
+                  {ball.eventType != "run" && ball.eventType != "boundary"
+                    ? ball.event
+                    : ""}
+                  {ball.eventType != "run" && ball.eventType != "boundary"
+                    ? a[ball.eventType]
+                    : ball.event}
+                </span>
+              ))}
+            </span>
+
+            {/* ✅ Modal — flex ke bahar, fixed position kaam karega */}
+            {selectedBallId && (
+              <Media
+                ballId={selectedBallId}
+                matchId={matchId}
+                onClose={() => setSelectedBallId(null)}
+              />
+            )}
+          </>
         )}
         {activeTab == "Scoring" && mainModal && isAdmin && (
           <div className="mt-3">
@@ -934,7 +961,6 @@ export default function CricketScoring({
             </div>
           </div>
         )}
-
         {activeTab == "Summary" && <MatchSummary matchId={matchId} />}
         {activeTab == "Balls" && (
           <MatchBalls

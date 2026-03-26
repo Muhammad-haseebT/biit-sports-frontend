@@ -5,6 +5,7 @@ import { getMediaBySeasonId } from "../../api/mediaApi";
 import TournamentDetailComponent from "../../components/features/tournament/TournamentDetailComponent";
 
 import MediaViewer from "../../components/common/MediaViewer";
+
 export default function TournamentDetail() {
   const navigate = useNavigate();
   const { state } = useLocation();

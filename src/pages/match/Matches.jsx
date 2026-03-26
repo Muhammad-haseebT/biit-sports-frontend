@@ -175,6 +175,7 @@ export default function Matches() {
               team2Id={match.team2Id}
               extra={match.date + " " + match.time}
               live={match.status === "live" || match.status === "LIVE"}
+              sportId={match.sportId}
               onClick={() =>
                 handleClick(
                   match.id,
