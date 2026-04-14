@@ -5,7 +5,7 @@ import Loading from "../../common/LoadingSpinner";
 import { getTeamsByTournamentId } from "../../../api/teamApi";
 import { createMatch, updateMatch } from "../../../api/matchApi";
 
-function FixtureCard({ fixture, onEdit }) {
+function FixtureCard({ fixture, onEdit, sportId }) {
   return (
     <div className="bg-gray-100 rounded-xl p-3 mb-3 shadow-sm border border-red-600">
       <div className="flex justify-between items-start">
@@ -17,7 +17,7 @@ function FixtureCard({ fixture, onEdit }) {
             Date: {fixture.date} | Time: {fixture.time}
           </div>
           <div className="text-xs text-gray-400">
-            Venue: {fixture.venue} | {fixture.overs} Overs
+            Venue: {fixture.venue} | {sportId == 1 && `${fixture.overs} Overs`}
           </div>
         </div>
         <div className="ml-2">
@@ -33,7 +33,7 @@ function FixtureCard({ fixture, onEdit }) {
   );
 }
 
-export default function TournamentFixtures({ tournamentId }) {
+export default function TournamentFixtures({ tournamentId, sportId }) {
   const [fixtures, setFixtures] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -147,7 +147,12 @@ export default function TournamentFixtures({ tournamentId }) {
         <div className="bg-white p-4 rounded-lg">
           {fixtures.length > 0 ? (
             fixtures.map((f) => (
-              <FixtureCard key={f.id} fixture={f} onEdit={handleEdit} />
+              <FixtureCard
+                key={f.id}
+                fixture={f}
+                onEdit={handleEdit}
+                sportId={sportId}
+              />
             ))
           ) : (
             <div>No fixtures found</div>
@@ -270,15 +275,17 @@ export default function TournamentFixtures({ tournamentId }) {
                 </div>
               </div>
 
-              <input
-                type="number"
-                name="overs"
-                placeholder="Total Overs"
-                required
-                value={form.overs}
-                onChange={handleChange}
-                className="w-full border p-2 rounded-lg focus:ring-2 focus:ring-red-500"
-              />
+              {sportId == 1 && (
+                <input
+                  type="number"
+                  name="overs"
+                  placeholder="Total Overs"
+                  required
+                  value={form.overs}
+                  onChange={handleChange}
+                  className="w-full border p-2 rounded-lg focus:ring-2 focus:ring-red-500"
+                />
+              )}
 
               <button
                 type="submit"

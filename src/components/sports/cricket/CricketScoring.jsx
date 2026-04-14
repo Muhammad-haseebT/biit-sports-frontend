@@ -39,17 +39,17 @@ export default function CricketScoring({
   const [team1Players, setTeam1Players] = useState([]);
   const [team2Players, setTeam2Players] = useState([]);
 
-  // ✅ Fixed row positions - NEVER change after match start
-  const player1IdRef = useRef(null); // Row 1 player
-  const player2IdRef = useRef(null); // Row 2 player
+  const player1IdRef = useRef(null);
+  const player2IdRef = useRef(null);
   const socketRef = useRef(null);
+  const isEndingMatch = useRef(false); // ✅ 1. ADD
 
-  //modals view ki logic hai
   const [mainModal, setMainModal] = useState(false);
   const [playerSelectModal, setPlayerSelectModal] = useState(false);
   const [bowlerModal, setBowlerModal] = useState(false);
   const [batsmanModal, setBatsmanModal] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isWaiting, setIsWaiting] = useState(false);
 
   const [data, setData] = useState({
     runs: 0,
@@ -96,7 +96,6 @@ export default function CricketScoring({
   const [team2Scorecard, setTeam2Scorecard] = useState([]);
   const [cardFor, setCardFor] = useState(1);
   const [battingTeamId, setBattingTeamId] = useState(bTeamId);
-
   const [selectedBallId, setSelectedBallId] = useState(null);
 
   useEffect(() => {
@@ -134,24 +133,20 @@ export default function CricketScoring({
       );
       team2Players = await getPlayersByTeamId(bTeamId);
     }
-
     setTeam1Players(team1Players);
     setTeam2Players(team2Players);
   };
 
-  // ✅ Normalize: rows fixed, sirf batsmanId (star) change hota hai
   const normalizeStats = (receivedData) => {
     const stats1 = receivedData.batsman1Stats;
     const stats2 = receivedData.batsman2Stats;
 
-    // Pehli baar - positions lock karo
     if (!player1IdRef.current && stats1?.playerId) {
       player1IdRef.current = stats1.playerId;
       player2IdRef.current = stats2?.playerId;
       return receivedData;
     }
 
-    // Agar backend ne swap kar diya toh wapas fix karo
     if (
       stats1?.playerId != null &&
       stats2?.playerId != null &&
@@ -160,15 +155,14 @@ export default function CricketScoring({
     ) {
       return {
         ...receivedData,
-        batsman1Stats: stats2, // Player1 wapas row 1
-        batsman2Stats: stats1, // Player2 wapas row 2
+        batsman1Stats: stats2,
+        batsman2Stats: stats1,
       };
     }
 
     return receivedData;
   };
 
-  // WebSocket setup
   useEffect(() => {
     setBattingTeamId(bTeamId);
 
@@ -186,10 +180,16 @@ export default function CricketScoring({
         const receivedData = JSON.parse(event.data);
         console.log("Received data:", receivedData);
 
-        // ✅ Normalize BEFORE setting data
         const normalized = normalizeStats(receivedData);
         setData(normalized);
         handleModalLogic(normalized);
+        setIsWaiting(false);
+
+        // ✅ 2. Response aane ke baad Summary dikhao
+        if (isEndingMatch.current) {
+          isEndingMatch.current = false;
+          setActiveTab("Summary");
+        }
       };
 
       ws.onclose = () => {
@@ -216,11 +216,10 @@ export default function CricketScoring({
       setPlayerSelectModal(false);
       setBowlerModal(false);
       setBatsmanModal(false);
-      return; // ← yeh pehle se sahi hai
+      return;
     }
 
-    // ✅ End_Innings nahi aaya toh modal band karo
-    setEnd_InningsModal(false); // ← yeh line ADD karo
+    setEnd_InningsModal(false);
 
     if (
       receivedData.balls === 0 &&
@@ -250,10 +249,6 @@ export default function CricketScoring({
       setBowlerModal(true);
     }
     if (receivedData.firstInnings) {
-      console.log("First Innings");
-      console.log(battingTeamId);
-      console.log(team1Id);
-      console.log(team2Id);
       if (battingTeamId == team1Id) {
         setBattingTeamId(team2Id);
       } else {
@@ -272,7 +267,6 @@ export default function CricketScoring({
     const player2 = team1Players.find((p) => p.id == nonStrikerId);
     const bowlerPlayer = team2Players.find((p) => p.id == bowlerId);
 
-    // ✅ Lock row positions ONCE
     player1IdRef.current = Number(strikerId);
     player2IdRef.current = Number(nonStrikerId);
 
@@ -329,6 +323,7 @@ export default function CricketScoring({
     setOutModal(true);
     setMainModal(false);
   };
+
   var a = {
     wicket: "W",
     bye: "B",
@@ -345,9 +340,8 @@ export default function CricketScoring({
       team1Scorecard = await getScoreCard(matchId, team2Id, team1Id);
     }
     setTeam1Scorecard(team1Scorecard);
-    console.log(team1Scorecard);
-    console.log("sdad");
   };
+
   return (
     <>
       <div className="flex items-center bg-red-600 h-16 ">
@@ -369,10 +363,7 @@ export default function CricketScoring({
                   className="mx-2 bg-red-600 p-1 rounded-lg text-white w-32 font-semibold text-xl"
                   onClick={() => {
                     setActiveTab(item);
-                    console.log(item);
-                    if (item == "Scorecard") {
-                      fetchScorecard(1);
-                    }
+                    if (item == "Scorecard") fetchScorecard(1);
                   }}
                 >
                   {item}
@@ -386,10 +377,7 @@ export default function CricketScoring({
                   className="mx-2 bg-red-600 p-1 rounded-lg text-white w-32 font-semibold text-xl"
                   onClick={() => {
                     setActiveTab(item);
-                    console.log(item);
-                    if (item == "Scorecard") {
-                      fetchScorecard(1);
-                    }
+                    if (item == "Scorecard") fetchScorecard(1);
                   }}
                 >
                   {item}
@@ -445,7 +433,6 @@ export default function CricketScoring({
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Row 1 - FIXED position */}
                   <tr>
                     <td>
                       {data.batsman1Stats?.playerId == data.batsmanId && (
@@ -470,8 +457,6 @@ export default function CricketScoring({
                         : "0.00"}
                     </td>
                   </tr>
-
-                  {/* Row 2 - FIXED position */}
                   <tr>
                     <td>
                       {data.batsman2Stats?.playerId == data.batsmanId && (
@@ -544,7 +529,6 @@ export default function CricketScoring({
 
         {activeTab == "Scoring" && (
           <>
-            {/* ✅ Balls list */}
             <span className="flex flex-wrap gap-2">
               {data.cricketBalls?.map((ball, index) => (
                 <span
@@ -571,8 +555,6 @@ export default function CricketScoring({
                 </span>
               ))}
             </span>
-
-            {/* ✅ Modal — flex ke bahar, fixed position kaam karega */}
             {selectedBallId && (
               <Media
                 ballId={selectedBallId}
@@ -582,15 +564,20 @@ export default function CricketScoring({
             )}
           </>
         )}
+
         {activeTab == "Scoring" && mainModal && isAdmin && (
           <div className="mt-3">
             <div className="bg-red-600 p-3 h-74.5">
-              <div className="grid grid-cols-5 space-y-2 space-x-2 mt-4">
+              <div
+                className={`grid grid-cols-5 space-y-2 space-x-2 mt-4 ${isWaiting ? "opacity-50 pointer-events-none" : ""}`}
+              >
                 {["1", "2", "3", "4", "6"].map((run) => (
                   <button
                     key={run}
-                    className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20"
+                    disabled={isWaiting}
+                    className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20 disabled:cursor-not-allowed"
                     onClick={() => {
+                      setIsWaiting(true);
                       socketRef.current.send(
                         JSON.stringify(
                           handleRuns(
@@ -607,34 +594,51 @@ export default function CricketScoring({
                     {run}
                   </button>
                 ))}
-
                 <button
-                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20"
-                  onClick={() => handleExtraModal("legbye")}
+                  disabled={isWaiting}
+                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20 disabled:cursor-not-allowed"
+                  onClick={() => {
+                    setIsWaiting(true);
+                    handleExtraModal("legbye");
+                  }}
                 >
                   LB
                 </button>
                 <button
-                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20"
-                  onClick={() => handleExtraModal("bye")}
+                  disabled={isWaiting}
+                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20 disabled:cursor-not-allowed"
+                  onClick={() => {
+                    setIsWaiting(true);
+                    handleExtraModal("bye");
+                  }}
                 >
                   BYE
                 </button>
                 <button
-                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20"
-                  onClick={() => handleExtraModal("wide")}
+                  disabled={isWaiting}
+                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20 disabled:cursor-not-allowed"
+                  onClick={() => {
+                    setIsWaiting(true);
+                    handleExtraModal("wide");
+                  }}
                 >
                   Wide
                 </button>
                 <button
-                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20"
-                  onClick={() => handleExtraModal("noball")}
+                  disabled={isWaiting}
+                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20 disabled:cursor-not-allowed"
+                  onClick={() => {
+                    setIsWaiting(true);
+                    handleExtraModal("noball");
+                  }}
                 >
                   NB
                 </button>
                 <button
-                  className="bg-white flex items-center justify-center text-red-600 p-1 rounded-lg h-20"
+                  disabled={isWaiting}
+                  className="bg-white flex items-center justify-center text-red-600 p-1 rounded-lg h-20 disabled:cursor-not-allowed"
                   onClick={() => {
+                    setIsWaiting(true);
                     socketRef.current.send(
                       JSON.stringify(
                         handleRuns(
@@ -660,16 +664,20 @@ export default function CricketScoring({
                   <Camera size={50} />
                 </button>
                 <button
-                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20"
+                  disabled={isWaiting}
+                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20 disabled:cursor-not-allowed"
                   onClick={() => {
+                    setIsWaiting(true);
                     socketRef.current.send(JSON.stringify(handleUndo(data)));
                   }}
                 >
                   UNDO
                 </button>
                 <button
-                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20"
+                  disabled={isWaiting}
+                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20 disabled:cursor-not-allowed"
                   onClick={() => {
+                    setIsWaiting(true);
                     handleOutModal();
                   }}
                 >
@@ -679,6 +687,7 @@ export default function CricketScoring({
             </div>
           </div>
         )}
+
         {activeTab == "Scoring" && playerSelectModal && (
           <div className="mt-5">
             <div className="bg-red-600 p-3 h-89.5">
@@ -744,6 +753,7 @@ export default function CricketScoring({
             </div>
           </div>
         )}
+
         {activeTab == "Scoring" && bowlerModal && (
           <div className="mt-5">
             <div className="bg-red-600 p-3 h-89.5">
@@ -769,6 +779,7 @@ export default function CricketScoring({
             </div>
           </div>
         )}
+
         {activeTab == "Scoring" && extraModal && (
           <Extras
             mainModal={setMainModal}
@@ -778,6 +789,7 @@ export default function CricketScoring({
             socket={socketRef.current}
           />
         )}
+
         {activeTab == "Scoring" && outModal && (
           <Out
             mainModal={setMainModal}
@@ -793,6 +805,7 @@ export default function CricketScoring({
             team2Id={team2Id}
           />
         )}
+
         {activeTab == "Scoring" && end_InningsModal && (
           <div className="mt-5">
             <div className="bg-red-600 p-3 h-89.5">
@@ -800,6 +813,11 @@ export default function CricketScoring({
                 <button
                   className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
                   onClick={() => {
+                    // ✅ 3. Sirf flag set karo, Summary abhi nahi
+                    if (data.firstInnings == false) {
+                      isEndingMatch.current = true;
+                      setIsWaiting(true);
+                    }
                     socketRef.current.send(
                       JSON.stringify(handleEndInnings(data)),
                     );
@@ -816,6 +834,7 @@ export default function CricketScoring({
                     setData((prev) => ({ ...prev, eventType: "" }));
                     setEnd_InningsModal(false);
                     setMainModal(true);
+                    setIsWaiting(true);
                   }}
                 >
                   Undo
@@ -824,13 +843,12 @@ export default function CricketScoring({
             </div>
           </div>
         )}
+
         {activeTab === "Scorecard" && (
           <div className="max-w-4xl mx-auto p-4 bg-gray-50 rounded-xl shadow-sm">
             <h1 className="text-3xl font-bold text-gray-800 mb-6 border-b-2 border-red-600 pb-2">
               Match Scorecard
             </h1>
-
-            {/* Team Selection Tabs */}
             <div className="flex gap-2 mb-6 bg-gray-200 p-1 rounded-xl w-fit justify-center items-center">
               <button
                 onClick={() => fetchScorecard(1)}
@@ -846,7 +864,6 @@ export default function CricketScoring({
               </button>
             </div>
 
-            {/* Batting Table */}
             <div className="overflow-hidden rounded-lg border border-gray-200 bg-white mb-8 shadow-sm">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -891,7 +908,6 @@ export default function CricketScoring({
               </table>
             </div>
 
-            {/* Summary Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
               <div className="bg-white p-4 rounded-lg border-l-4 border-yellow-500 shadow-sm">
                 <p className="text-sm text-gray-500 uppercase font-bold">
@@ -919,7 +935,6 @@ export default function CricketScoring({
               </div>
             </div>
 
-            {/* Bowling Table */}
             <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -961,6 +976,7 @@ export default function CricketScoring({
             </div>
           </div>
         )}
+
         {activeTab == "Summary" && <MatchSummary matchId={matchId} />}
         {activeTab == "Balls" && (
           <MatchBalls

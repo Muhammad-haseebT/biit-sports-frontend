@@ -15,6 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 import CricketScoring from "../../components/sports/cricket/CricketScoring";
+import FutsalScoring from "../../components/sports/football/FutsalScoring.jsx";
 
 export default function MatchScoreRoute() {
   const location = useLocation();
@@ -50,6 +51,7 @@ export default function MatchScoreRoute() {
   ];
 
   const isCricket = sports[sportId - 1] === "Cricket";
+  const isFutsal = sports[sportId - 1] === "Futsal";
   const [scorerUsername, setScorerUsername] = useState("");
 
   if (!location.state) {
@@ -61,7 +63,8 @@ export default function MatchScoreRoute() {
   }
 
   const handleStartMatch = () => {
-    startmatch(matchId, {
+    console.log({
+      matchId,
       tossWinnerId,
       decision,
       scorerId: scorerUsername,
@@ -69,6 +72,19 @@ export default function MatchScoreRoute() {
       inningsId,
       overs: match?.overs,
     });
+
+    if (
+      startmatch(matchId, {
+        tossWinnerId,
+        decision,
+        scorerId: scorerUsername,
+        sportId,
+        inningsId,
+        overs: match?.overs,
+      })
+    ) {
+      navigate(-1);
+    }
   };
   return (
     <div className="h-screen w-full bg-[#f8f9fa] dark:bg-[#0f172a] text-[#1e293b] dark:text-[#f1f5f9] overflow-hidden flex flex-col">
@@ -278,6 +294,186 @@ export default function MatchScoreRoute() {
             battingTeamName={battingTeamName}
             inningsId={inningsId}
           />
+        </div>
+      )}
+
+      {/* ── FUTSAL LIVE ── */}
+      {isFutsal && status === "LIVE" && (
+        <div className="flex-1 overflow-auto">
+          <FutsalScoring
+            matchId={matchId}
+            status={status}
+            team1Id={team1Id}
+            team2Id={team2Id}
+            team1Name={team1Name}
+            team2Name={team2Name}
+          />
+        </div>
+      )}
+
+      {/* ── FUTSAL COMPLETED ── */}
+      {isFutsal && status === "COMPLETED" && (
+        <div className="flex-1 overflow-auto">
+          <FutsalScoring
+            matchId={matchId}
+            status={status}
+            team1Id={team1Id}
+            team2Id={team2Id}
+            team1Name={team1Name}
+            team2Name={team2Name}
+            winnerTeamName={match.winnerTeamName}
+          />
+        </div>
+      )}
+
+      {/* ── FUTSAL UPCOMING — Match Setup (Kick-off) ── */}
+      {isFutsal && status === "UPCOMING" && (
+        <div className="flex-1 flex flex-col p-4 max-w-lg mx-auto w-full space-y-4">
+          {/* Header Card */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-xl shadow-emerald-500/10 border border-slate-100 dark:border-slate-700 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-3 opacity-10">
+              <Trophy size={64} className="text-emerald-600" />
+            </div>
+            <div className="flex items-center justify-between relative z-10">
+              <div className="flex flex-col items-center flex-1">
+                <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 font-bold text-2xl mb-2 border border-blue-100 dark:border-blue-900/30">
+                  {team1Name?.substring(0, 2).toUpperCase()}
+                </div>
+                <h3 className="text-sm font-bold text-center line-clamp-1">
+                  {team1Name}
+                </h3>
+              </div>
+              <div className="px-4 flex flex-col items-center">
+                <div className="bg-emerald-600 text-white text-xs font-black px-3 py-1 rounded-full mb-1">
+                  VS
+                </div>
+                <div className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">
+                  Futsal Setup
+                </div>
+              </div>
+              <div className="flex flex-col items-center flex-1">
+                <div className="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center text-rose-600 font-bold text-2xl mb-2 border border-rose-100 dark:border-rose-900/30">
+                  {team2Name?.substring(0, 2).toUpperCase()}
+                </div>
+                <h3 className="text-sm font-bold text-center line-clamp-1">
+                  {team2Name}
+                </h3>
+              </div>
+            </div>
+          </div>
+
+          {/* Match Details */}
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { icon: MapPin, label: "Venue", value: venue },
+              {
+                icon: Calendar,
+                label: "Date",
+                value: match?.date?.split("T")[0],
+              },
+              { icon: Clock, label: "Time", value: match?.time },
+              { icon: Hash, label: "Half Duration", value: "25 min" },
+            ].map((item, idx) => (
+              <div
+                key={idx}
+                className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-3 border border-slate-100 dark:border-slate-700 flex items-center gap-3"
+              >
+                <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl">
+                  <item.icon size={16} className="text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">
+                    {item.label}
+                  </p>
+                  <p className="text-xs font-semibold">{item.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Kick-off winner */}
+          <div className="space-y-2">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <Zap size={14} className="text-emerald-600" />
+              <span className="text-emerald-600">Who Kicks Off?</span>
+            </label>
+            <div className="flex gap-2">
+              {[team1Name, team2Name].map((team, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setTossWinnerId(team === team1Name ? team1Id : team2Id);
+                    setTossWinner(team);
+                  }}
+                  className={`flex-1 py-3 px-2 rounded-2xl text-xs font-bold transition-all duration-300 border-2 ${
+                    tossWinner === team
+                      ? "bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+                      : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-emerald-200"
+                  }`}
+                >
+                  {team}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Scorer */}
+          <div className="space-y-2">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <User size={14} className="text-emerald-500" /> Scorer Username
+            </label>
+            <input
+              type="text"
+              value={scorerUsername}
+              onChange={(e) => setScorerUsername(e.target.value)}
+              className="w-full py-3 px-4 rounded-2xl text-sm font-bold transition-all duration-300 border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+              placeholder="Enter scorer username"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="pt-2 flex flex-col gap-2">
+            <button
+              disabled={!tossWinner}
+              className={`w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 ${
+                tossWinner
+                  ? "bg-emerald-600 text-white shadow-xl shadow-emerald-500/40 hover:-translate-y-1 active:scale-95"
+                  : "bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed"
+              }`}
+              onClick={() =>
+                startmatch(matchId, {
+                  tossWinnerId,
+                  decision: "KICKOFF",
+                  scorerId: scorerUsername,
+                  sportId,
+                })
+              }
+            >
+              ⚽ Start Futsal Match <ChevronRight size={18} />
+            </button>
+            <button
+              className="w-full py-3 rounded-xl text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center justify-center gap-2 transition-all"
+              onClick={() =>
+                Swal.fire({
+                  title: "Are you sure?",
+                  text: "Match will be abandoned",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonText: "Yes, abandon it!",
+                  cancelButtonText: "No, cancel!",
+                }).then((result) => {
+                  if (result.isConfirmed)
+                    Swal.fire(
+                      "Abandoned!",
+                      "Match has been abandoned",
+                      "success",
+                    );
+                })
+              }
+            >
+              <AlertTriangle size={14} /> Abandon Match
+            </button>
+          </div>
         </div>
       )}
     </div>

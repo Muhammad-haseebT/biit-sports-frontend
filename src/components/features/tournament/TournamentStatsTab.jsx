@@ -1,287 +1,241 @@
 import { useState, useEffect } from "react";
-import { Trophy, Award, TrendingUp, Target, Crown } from "lucide-react";
+import {
+  Trophy,
+  Award,
+  TrendingUp,
+  Target,
+  Crown,
+  ShieldAlert,
+} from "lucide-react";
 import LoadingSpinner from "../../common/LoadingSpinner";
 import { getTournamentStats } from "../../../api/statsApi";
 
-export default function TournamentStatsTab({
-  tournamentId,
-  sport = "cricket",
-}) {
+export default function TournamentStatsTab({ tournamentId }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    if (!tournamentId) return;
+    (async () => {
       try {
         setLoading(true);
-        const tournamentStats = await getTournamentStats(tournamentId);
-        setStats(tournamentStats);
+        setStats(await getTournamentStats(tournamentId));
       } catch (err) {
-        console.error("Error fetching tournament stats:", err);
         setError("Failed to load tournament statistics");
       } finally {
         setLoading(false);
       }
-    };
-    if (tournamentId) fetchStats();
+    })();
   }, [tournamentId]);
 
-  if (loading) {
+  if (loading)
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <LoadingSpinner size="large" />
       </div>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
       <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
         {error}
       </div>
     );
-  }
 
-  if (!stats) {
+  if (!stats)
     return (
-      <div className="bg-white rounded-lg shadow-md p-6 md:p-12 text-center">
+      <div className="bg-white rounded-lg shadow-md p-12 text-center">
         <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
         <h3 className="text-xl font-semibold text-gray-700 mb-2">
-          No Stats Available
+          No Stats Yet
         </h3>
-        <p className="text-gray-500">
-          Statistics for this tournament are not available yet
-        </p>
       </div>
     );
-  }
 
-  if (sport.toLowerCase() !== "cricket") {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 md:p-12 text-center">
-        <div className="text-6xl mb-4">🏃‍♂️</div>
-        <h3 className="text-xl font-semibold text-gray-700 mb-2">
-          Coming Soon!
-        </h3>
-        <p className="text-gray-500">
-          Stats for {sport} tournaments will be available soon
-        </p>
-      </div>
-    );
-  }
+  // ✅ Auto-route based on sport from API
+  return stats.sport === "futsal" ? (
+    <FutsalTournamentStats stats={stats} />
+  ) : (
+    <CricketTournamentStats stats={stats} />
+  );
+}
 
+// ─── CRICKET ─────────────────────────────────────────────────────
+
+function CricketTournamentStats({ stats }) {
   return (
     <div className="space-y-6">
-      {/* Man of the Tournament */}
-      <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg shadow-lg p-6">
-        <div className="flex items-center gap-3 mb-2">
-          <Crown className="w-8 h-8" />
-          <h3 className="text-lg font-semibold">Man of the Tournament</h3>
-        </div>
-        <div className="text-3xl font-bold">
-          {stats.manOfTournament?.playerName || "TBD"}
-        </div>
-        <p className="text-yellow-100 mt-1">Outstanding Performance</p>
-      </div>
-
-      {/* Top Performers Grid */}
-      <div className="grid md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow-md p-5">
-          <div className="flex items-center gap-2 text-red-500 mb-3">
-            <TrendingUp className="w-5 h-5" />
-            <h4 className="font-semibold">Best Batsman</h4>
+      {/* Man of Tournament */}
+      {stats.manOfTournament && (
+        <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg shadow-lg p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <Crown className="w-8 h-8" />
+            <h3 className="text-lg font-semibold">Man of the Tournament</h3>
           </div>
-          <div className="text-2xl font-bold text-gray-800">
-            {stats.bestBatsman?.playerName || "TBD"}
+          <div className="text-3xl font-bold">
+            {stats.manOfTournament.playerName}
           </div>
-          <div className="text-gray-600 mt-1">
-            {stats.bestBatsman?.points || 0} runs
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-5">
-          <div className="flex items-center gap-2 text-red-500 mb-3">
-            <Target className="w-5 h-5" />
-            <h4 className="font-semibold">Best Bowler</h4>
-          </div>
-          <div className="text-2xl font-bold text-gray-800">
-            {stats.bestBowler?.playerName || "TBD"}
-          </div>
-          <div className="text-gray-600 mt-1">
-            {stats.bestBowler?.reason || "—"}
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-md p-5">
-          <div className="flex items-center gap-2 text-red-500 mb-3">
-            <Award className="w-5 h-5" />
-            <h4 className="font-semibold">Best Fielder</h4>
-          </div>
-          <div className="text-2xl font-bold text-gray-800">
-            {stats.bestFielder?.playerName || "TBD"}
-          </div>
-          <div className="text-gray-600 mt-1">
-            {stats.bestFielder?.reason || "—"}
-          </div>
-        </div>
-      </div>
-
-      {/* Top Batsmen */}
-      {stats.topRunScorers && stats.topRunScorers.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 md:px-6 py-3 md:py-4">
-            <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 md:w-5 md:h-5" />
-              Top Batsmen
-            </h3>
-          </div>
-          <div className="px-4 py-2 text-xs text-gray-500 bg-gray-50 border-b border-gray-200 md:hidden">
-            👉 Swipe to see all columns
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full" style={{ minWidth: "550px" }}>
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-600 uppercase sticky left-0 bg-gray-50 z-10">
-                    Rank
-                  </th>
-                  <th className="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-600 uppercase sticky left-12 bg-gray-50 z-10">
-                    Player
-                  </th>
-                  <th className="px-2 md:px-4 py-2 md:py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                    Runs
-                  </th>
-                  <th className="px-2 md:px-4 py-2 md:py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                    Balls
-                  </th>
-                  <th className="px-2 md:px-4 py-2 md:py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                    4s
-                  </th>
-                  <th className="px-2 md:px-4 py-2 md:py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                    6s
-                  </th>
-                  <th className="px-2 md:px-4 py-2 md:py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                    POM
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {stats.topRunScorers.map((player, index) => (
-                  <tr
-                    key={player.playerId}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-2 md:px-4 py-3 md:py-4 sticky left-0 bg-white">
-                      <RankBadge rank={index + 1} />
-                    </td>
-                    <td className="px-2 md:px-4 py-3 md:py-4 font-semibold text-gray-800 text-sm sticky left-12 bg-white">
-                      {player.playerName}
-                    </td>
-                    <td className="px-2 md:px-4 py-3 md:py-4 text-center font-bold text-red-500 text-sm">
-                      {player.runs}
-                    </td>
-                    <td className="px-2 md:px-4 py-3 md:py-4 text-center text-gray-600 text-sm">
-                      {player.ballsFaced}
-                    </td>
-                    <td className="px-2 md:px-4 py-3 md:py-4 text-center text-gray-600 text-sm">
-                      {player.fours}
-                    </td>
-                    <td className="px-2 md:px-4 py-3 md:py-4 text-center text-gray-600 text-sm">
-                      {player.sixes}
-                    </td>
-                    <td className="px-2 md:px-4 py-3 md:py-4 text-center">
-                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
-                        {player.playerOfMatchCount || 0}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <p className="text-yellow-100 mt-1">Outstanding Performance</p>
         </div>
       )}
 
+      {/* Awards grid */}
+      <div className="grid md:grid-cols-3 gap-4">
+        <AwardCard
+          title="Best Batsman"
+          icon={<TrendingUp className="w-5 h-5" />}
+          name={stats.bestBatsman?.playerName}
+          detail={stats.bestBatsman?.reason}
+        />
+        <AwardCard
+          title="Best Bowler"
+          icon={<Target className="w-5 h-5" />}
+          name={stats.bestBowler?.playerName}
+          detail={stats.bestBowler?.reason}
+        />
+        <AwardCard
+          title="Best Fielder"
+          icon={<Award className="w-5 h-5" />}
+          name={stats.bestFielder?.playerName}
+          detail={stats.bestFielder?.reason}
+        />
+      </div>
+
+      {/* Top Batsmen */}
+      {stats.topRunScorers?.length > 0 && (
+        <LeaderboardTable
+          title="Top Batsmen"
+          icon={<TrendingUp className="w-5 h-5" />}
+          columns={["Runs", "Balls", "4s", "6s", "POM"]}
+          rows={stats.topRunScorers.map((p) => ({
+            name: p.playerName,
+            cols: [
+              p.runs,
+              p.ballsFaced,
+              p.fours,
+              p.sixes,
+              p.playerOfMatchCount || 0,
+            ],
+          }))}
+        />
+      )}
+
       {/* Top Bowlers */}
-      {stats.topBowlers && stats.topBowlers.length > 0 && (
+      {stats.topBowlers?.length > 0 && (
+        <LeaderboardTable
+          title="Top Bowlers"
+          icon={<Target className="w-5 h-5" />}
+          columns={["Wkts", "Runs", "Balls", "Eco", "POM"]}
+          rows={stats.topBowlers.map((p) => ({
+            name: p.playerName,
+            cols: [
+              p.wickets,
+              p.runsConceded ?? 0,
+              p.ballsBowled,
+              p.economy != null ? Number(p.economy).toFixed(2) : "—",
+              p.playerOfMatchCount || 0,
+            ],
+          }))}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── FUTSAL ──────────────────────────────────────────────────────
+
+function FutsalTournamentStats({ stats }) {
+  return (
+    <div className="space-y-6">
+      {/* Man of Tournament */}
+      {stats.manOfTournament && (
+        <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg shadow-lg p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <Crown className="w-8 h-8" />
+            <h3 className="text-lg font-semibold">Man of the Tournament</h3>
+          </div>
+          <div className="text-3xl font-bold">
+            {stats.manOfTournament.playerName}
+          </div>
+          <p className="text-yellow-100 mt-1">Outstanding Performance</p>
+        </div>
+      )}
+
+      {/* Awards */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <AwardCard
+          title="Top Scorer"
+          icon={<span className="text-xl">⚽</span>}
+          name={stats.topScorer?.playerName}
+          detail={stats.topScorer?.reason}
+          color="emerald"
+        />
+        <AwardCard
+          title="Top Assist"
+          icon={<span className="text-xl">🤝</span>}
+          name={stats.topAssist?.playerName}
+          detail={stats.topAssist?.reason}
+          color="blue"
+        />
+      </div>
+
+      {/* Top Goal Scorers */}
+      {stats.topGoalScorers?.length > 0 && (
+        <LeaderboardTable
+          title="Top Scorers"
+          icon={<span className="text-xl">⚽</span>}
+          columns={["Goals", "Assists", "G+A", "🟨", "🟥"]}
+          accentColor="emerald"
+          rows={stats.topGoalScorers.map((p) => ({
+            name: p.playerName,
+            cols: [
+              p.goals,
+              p.assists,
+              (p.goals || 0) + (p.assists || 0),
+              p.yellowCards || 0,
+              p.redCards || 0,
+            ],
+          }))}
+          highlightCol={0}
+        />
+      )}
+
+      {/* Top Assisters */}
+      {stats.topAssisters?.length > 0 && (
+        <LeaderboardTable
+          title="Top Assisters"
+          icon={<span className="text-xl">🤝</span>}
+          columns={["Assists", "Goals", "G+A"]}
+          accentColor="blue"
+          rows={stats.topAssisters.map((p) => ({
+            name: p.playerName,
+            cols: [p.assists, p.goals, (p.goals || 0) + (p.assists || 0)],
+          }))}
+          highlightCol={0}
+        />
+      )}
+
+      {/* Per-match POMs */}
+      {stats.allAwards?.length > 0 && (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 md:px-6 py-3 md:py-4">
-            <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-              <Target className="w-4 h-4 md:w-5 md:h-5" />
-              Top Bowlers
+          <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-6 py-4">
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              <Trophy className="w-5 h-5" /> Player of the Match Awards
             </h3>
           </div>
-          <div className="px-4 py-2 text-xs text-gray-500 bg-gray-50 border-b border-gray-200 md:hidden">
-            👉 Swipe to see all columns
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full" style={{ minWidth: "600px" }}>
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-600 uppercase sticky left-0 bg-gray-50 z-10">
-                    Rank
-                  </th>
-                  <th className="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-600 uppercase sticky left-12 bg-gray-50 z-10">
-                    Player
-                  </th>
-                  <th className="px-2 md:px-4 py-2 md:py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                    Wickets
-                  </th>
-                  <th className="px-2 md:px-4 py-2 md:py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                    Runs
-                  </th>
-                  <th className="px-2 md:px-4 py-2 md:py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                    Balls
-                  </th>
-                  <th className="px-2 md:px-4 py-2 md:py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                    Economy
-                  </th>
-                  <th className="px-2 md:px-4 py-2 md:py-3 text-center text-xs font-semibold text-gray-600 uppercase">
-                    POM
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {stats.topBowlers.map((player, index) => (
-                  <tr
-                    key={player.playerId}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-2 md:px-4 py-3 md:py-4 sticky left-0 bg-white">
-                      <RankBadge rank={index + 1} />
-                    </td>
-                    <td className="px-2 md:px-4 py-3 md:py-4 font-semibold text-gray-800 text-sm sticky left-12 bg-white">
-                      {player.playerName}
-                    </td>
-                    <td className="px-2 md:px-4 py-3 md:py-4 text-center font-bold text-red-500 text-sm">
-                      {player.wickets}
-                    </td>
-                    <td className="px-2 md:px-4 py-3 md:py-4 text-center text-gray-600 text-sm">
-                      {player.runsConceded ?? 0}
-                    </td>
-                    <td className="px-2 md:px-4 py-3 md:py-4 text-center text-gray-600 text-sm">
-                      {player.ballsBowled}
-                    </td>
-                    <td className="px-2 md:px-4 py-3 md:py-4 text-center text-gray-600 text-sm">
-                      {player.economy != null
-                        ? Number(player.economy).toFixed(2)
-                        : player.ballsBowled > 0
-                          ? (
-                              (player.runsConceded / player.ballsBowled) *
-                              6
-                            ).toFixed(2)
-                          : "—"}
-                    </td>
-                    <td className="px-2 md:px-4 py-3 md:py-4 text-center">
-                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
-                        {player.playerOfMatchCount || 0}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="divide-y divide-gray-100">
+            {stats.allAwards.map((a, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between px-6 py-3"
+              >
+                <span className="font-semibold text-gray-800">
+                  {a.playerName}
+                </span>
+                <span className="text-xs text-gray-400">{a.reason}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -289,22 +243,112 @@ export default function TournamentStatsTab({
   );
 }
 
-function RankBadge({ rank }) {
-  const getBadgeColor = (rank) => {
-    switch (rank) {
-      case 1:
-        return "bg-gradient-to-br from-yellow-400 to-yellow-500 text-white";
-      case 2:
-        return "bg-gradient-to-br from-gray-300 to-gray-400 text-white";
-      case 3:
-        return "bg-gradient-to-br from-orange-400 to-orange-500 text-white";
-      default:
-        return "bg-gray-200 text-gray-700";
-    }
+// ─── SHARED SUB COMPONENTS ────────────────────────────────────────
+
+function AwardCard({ title, icon, name, detail, color = "red" }) {
+  const colors = {
+    red: "text-red-500",
+    emerald: "text-emerald-500",
+    blue: "text-blue-500",
   };
   return (
+    <div className="bg-white rounded-lg shadow-md p-5">
+      <div className={`flex items-center gap-2 ${colors[color]} mb-3`}>
+        {icon}
+        <h4 className="font-semibold">{title}</h4>
+      </div>
+      <div className="text-2xl font-bold text-gray-800">{name || "TBD"}</div>
+      {detail && <div className="text-gray-500 text-sm mt-1">{detail}</div>}
+    </div>
+  );
+}
+
+function LeaderboardTable({
+  title,
+  icon,
+  columns,
+  rows,
+  accentColor = "red",
+  highlightCol = 0,
+}) {
+  const accent =
+    accentColor === "emerald"
+      ? "from-emerald-500 to-emerald-600"
+      : accentColor === "blue"
+        ? "from-blue-500 to-blue-600"
+        : "from-red-500 to-red-600";
+  const textAccent =
+    accentColor === "emerald"
+      ? "text-emerald-500"
+      : accentColor === "blue"
+        ? "text-blue-500"
+        : "text-red-500";
+
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className={`bg-gradient-to-r ${accent} text-white px-6 py-4`}>
+        <h3 className="text-lg font-bold flex items-center gap-2">
+          {icon} {title}
+        </h3>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full" style={{ minWidth: 400 }}>
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase sticky left-0 bg-gray-50">
+                Rank
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase sticky left-12 bg-gray-50">
+                Player
+              </th>
+              {columns.map((c, i) => (
+                <th
+                  key={i}
+                  className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase"
+                >
+                  {c}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {rows.map((row, i) => (
+              <tr key={i} className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3 sticky left-0 bg-white">
+                  <RankBadge rank={i + 1} />
+                </td>
+                <td className="px-4 py-3 font-semibold text-gray-800 text-sm sticky left-12 bg-white">
+                  {row.name}
+                </td>
+                {row.cols.map((v, j) => (
+                  <td
+                    key={j}
+                    className={`px-4 py-3 text-center text-sm ${j === highlightCol ? `font-bold ${textAccent}` : "text-gray-600"}`}
+                  >
+                    {v}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function RankBadge({ rank }) {
+  const color =
+    rank === 1
+      ? "bg-gradient-to-br from-yellow-400 to-yellow-500 text-white"
+      : rank === 2
+        ? "bg-gradient-to-br from-gray-300 to-gray-400 text-white"
+        : rank === 3
+          ? "bg-gradient-to-br from-orange-400 to-orange-500 text-white"
+          : "bg-gray-200 text-gray-700";
+  return (
     <div
-      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${getBadgeColor(rank)}`}
+      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${color}`}
     >
       {rank}
     </div>

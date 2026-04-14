@@ -119,6 +119,7 @@ export default function TournamentDetailComponent({
                               state: {
                                 tournamentId: tournament.id,
                                 tournamentName: tournament.name,
+                                sportId: sportID,
                               },
                             })
                       }

@@ -17,6 +17,7 @@ import SportTournamentDetail from "../pages/tournament/sport_tournamentDetail";
 import Request from "../pages/requests/Request";
 import Stats from "../pages/stats/Stats";
 import MatchScoreRoute from "../pages/match/MatchScoreRoute";
+import FutsalMatch from "../components/sports/football/FutsalScoring.jsx";
 
 function AppRoutes() {
   return (
@@ -49,6 +50,7 @@ function AppRoutes() {
       <Route path="/stats" element={<Stats />} />
       <Route path="/request" element={<Request />} />
       <Route path="/match" element={<MatchScoreRoute />} />
+      <Route path="/futsal-match" element={<FutsalMatch />} />
     </Routes>
   );
 }

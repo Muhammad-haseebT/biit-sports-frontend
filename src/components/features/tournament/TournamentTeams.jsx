@@ -9,7 +9,7 @@ import { Plus } from "lucide-react";
 import Cookies from "js-cookie";
 import {
   getTeamsByTournamentId,
-  getMyTeamByTournamentIdAndPlayerId,
+  getMyTeamByTournamentIdAndAccountId,
   createTeam,
 } from "../../../api/teamApi";
 import { GetAllPlayers } from "../../../api/accountsApi";
@@ -106,16 +106,16 @@ export default function TournamentTeams({ tournamentId, onCreateTeam }) {
 
   const fetchMyTeam = useCallback(async () => {
     try {
-      const playerId = JSON.parse(Cookies.get("account")).playerId;
+      const accountId = JSON.parse(Cookies.get("account")).id;
 
-      if (!playerId) {
+      if (!accountId) {
         setMyTeam(null);
         return;
       }
 
-      const res = await getMyTeamByTournamentIdAndPlayerId(
+      const res = await getMyTeamByTournamentIdAndAccountId(
         tournamentId,
-        playerId,
+        accountId,
       );
 
       setMyTeam(res ?? null);
