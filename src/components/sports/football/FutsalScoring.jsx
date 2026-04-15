@@ -339,9 +339,13 @@ export default function FutsalScoring({
                 <span className="text-rose-600">{team2Name}</span>
               </div>
 
-              {winnerTeamName ? (
+              {score.team1Score > score.team2Score ? (
                 <div className="mt-2 bg-yellow-400 text-yellow-900 font-black text-xl px-6 py-3 rounded-full shadow-md text-center">
-                  🏆 {winnerTeamName} Wins!
+                  🏆 {team1Name} Wins!
+                </div>
+              ) : score.team2Score > score.team1Score ? (
+                <div className="mt-2 bg-yellow-400 text-yellow-900 font-black text-xl px-6 py-3 rounded-full shadow-md text-center">
+                  🏆 {team2Name} Wins!
                 </div>
               ) : (
                 <div className="mt-2 bg-gray-200 text-gray-700 font-bold text-xl px-6 py-3 rounded-full text-center">
