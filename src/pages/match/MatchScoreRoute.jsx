@@ -62,28 +62,29 @@ export default function MatchScoreRoute() {
     );
   }
 
-  const handleStartMatch = () => {
-    console.log({
-      matchId,
-      tossWinnerId,
-      decision,
-      scorerId: scorerUsername,
-      sportId,
-      inningsId,
-      overs: match?.overs,
-    });
+  const [starting, setStarting] = useState(false);
 
-    if (
-      startmatch(matchId, {
+  const handleStartMatch = async () => {
+    setStarting(true);
+    try {
+      await startmatch(matchId, {
         tossWinnerId,
         decision,
         scorerId: scorerUsername,
         sportId,
         inningsId,
         overs: match?.overs,
-      })
-    ) {
+      });
       navigate(-1);
+    } catch (err) {
+      console.error("Failed to start match:", err);
+      Swal.fire({
+        title: "Error",
+        text: err?.response?.data?.message || "Failed to start match. Please try again.",
+        icon: "error",
+      });
+    } finally {
+      setStarting(false);
     }
   };
   return (
@@ -241,17 +242,22 @@ export default function MatchScoreRoute() {
           {/* Bottom Actions */}
           <div className="pt-2 flex flex-col gap-2">
             <button
-              disabled={!tossWinner || !decision}
+              disabled={!tossWinner || !decision || starting}
               className={`w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 ${
-                tossWinner && decision
+                tossWinner && decision && !starting
                   ? "bg-red-600 text-white shadow-xl shadow-red-500/40 hover:-translate-y-1 active:scale-95"
                   : "bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed"
               }`}
-              onClick={() => {
-                handleStartMatch();
-              }}
+              onClick={handleStartMatch}
             >
-              Start Match <ChevronRight size={18} />
+              {starting ? (
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+              ) : (
+                <>Start Match <ChevronRight size={18} /></>
+              )}
             </button>
             <button
               className="w-full py-3 rounded-xl text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center justify-center gap-2 transition-all"
@@ -434,22 +440,42 @@ export default function MatchScoreRoute() {
           {/* Actions */}
           <div className="pt-2 flex flex-col gap-2">
             <button
-              disabled={!tossWinner}
+              disabled={!tossWinner || starting}
               className={`w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 ${
-                tossWinner
+                tossWinner && !starting
                   ? "bg-emerald-600 text-white shadow-xl shadow-emerald-500/40 hover:-translate-y-1 active:scale-95"
                   : "bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed"
               }`}
-              onClick={() =>
-                startmatch(matchId, {
-                  tossWinnerId,
-                  decision: "KICKOFF",
-                  scorerId: scorerUsername,
-                  sportId,
-                })
-              }
+              onClick={async () => {
+                setStarting(true);
+                try {
+                  await startmatch(matchId, {
+                    tossWinnerId,
+                    decision: "KICKOFF",
+                    scorerId: scorerUsername,
+                    sportId,
+                  });
+                  navigate(-1);
+                } catch (err) {
+                  console.error("Failed to start match:", err);
+                  Swal.fire({
+                    title: "Error",
+                    text: err?.response?.data?.message || "Failed to start match. Please try again.",
+                    icon: "error",
+                  });
+                } finally {
+                  setStarting(false);
+                }
+              }}
             >
-              ⚽ Start Futsal Match <ChevronRight size={18} />
+              {starting ? (
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+              ) : (
+                <>⚽ Start Futsal Match <ChevronRight size={18} /></>
+              )}
             </button>
             <button
               className="w-full py-3 rounded-xl text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center justify-center gap-2 transition-all"

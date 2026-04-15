@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Navbar from "../components/layout/Navbar";
 import SportFilter from "../components/common/SportFilter";
 import MatchCard from "../components/common/MatchCard";
@@ -6,6 +6,7 @@ import LoadingSpinner from "../components/common/LoadingSpinner";
 import { getMatchByStatus, getMatchBySportAndStatus } from "../api/matchApi";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Home() {
   const [live, setLive] = useState([]);
@@ -14,6 +15,8 @@ export default function Home() {
   const [searchLive, setSearchLive] = useState([]);
   const [searchUpcoming, setSearchUpcoming] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const carouselRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -175,6 +178,26 @@ export default function Home() {
     }
   };
 
+  const liveSlides = searchLive.slice(0, 3);
+
+  const goCarousel = (dir) => {
+    const next = (carouselIndex + dir + liveSlides.length) % liveSlides.length;
+    setCarouselIndex(next);
+    if (carouselRef.current) {
+      const cardWidth = carouselRef.current.offsetWidth;
+      carouselRef.current.scrollTo({ left: next * cardWidth, behavior: "smooth" });
+    }
+  };
+
+  const handleCarouselScroll = () => {
+    if (carouselRef.current) {
+      const idx = Math.round(
+        carouselRef.current.scrollLeft / carouselRef.current.offsetWidth
+      );
+      setCarouselIndex(idx);
+    }
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen">
       <Navbar username={username} onSearch={onSearch} />
@@ -185,37 +208,95 @@ export default function Home() {
           <LoadingSpinner size="large" />
         ) : (
           <>
-            <h3 className="text-xl font-bold mb-4">Live Matches</h3>
-            <div className="overflow-x-auto mb-8 ">
-              <div>
-                {searchLive.slice(0, 3).map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    title={match.tournamentName}
-                    team1={match.team1Name}
-                    team2={match.team2Name}
-                    extra={match.status}
-                    sportId={match.sportId}
-                    live={true}
-                    onClick={() =>
-                      handleClick(
-                        match.id,
-                        match.status,
-                        match.team1Id,
-                        match.team2Id,
-                        match.decision,
-                        match.tossWinnerId,
-                        match.team1Name,
-                        match.team2Name,
-                        match.sportId,
-                        match.inningsId,
-                        match.venue,
-                        match,
-                      )
-                    }
-                  />
-                ))}
+            {/* ── Live Matches Carousel ── */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                  </span>
+                  Live Matches
+                </h3>
+                {liveSlides.length > 1 && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      id="carousel-prev"
+                      onClick={() => goCarousel(-1)}
+                      className="p-1.5 rounded-full bg-white shadow hover:bg-red-50 text-red-500 transition"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button
+                      id="carousel-next"
+                      onClick={() => goCarousel(1)}
+                      className="p-1.5 rounded-full bg-white shadow hover:bg-red-50 text-red-500 transition"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                )}
               </div>
+
+              {liveSlides.length === 0 ? (
+                <div className="bg-white rounded-2xl p-8 text-center text-gray-400 shadow-sm">
+                  <p className="text-sm font-medium">No live matches right now</p>
+                </div>
+              ) : (
+                <>
+                  <div
+                    ref={carouselRef}
+                    onScroll={handleCarouselScroll}
+                    className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar gap-0"
+                    style={{ scrollbarWidth: "none" }}
+                  >
+                    {liveSlides.map((match) => (
+                      <div key={match.id} className="flex-shrink-0 w-full snap-start">
+                        <MatchCard
+                          title={match.tournamentName}
+                          team1={match.team1Name}
+                          team2={match.team2Name}
+                          extra={match.status}
+                          sportId={match.sportId}
+                          live={true}
+                          onClick={() =>
+                            handleClick(
+                              match.id,
+                              match.status,
+                              match.team1Id,
+                              match.team2Id,
+                              match.decision,
+                              match.tossWinnerId,
+                              match.team1Name,
+                              match.team2Name,
+                              match.sportId,
+                              match.inningsId,
+                              match.venue,
+                              match,
+                            )
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {/* Dot indicators */}
+                  {liveSlides.length > 1 && (
+                    <div className="flex justify-center gap-1.5 mt-2">
+                      {liveSlides.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => goCarousel(i - carouselIndex)}
+                          className={`h-1.5 rounded-full transition-all duration-300 ${
+                            i === carouselIndex
+                              ? "w-5 bg-red-500"
+                              : "w-1.5 bg-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             <h3 className="text-xl font-bold mb-4">Upcoming Matches</h3>
