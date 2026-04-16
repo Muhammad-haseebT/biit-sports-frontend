@@ -72,6 +72,18 @@ export default function PlayerStats() {
       setTournamentLoading(false);
     }
   };
+  const handleSportChange = async (sport) => {
+    setManualSport(sport);
+    // Overall view mein sport-specific stats reload karo
+    if (activeView === "overall" && playerId) {
+      try {
+        const stats = await getPlayerStats(playerId, sport); // sport param add
+        setOverallStats(stats);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
 
   if (loading)
     return (
@@ -136,7 +148,7 @@ export default function PlayerStats() {
             ].map(({ key, label, emoji }) => (
               <button
                 key={key}
-                onClick={() => setManualSport(key)}
+                onClick={() => handleSportChange(key)}
                 className={`px-4 py-2 rounded-full font-medium transition-all whitespace-nowrap border-2 flex items-center gap-2 ${
                   activeSport === key
                     ? "bg-red-500 text-white border-red-500"
@@ -205,7 +217,7 @@ export default function PlayerStats() {
       {/* ✅ Stats display — auto-routes to correct component based on sport */}
       {stats &&
         !tournamentLoading &&
-        (activeSport === "Futsal" ? (
+        (activeSport.toLowerCase() === "futsal" ? (
           <FutsalPlayerStats stats={stats} />
         ) : (
           <CricketPlayerStats stats={stats} />
