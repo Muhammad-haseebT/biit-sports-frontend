@@ -4,11 +4,18 @@ import Cookies from "js-cookie";
 import LoadingSpinner from "../../common/LoadingSpinner";
 import CricketPlayerStats from "./CricketPlayerStats";
 import FutsalPlayerStats from "./FutsalPlayerStats";
+import VolleyballPlayerStats from "./VolleyballPlayerStats";
 import {
   getPlayerStats,
   getPlayerTournamentStats,
   getTournamentNamesandIds,
 } from "../../../api/statsApi";
+
+const SPORTS = [
+  { key: "cricket", label: "Cricket", emoji: "🏏" },
+  { key: "futsal", label: "Futsal", emoji: "⚽" },
+  { key: "volleyball", label: "Volleyball", emoji: "🏐" }, // ✅ NEW
+];
 
 export default function PlayerStats() {
   const [overallStats, setOverallStats] = useState(null);
@@ -20,10 +27,7 @@ export default function PlayerStats() {
   const [error, setError] = useState(null);
   const [playerId, setPlayerId] = useState(null);
   const [activeView, setActiveView] = useState("overall");
-
-  // ── sport is now auto-detected from API response (stats.sport field)
-  // No manual selector needed — backend tells us the sport
-  const [manualSport, setManualSport] = useState(null); // override for overall view
+  const [manualSport, setManualSport] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,12 +76,12 @@ export default function PlayerStats() {
       setTournamentLoading(false);
     }
   };
+
   const handleSportChange = async (sport) => {
     setManualSport(sport);
-    // Overall view mein sport-specific stats reload karo
     if (activeView === "overall" && playerId) {
       try {
-        const stats = await getPlayerStats(playerId, sport); // sport param add
+        const stats = await getPlayerStats(playerId, sport);
         setOverallStats(stats);
       } catch (err) {
         console.error(err);
@@ -100,16 +104,13 @@ export default function PlayerStats() {
     );
 
   const stats = activeView === "overall" ? overallStats : tournamentStats;
-
-  // ✅ Sport from API response — no manual override needed for tournament view
-  // For overall view, allow manual sport selection if player plays multiple sports
   const detectedSport = stats?.sport || "cricket";
   const activeSport =
     activeView === "overall" && manualSport ? manualSport : detectedSport;
 
   return (
     <div className="space-y-6">
-      {/* View Selector */}
+      {/* ── View Selector ── */}
       <div className="bg-white rounded-lg shadow-md p-4">
         <div className="flex gap-3 overflow-x-auto">
           <button
@@ -135,17 +136,14 @@ export default function PlayerStats() {
         </div>
       </div>
 
-      {/* Sport chips — only overall view, only if player has multi-sport stats */}
+      {/* ── Sport Chips (overall view only) ── */}
       {activeView === "overall" && overallStats && (
         <div className="bg-white rounded-lg shadow-md p-4">
           <label className="block text-xs font-semibold text-gray-500 uppercase mb-3">
             Sport
           </label>
           <div className="flex gap-3 overflow-x-auto">
-            {[
-              { key: "cricket", label: "Cricket", emoji: "🏏" },
-              { key: "futsal", label: "Futsal", emoji: "⚽" },
-            ].map(({ key, label, emoji }) => (
+            {SPORTS.map(({ key, label, emoji }) => (
               <button
                 key={key}
                 onClick={() => handleSportChange(key)}
@@ -162,7 +160,7 @@ export default function PlayerStats() {
         </div>
       )}
 
-      {/* Tournament Selector */}
+      {/* ── Tournament Selector ── */}
       {activeView === "tournament" && (
         <div className="bg-white rounded-lg shadow-md p-4">
           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -180,7 +178,6 @@ export default function PlayerStats() {
               </option>
             ))}
           </select>
-          {/* ✅ Sport auto-detected — no manual selector needed for tournament view */}
           {tournamentStats?.sport && (
             <p className="text-xs text-gray-400 mt-2">
               Sport:{" "}
@@ -192,14 +189,14 @@ export default function PlayerStats() {
         </div>
       )}
 
-      {/* Loading */}
+      {/* ── Loading ── */}
       {tournamentLoading && (
         <div className="flex justify-center items-center min-h-[200px]">
           <LoadingSpinner size="medium" />
         </div>
       )}
 
-      {/* Empty state */}
+      {/* ── Empty State ── */}
       {activeView === "tournament" &&
         !selectedTournament &&
         !tournamentLoading && (
@@ -214,14 +211,18 @@ export default function PlayerStats() {
           </div>
         )}
 
-      {/* ✅ Stats display — auto-routes to correct component based on sport */}
-      {stats &&
-        !tournamentLoading &&
-        (activeSport.toLowerCase() === "futsal" ? (
-          <FutsalPlayerStats stats={stats} />
-        ) : (
-          <CricketPlayerStats stats={stats} />
-        ))}
+      {/* ── Stats Display — routes by sport ── */}
+      {stats && !tournamentLoading && (
+        <>
+          {activeSport.toLowerCase() === "volleyball" ? (
+            <VolleyballPlayerStats stats={stats} /> // ✅ NEW
+          ) : activeSport.toLowerCase() === "futsal" ? (
+            <FutsalPlayerStats stats={stats} />
+          ) : (
+            <CricketPlayerStats stats={stats} />
+          )}
+        </>
+      )}
     </div>
   );
 }

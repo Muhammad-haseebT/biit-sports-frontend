@@ -5,7 +5,9 @@ import {
   TrendingUp,
   Target,
   Crown,
-  ShieldAlert,
+  Zap,
+  Star,
+  Shield,
 } from "lucide-react";
 import LoadingSpinner from "../../common/LoadingSpinner";
 import { getTournamentStats } from "../../../api/statsApi";
@@ -53,34 +55,22 @@ export default function TournamentStatsTab({ tournamentId }) {
       </div>
     );
 
-  // ✅ Auto-route based on sport from API
-  return stats.sport === "futsal" ? (
-    <FutsalTournamentStats stats={stats} />
-  ) : (
-    <CricketTournamentStats stats={stats} />
-  );
+  // Auto-route based on sport from API
+  const sport = stats.sport?.toLowerCase() ?? "cricket";
+  if (sport === "volleyball")
+    return <VolleyballTournamentStats stats={stats} />;
+  if (sport === "futsal") return <FutsalTournamentStats stats={stats} />;
+  return <CricketTournamentStats stats={stats} />;
 }
 
-// ─── CRICKET ─────────────────────────────────────────────────────
+// ─── CRICKET ──────────────────────────────────────────────────────
 
 function CricketTournamentStats({ stats }) {
   return (
     <div className="space-y-6">
-      {/* Man of Tournament */}
       {stats.manOfTournament && (
-        <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg shadow-lg p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Crown className="w-8 h-8" />
-            <h3 className="text-lg font-semibold">Man of the Tournament</h3>
-          </div>
-          <div className="text-3xl font-bold">
-            {stats.manOfTournament.playerName}
-          </div>
-          <p className="text-yellow-100 mt-1">Outstanding Performance</p>
-        </div>
+        <ManOfTournamentCard name={stats.manOfTournament.playerName} />
       )}
-
-      {/* Awards grid */}
       <div className="grid md:grid-cols-3 gap-4">
         <AwardCard
           title="Best Batsman"
@@ -101,8 +91,6 @@ function CricketTournamentStats({ stats }) {
           detail={stats.bestFielder?.reason}
         />
       </div>
-
-      {/* Top Batsmen */}
       {stats.topRunScorers?.length > 0 && (
         <LeaderboardTable
           title="Top Batsmen"
@@ -120,8 +108,6 @@ function CricketTournamentStats({ stats }) {
           }))}
         />
       )}
-
-      {/* Top Bowlers */}
       {stats.topBowlers?.length > 0 && (
         <LeaderboardTable
           title="Top Bowlers"
@@ -143,50 +129,37 @@ function CricketTournamentStats({ stats }) {
   );
 }
 
-// ─── FUTSAL ──────────────────────────────────────────────────────
+// ─── FUTSAL ───────────────────────────────────────────────────────
 
 function FutsalTournamentStats({ stats }) {
   return (
     <div className="space-y-6">
-      {/* Man of Tournament */}
       {stats.manOfTournament && (
-        <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg shadow-lg p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Crown className="w-8 h-8" />
-            <h3 className="text-lg font-semibold">Man of the Tournament</h3>
-          </div>
-          <div className="text-3xl font-bold">
-            {stats.manOfTournament.playerName}
-          </div>
-          <p className="text-yellow-100 mt-1">Outstanding Performance</p>
-        </div>
+        <ManOfTournamentCard name={stats.manOfTournament.playerName} />
       )}
-
-      {/* Awards */}
       <div className="grid md:grid-cols-2 gap-4">
         <AwardCard
           title="Top Scorer"
-          icon={<span className="text-xl">⚽</span>}
+          icon={<span style={{ fontSize: 16 }}>⚽</span>}
           name={stats.topScorer?.playerName}
           detail={stats.topScorer?.reason}
           color="emerald"
         />
         <AwardCard
           title="Top Assist"
-          icon={<span className="text-xl">🤝</span>}
+          icon={<span style={{ fontSize: 16 }}>🤝</span>}
           name={stats.topAssist?.playerName}
           detail={stats.topAssist?.reason}
           color="blue"
         />
       </div>
-
-      {/* Top Goal Scorers */}
       {stats.topGoalScorers?.length > 0 && (
         <LeaderboardTable
           title="Top Scorers"
-          icon={<span className="text-xl">⚽</span>}
+          icon={<span style={{ fontSize: 16 }}>⚽</span>}
           columns={["Goals", "Assists", "G+A", "🟨", "🟥"]}
           accentColor="emerald"
+          highlightCol={0}
           rows={stats.topGoalScorers.map((p) => ({
             name: p.playerName,
             cols: [
@@ -197,63 +170,152 @@ function FutsalTournamentStats({ stats }) {
               p.redCards || 0,
             ],
           }))}
-          highlightCol={0}
         />
       )}
-
-      {/* Top Assisters */}
       {stats.topAssisters?.length > 0 && (
         <LeaderboardTable
           title="Top Assisters"
-          icon={<span className="text-xl">🤝</span>}
+          icon={<span style={{ fontSize: 16 }}>🤝</span>}
           columns={["Assists", "Goals", "G+A"]}
           accentColor="blue"
+          highlightCol={0}
           rows={stats.topAssisters.map((p) => ({
             name: p.playerName,
             cols: [p.assists, p.goals, (p.goals || 0) + (p.assists || 0)],
           }))}
+        />
+      )}
+      {stats.allAwards?.length > 0 && <PomList awards={stats.allAwards} />}
+    </div>
+  );
+}
+
+// ─── VOLLEYBALL ───────────────────────────────────────────────────
+
+function VolleyballTournamentStats({ stats }) {
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg shadow-lg p-6">
+        <div className="flex items-center gap-3">
+          <span className="text-4xl">🏐</span>
+          <div>
+            <h2 className="text-2xl font-bold">{stats.tournamentName}</h2>
+            <p className="text-violet-200 text-sm mt-0.5">
+              Volleyball Tournament Stats
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Top Awards */}
+      <div className="grid md:grid-cols-3 gap-4">
+        {stats.manOfTournament && (
+          <AwardCard
+            title="Man of Tournament"
+            icon={<Trophy className="w-5 h-5" />}
+            name={stats.manOfTournament.playerName}
+            detail={`${stats.manOfTournament.points ?? 0} fantasy pts`}
+            color="amber"
+          />
+        )}
+        <AwardCard
+          title="Top Scorer"
+          icon={<Zap className="w-5 h-5" />}
+          name={stats.topScorer?.playerName}
+          detail={stats.topScorer?.reason}
+          color="violet"
+        />
+        <AwardCard
+          title="Best Server"
+          icon={<Star className="w-5 h-5" />}
+          name={stats.topAssist?.playerName}
+          detail={stats.topAssist?.reason}
+          color="sky"
+        />
+      </div>
+
+      {/* Top Scorers (attack points) */}
+      {stats.topGoalScorers?.length > 0 && (
+        <LeaderboardTable
+          title="Top Scorers (Attack Points)"
+          icon={<Zap className="w-5 h-5" />}
+          columns={[
+            "Points",
+            "Aces",
+            "Blocks",
+            "Atk Err",
+            "Svc Err",
+            "Fantasy",
+          ]}
+          accentColor="violet"
           highlightCol={0}
+          rows={stats.topGoalScorers.map((p) => ({
+            name: p.playerName,
+            cols: [
+              p.goals,
+              p.assists,
+              p.futsalFouls ?? 0,
+              p.yellowCards ?? 0,
+              p.redCards ?? 0,
+              p.totalPoints ?? 0,
+            ],
+          }))}
         />
       )}
 
-      {/* Per-match POMs */}
+      {/* Best Servers (aces) */}
+      {stats.topAssisters?.length > 0 && (
+        <LeaderboardTable
+          title="Best Servers (Aces)"
+          icon={<Star className="w-5 h-5" />}
+          columns={["Aces", "Points", "Fantasy"]}
+          accentColor="sky"
+          highlightCol={0}
+          rows={stats.topAssisters.map((p) => ({
+            name: p.playerName,
+            cols: [p.assists, p.goals, p.totalPoints ?? 0],
+          }))}
+        />
+      )}
+
+      {/* Player of Match Awards */}
       {stats.allAwards?.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-6 py-4">
-            <h3 className="text-lg font-bold flex items-center gap-2">
-              <Trophy className="w-5 h-5" /> Player of the Match Awards
-            </h3>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {stats.allAwards.map((a, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between px-6 py-3"
-              >
-                <span className="font-semibold text-gray-800">
-                  {a.playerName}
-                </span>
-                <span className="text-xs text-gray-400">{a.reason}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <PomList awards={stats.allAwards} violet />
       )}
     </div>
   );
 }
 
-// ─── SHARED SUB COMPONENTS ────────────────────────────────────────
+// ─── SHARED COMPONENTS ────────────────────────────────────────────
+
+function ManOfTournamentCard({ name }) {
+  return (
+    <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg shadow-lg p-6">
+      <div className="flex items-center gap-3 mb-2">
+        <Crown className="w-8 h-8" />
+        <h3 className="text-lg font-semibold">Man of the Tournament</h3>
+      </div>
+      <div className="text-3xl font-bold">{name}</div>
+      <p className="text-yellow-100 mt-1">Outstanding Performance</p>
+    </div>
+  );
+}
 
 function AwardCard({ title, icon, name, detail, color = "red" }) {
   const colors = {
     red: "text-red-500",
     emerald: "text-emerald-500",
     blue: "text-blue-500",
+    amber: "text-amber-500",
+    violet: "text-violet-500",
+    sky: "text-sky-500",
   };
   return (
     <div className="bg-white rounded-lg shadow-md p-5">
-      <div className={`flex items-center gap-2 ${colors[color]} mb-3`}>
+      <div
+        className={`flex items-center gap-2 ${colors[color] ?? "text-red-500"} mb-3`}
+      >
         {icon}
         <h4 className="font-semibold">{title}</h4>
       </div>
@@ -271,22 +333,26 @@ function LeaderboardTable({
   accentColor = "red",
   highlightCol = 0,
 }) {
-  const accent =
-    accentColor === "emerald"
-      ? "from-emerald-500 to-emerald-600"
-      : accentColor === "blue"
-        ? "from-blue-500 to-blue-600"
-        : "from-red-500 to-red-600";
-  const textAccent =
-    accentColor === "emerald"
-      ? "text-emerald-500"
-      : accentColor === "blue"
-        ? "text-blue-500"
-        : "text-red-500";
+  const gradients = {
+    red: "from-red-500 to-red-600",
+    emerald: "from-emerald-500 to-emerald-600",
+    blue: "from-blue-500 to-blue-600",
+    violet: "from-violet-500 to-purple-600",
+    sky: "from-sky-500 to-blue-600",
+  };
+  const textAccents = {
+    red: "text-red-500",
+    emerald: "text-emerald-500",
+    blue: "text-blue-500",
+    violet: "text-violet-600",
+    sky: "text-sky-600",
+  };
+  const gradient = gradients[accentColor] ?? gradients.red;
+  const textAccent = textAccents[accentColor] ?? textAccents.red;
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className={`bg-gradient-to-r ${accent} text-white px-6 py-4`}>
+      <div className={`bg-gradient-to-r ${gradient} text-white px-6 py-4`}>
         <h3 className="text-lg font-bold flex items-center gap-2">
           {icon} {title}
         </h3>
@@ -332,6 +398,33 @@ function LeaderboardTable({
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+function PomList({ awards, violet }) {
+  const headerGradient = violet
+    ? "from-violet-500 to-purple-600"
+    : "from-amber-500 to-yellow-500";
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div
+        className={`bg-gradient-to-r ${headerGradient} text-white px-6 py-4`}
+      >
+        <h3 className="text-lg font-bold flex items-center gap-2">
+          <Trophy className="w-5 h-5" /> Player of the Match Awards
+        </h3>
+      </div>
+      <div className="divide-y divide-gray-100">
+        {awards.map((a, i) => (
+          <div key={i} className="flex items-center justify-between px-6 py-3">
+            <span className="font-semibold text-gray-800">{a.playerName}</span>
+            <span className="text-xs text-gray-400">
+              {a.reason ?? (a.points != null ? `${a.points} pts` : "")}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
