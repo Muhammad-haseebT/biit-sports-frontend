@@ -2,12 +2,12 @@ import axios from "axios";
 
 const url = import.meta.env.VITE_BASE_URL;
 
-export const getPlayerStats = async (playerId, sport = null) => {
-  const params = sport ? `?sport=${sport}` : "";
-  const response = await axios.get(`${url}/player/${playerId}/stats${params}`);
-  console.log(response.data);
-  return response.data;
-};
+// export const getPlayerStats = async (playerId, sport = null) => {
+//   const params = sport ? `?sport=${sport}` : "";
+//   const response = await axios.get(`${url}/player/${playerId}/stats${params}`);
+//   console.log(response.data);
+//   return response.data;
+// };
 
 // Response
 // {
@@ -268,3 +268,16 @@ export const getTournamentNamesandIds = async () => {
 //     "18": "sadasdasd"
 //   }
 // ]
+
+export const getPlayerStats = async (playerId, sport = null) => {
+  try {
+    const params = sport ? `?sport=${encodeURIComponent(sport)}` : "";
+    const response = await axios.get(
+      `${url}/player/${playerId}/stats${params}`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching player stats:", error);
+    throw error;
+  }
+};

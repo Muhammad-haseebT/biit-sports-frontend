@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trophy, TrendingUp, Target, Award, Crown } from "lucide-react";
+import { Trophy, TrendingUp, Target, Award, Crown, Users } from "lucide-react";
 import LoadingSpinner from "../../common/LoadingSpinner";
 import { getTournamentStats } from "../../../api/statsApi";
 
@@ -42,18 +42,25 @@ export default function TournamentStatsTab({ tournamentId }) {
       </div>
     );
 
-  switch (stats.sport) {
+  switch (stats.sport?.toLowerCase()) {
     case "futsal":
       return <FutsalStats stats={stats} />;
     case "volleyball":
       return <VolleyballStats stats={stats} />;
     case "badminton":
       return <BadmintonStats stats={stats} />;
+    case "table tennis":
+    case "tabletennis":
+      return <TableTennisStats stats={stats} />;
+    case "tug of war":
+    case "tugofwar":
+      return <TugOfWarStats stats={stats} />;
     default:
       return <CricketStats stats={stats} />;
   }
 }
 
+// ── Cricket ──────────────────────────────────────────────────────
 function CricketStats({ stats }) {
   return (
     <div className="space-y-6">
@@ -117,6 +124,7 @@ function CricketStats({ stats }) {
   );
 }
 
+// ── Futsal ───────────────────────────────────────────────────────
 function FutsalStats({ stats }) {
   return (
     <div className="space-y-6">
@@ -174,6 +182,7 @@ function FutsalStats({ stats }) {
   );
 }
 
+// ── Volleyball ───────────────────────────────────────────────────
 function VolleyballStats({ stats }) {
   return (
     <div className="space-y-6">
@@ -212,13 +221,11 @@ function VolleyballStats({ stats }) {
   );
 }
 
+// ── Badminton ────────────────────────────────────────────────────
 function BadmintonStats({ stats }) {
   return (
     <div className="space-y-6">
-      <ManOfTournament
-        name={stats.manOfTournament?.playerName}
-        color="violet"
-      />
+      <ManOfTournament name={stats.manOfTournament?.playerName} />
       <div className="grid md:grid-cols-2 gap-4">
         <AwardCard
           title="Top Scorer"
@@ -253,7 +260,96 @@ function BadmintonStats({ stats }) {
   );
 }
 
-// ─── SHARED ──────────────────────────────────────────────────────
+// ── Table Tennis ─────────────────────────────────────────────────
+function TableTennisStats({ stats }) {
+  return (
+    <div className="space-y-6">
+      <ManOfTournament name={stats.manOfTournament?.playerName} />
+      <div className="grid md:grid-cols-2 gap-4">
+        <AwardCard
+          title="Top Scorer"
+          icon="🏓"
+          name={stats.topScorer?.playerName}
+          detail={stats.topScorer?.reason}
+          color="blue"
+        />
+        <AwardCard
+          title="Top Attacker"
+          icon="💥"
+          name={stats.topAssist?.playerName}
+          detail={stats.topAssist?.reason}
+          color="orange"
+        />
+      </div>
+      {stats.topGoalScorers?.length > 0 && (
+        <Leaderboard
+          title="Top Scorers"
+          icon="🏓"
+          accentColor="blue"
+          columns={["Points", "Smashes+Aces", "Faults"]}
+          highlightCol={0}
+          rows={stats.topGoalScorers.map((p) => ({
+            name: p.playerName,
+            cols: [p.goals, p.assists, p.futsalFouls || 0],
+          }))}
+        />
+      )}
+      <PomList awards={stats.allAwards} />
+    </div>
+  );
+}
+
+// ── Tug of War ───────────────────────────────────────────────────
+function TugOfWarStats({ stats }) {
+  return (
+    <div className="space-y-6">
+      <ManOfTournament name={stats.manOfTournament?.playerName} />
+
+      {/* Note: team sport */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-700 flex items-center gap-2">
+        <Users className="w-4 h-4 flex-shrink-0" />
+        Tug of War is a team sport. Tournament awards are based on team
+        performance and round wins.
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <AwardCard
+          title="Best Team"
+          icon="🪢"
+          name={stats.topScorer?.playerName}
+          detail={stats.topScorer?.reason}
+          color="amber"
+        />
+        <AwardCard
+          title="Most Dominant"
+          icon="💪"
+          name={stats.topAssist?.playerName}
+          detail={stats.topAssist?.reason}
+          color="orange"
+        />
+      </div>
+
+      {/* Top teams by rounds won */}
+      {stats.topGoalScorers?.length > 0 && (
+        <Leaderboard
+          title="Top Performers"
+          icon="🪢"
+          accentColor="amber"
+          columns={["Rounds Won", "Matches Won", "POM"]}
+          highlightCol={0}
+          rows={stats.topGoalScorers.map((p) => ({
+            name: p.playerName,
+            cols: [p.goals || 0, p.assists || 0, p.playerOfMatchCount || 0],
+          }))}
+        />
+      )}
+
+      <PomList awards={stats.allAwards} />
+    </div>
+  );
+}
+
+// ── Shared sub-components ─────────────────────────────────────────
 
 function ManOfTournament({ name }) {
   if (!name) return null;
@@ -276,6 +372,7 @@ function AwardCard({ title, icon, name, detail, color = "red" }) {
     purple: "text-purple-500",
     violet: "text-violet-500",
     orange: "text-orange-500",
+    amber: "text-amber-600",
   };
   return (
     <div className="bg-white rounded-lg shadow-md p-5">
@@ -310,6 +407,7 @@ function Leaderboard({
     purple: "from-purple-500 to-purple-600",
     violet: "from-violet-500 to-violet-600",
     orange: "from-orange-500 to-orange-600",
+    amber: "from-amber-600 to-yellow-500",
   };
   const t = {
     red: "text-red-500",
@@ -318,6 +416,7 @@ function Leaderboard({
     purple: "text-purple-500",
     violet: "text-violet-500",
     orange: "text-orange-500",
+    amber: "text-amber-600",
   };
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">

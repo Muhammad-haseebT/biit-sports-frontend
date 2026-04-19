@@ -7,7 +7,7 @@ const url = import.meta.env.VITE_BASE_URL;
 export default function TournamentPoints({ tournamentId, sport }) {
   const [points, setPoints] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [detectedSport, setDetectedSport] = useState(sport || "cricket");
+  const [ds, setDs] = useState(sport || "cricket");
 
   useEffect(() => {
     if (!tournamentId) return;
@@ -18,14 +18,12 @@ export default function TournamentPoints({ tournamentId, sport }) {
         const list = Array.isArray(res.data) ? res.data : [];
         setPoints(list);
         if (sport) {
-          setDetectedSport(sport.toLowerCase());
+          setDs(sport.toLowerCase());
           return;
         }
         const hasGD = list[0]?.goalDifference !== undefined;
         const hasDraws = list.some((r) => (r.draws ?? 0) > 0);
-        if (!hasGD) setDetectedSport("cricket");
-        else if (hasDraws) setDetectedSport("futsal");
-        else setDetectedSport("volleyball");
+        setDs(!hasGD ? "cricket" : hasDraws ? "futsal" : "volleyball");
       } catch (err) {
         console.error(err);
       } finally {
@@ -42,14 +40,19 @@ export default function TournamentPoints({ tournamentId, sport }) {
       </div>
     );
 
-  const s = sport?.toLowerCase() || detectedSport;
+  const s = sport?.toLowerCase() || ds;
+  console.log(s);
   if (s === "futsal") return <FutsalTable rows={points} />;
   if (s === "volleyball") return <VolleyballTable rows={points} />;
-  if (s === "badminton") return <BadmintonTable rows={points} />;
+  if (s === "badminton")
+    return <SimpleTable rows={points} color="violet" title="Badminton" />;
+  if (s === "table tennis" || s === "tabletennis")
+    return <SimpleTable rows={points} color="blue" title="Table Tennis" />;
+  if (s === "tug of war" || s === "tugofwar")
+    return <SimpleTable rows={points} color="amber" title="Tug of War" />;
   return <CricketTable rows={points} />;
 }
 
-// ─── CRICKET: P | W | L | Pts | NRR ─────────────────────────────
 function CricketTable({ rows }) {
   return (
     <Wrapper>
@@ -72,7 +75,7 @@ function CricketTable({ rows }) {
               <Rank r={i + 1} />
               {t.teamName}
             </td>
-            <td className="p-4 text-center text-gray-600">{t.played}</td>
+            <td className="p-4 text-center">{t.played}</td>
             <td className="p-4 text-center text-green-600 font-semibold">
               {t.wins}
             </td>
@@ -90,7 +93,6 @@ function CricketTable({ rows }) {
   );
 }
 
-// ─── FUTSAL: P | W | D | L | GF | GA | GD | Pts ─────────────────
 function FutsalTable({ rows }) {
   return (
     <Wrapper mw={560} legend="P W D L GF GA GD Pts">
@@ -146,12 +148,11 @@ function FutsalTable({ rows }) {
   );
 }
 
-// ─── VOLLEYBALL: P | W | L | SW | SL | SD | Pts ─────────────────
 function VolleyballTable({ rows }) {
   return (
     <Wrapper
       mw={520}
-      legend="SW=Sets Won SL=Sets Lost SD=Set Diff — 3-0/3-1: winner 3pts | 3-2: winner 3pts loser 1pt"
+      legend="SW=Sets Won SL=Sets Lost — 3-0/3-1: 3pts | 3-2: 3pts (loser 1pt)"
     >
       <thead>
         <tr className="bg-blue-600 text-white">
@@ -188,7 +189,7 @@ function VolleyballTable({ rows }) {
                 {t.losses}
               </td>
               <td className="p-4 text-center text-blue-600">{sw}</td>
-              <td className="p-4 text-center text-gray-600">{sl}</td>
+              <td className="p-4 text-center">{sl}</td>
               <td className="p-4 text-center font-mono font-semibold">
                 <Gd v={sw - sl} />
               </td>
@@ -201,12 +202,27 @@ function VolleyballTable({ rows }) {
   );
 }
 
-// ─── BADMINTON: P | W | L | Pts (Win=2) ─────────────────────────
-function BadmintonTable({ rows }) {
+// Badminton / Table Tennis / Tug of War — simple P W L Pts
+function SimpleTable({ rows, color, title }) {
+  const bgs = {
+    violet: "bg-violet-600",
+    blue: "bg-blue-600",
+    amber: "bg-amber-600",
+  };
+  const hovers = {
+    violet: "hover:bg-violet-50",
+    blue: "hover:bg-blue-50",
+    amber: "hover:bg-amber-50",
+  };
+  const legend = {
+    violet: "Win = 2pts",
+    blue: "Win = 2pts",
+    amber: "Win = 2pts · Best of rounds",
+  };
   return (
-    <Wrapper legend="Win = 2 pts">
+    <Wrapper legend={legend[color]}>
       <thead>
-        <tr className="bg-violet-600 text-white">
+        <tr className={`${bgs[color] || "bg-gray-700"} text-white`}>
           <Th first>Team</Th>
           <Th c>P</Th>
           <Th c>W</Th>
@@ -220,7 +236,7 @@ function BadmintonTable({ rows }) {
         {rows.map((t, i) => (
           <tr
             key={t.teamId || i}
-            className="hover:bg-violet-50 even:bg-gray-50"
+            className={`${hovers[color] || ""} even:bg-gray-50 transition-colors`}
           >
             <td className="p-4 font-medium text-gray-900 flex items-center gap-2">
               <Rank r={i + 1} />
@@ -241,7 +257,6 @@ function BadmintonTable({ rows }) {
   );
 }
 
-// ─── SHARED ──────────────────────────────────────────────────────
 function Wrapper({ children, mw = 420, legend }) {
   return (
     <div className="overflow-hidden bg-white rounded-xl shadow border border-gray-100">
