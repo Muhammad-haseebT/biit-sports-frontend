@@ -1,14 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  Trophy,
-  Award,
-  TrendingUp,
-  Target,
-  Crown,
-  Zap,
-  Star,
-  Shield,
-} from "lucide-react";
+import { Trophy, TrendingUp, Target, Award, Crown } from "lucide-react";
 import LoadingSpinner from "../../common/LoadingSpinner";
 import { getTournamentStats } from "../../../api/statsApi";
 
@@ -23,8 +14,8 @@ export default function TournamentStatsTab({ tournamentId }) {
       try {
         setLoading(true);
         setStats(await getTournamentStats(tournamentId));
-      } catch (err) {
-        setError("Failed to load tournament statistics");
+      } catch {
+        setError("Failed to load stats");
       } finally {
         setLoading(false);
       }
@@ -37,40 +28,36 @@ export default function TournamentStatsTab({ tournamentId }) {
         <LoadingSpinner size="large" />
       </div>
     );
-
   if (error)
     return (
       <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
         {error}
       </div>
     );
-
   if (!stats)
     return (
       <div className="bg-white rounded-lg shadow-md p-12 text-center">
         <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-gray-700 mb-2">
-          No Stats Yet
-        </h3>
+        <h3 className="text-xl font-semibold text-gray-700">No Stats Yet</h3>
       </div>
     );
 
-  // Auto-route based on sport from API
-  const sport = stats.sport?.toLowerCase() ?? "cricket";
-  if (sport === "volleyball")
-    return <VolleyballTournamentStats stats={stats} />;
-  if (sport === "futsal") return <FutsalTournamentStats stats={stats} />;
-  return <CricketTournamentStats stats={stats} />;
+  switch (stats.sport) {
+    case "futsal":
+      return <FutsalStats stats={stats} />;
+    case "volleyball":
+      return <VolleyballStats stats={stats} />;
+    case "badminton":
+      return <BadmintonStats stats={stats} />;
+    default:
+      return <CricketStats stats={stats} />;
+  }
 }
 
-// ─── CRICKET ──────────────────────────────────────────────────────
-
-function CricketTournamentStats({ stats }) {
+function CricketStats({ stats }) {
   return (
     <div className="space-y-6">
-      {stats.manOfTournament && (
-        <ManOfTournamentCard name={stats.manOfTournament.playerName} />
-      )}
+      <ManOfTournament name={stats.manOfTournament?.playerName} />
       <div className="grid md:grid-cols-3 gap-4">
         <AwardCard
           title="Best Batsman"
@@ -92,7 +79,7 @@ function CricketTournamentStats({ stats }) {
         />
       </div>
       {stats.topRunScorers?.length > 0 && (
-        <LeaderboardTable
+        <Leaderboard
           title="Top Batsmen"
           icon={<TrendingUp className="w-5 h-5" />}
           columns={["Runs", "Balls", "4s", "6s", "POM"]}
@@ -109,7 +96,7 @@ function CricketTournamentStats({ stats }) {
         />
       )}
       {stats.topBowlers?.length > 0 && (
-        <LeaderboardTable
+        <Leaderboard
           title="Top Bowlers"
           icon={<Target className="w-5 h-5" />}
           columns={["Wkts", "Runs", "Balls", "Eco", "POM"]}
@@ -125,40 +112,37 @@ function CricketTournamentStats({ stats }) {
           }))}
         />
       )}
+      <PomList awards={stats.allAwards} />
     </div>
   );
 }
 
-// ─── FUTSAL ───────────────────────────────────────────────────────
-
-function FutsalTournamentStats({ stats }) {
+function FutsalStats({ stats }) {
   return (
     <div className="space-y-6">
-      {stats.manOfTournament && (
-        <ManOfTournamentCard name={stats.manOfTournament.playerName} />
-      )}
+      <ManOfTournament name={stats.manOfTournament?.playerName} />
       <div className="grid md:grid-cols-2 gap-4">
         <AwardCard
           title="Top Scorer"
-          icon={<span style={{ fontSize: 16 }}>⚽</span>}
+          icon="⚽"
           name={stats.topScorer?.playerName}
           detail={stats.topScorer?.reason}
           color="emerald"
         />
         <AwardCard
           title="Top Assist"
-          icon={<span style={{ fontSize: 16 }}>🤝</span>}
+          icon="🤝"
           name={stats.topAssist?.playerName}
           detail={stats.topAssist?.reason}
           color="blue"
         />
       </div>
       {stats.topGoalScorers?.length > 0 && (
-        <LeaderboardTable
+        <Leaderboard
           title="Top Scorers"
-          icon={<span style={{ fontSize: 16 }}>⚽</span>}
-          columns={["Goals", "Assists", "G+A", "🟨", "🟥"]}
+          icon="⚽"
           accentColor="emerald"
+          columns={["Goals", "Assists", "G+A", "🟨", "🟥"]}
           highlightCol={0}
           rows={stats.topGoalScorers.map((p) => ({
             name: p.playerName,
@@ -173,11 +157,11 @@ function FutsalTournamentStats({ stats }) {
         />
       )}
       {stats.topAssisters?.length > 0 && (
-        <LeaderboardTable
+        <Leaderboard
           title="Top Assisters"
-          icon={<span style={{ fontSize: 16 }}>🤝</span>}
-          columns={["Assists", "Goals", "G+A"]}
+          icon="🤝"
           accentColor="blue"
+          columns={["Assists", "Goals", "G+A"]}
           highlightCol={0}
           rows={stats.topAssisters.map((p) => ({
             name: p.playerName,
@@ -185,111 +169,94 @@ function FutsalTournamentStats({ stats }) {
           }))}
         />
       )}
-      {stats.allAwards?.length > 0 && <PomList awards={stats.allAwards} />}
+      <PomList awards={stats.allAwards} />
     </div>
   );
 }
 
-// ─── VOLLEYBALL ───────────────────────────────────────────────────
-
-function VolleyballTournamentStats({ stats }) {
+function VolleyballStats({ stats }) {
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg shadow-lg p-6">
-        <div className="flex items-center gap-3">
-          <span className="text-4xl">🏐</span>
-          <div>
-            <h2 className="text-2xl font-bold">{stats.tournamentName}</h2>
-            <p className="text-violet-200 text-sm mt-0.5">
-              Volleyball Tournament Stats
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Top Awards */}
-      <div className="grid md:grid-cols-3 gap-4">
-        {stats.manOfTournament && (
-          <AwardCard
-            title="Man of Tournament"
-            icon={<Trophy className="w-5 h-5" />}
-            name={stats.manOfTournament.playerName}
-            detail={`${stats.manOfTournament.points ?? 0} fantasy pts`}
-            color="amber"
-          />
-        )}
+      <ManOfTournament name={stats.manOfTournament?.playerName} />
+      <div className="grid md:grid-cols-2 gap-4">
         <AwardCard
           title="Top Scorer"
-          icon={<Zap className="w-5 h-5" />}
+          icon="🏐"
+          name={stats.topScorer?.playerName}
+          detail={stats.topScorer?.reason}
+          color="blue"
+        />
+        <AwardCard
+          title="Best Server"
+          icon="🎯"
+          name={stats.topAssist?.playerName}
+          detail={stats.topAssist?.reason}
+          color="purple"
+        />
+      </div>
+      {stats.topGoalScorers?.length > 0 && (
+        <Leaderboard
+          title="Top Point Scorers"
+          icon="🏐"
+          accentColor="blue"
+          columns={["Points", "Aces", "Blocks"]}
+          highlightCol={0}
+          rows={stats.topGoalScorers.map((p) => ({
+            name: p.playerName,
+            cols: [p.goals, p.assists, p.futsalFouls || 0],
+          }))}
+        />
+      )}
+      <PomList awards={stats.allAwards} />
+    </div>
+  );
+}
+
+function BadmintonStats({ stats }) {
+  return (
+    <div className="space-y-6">
+      <ManOfTournament
+        name={stats.manOfTournament?.playerName}
+        color="violet"
+      />
+      <div className="grid md:grid-cols-2 gap-4">
+        <AwardCard
+          title="Top Scorer"
+          icon="🏸"
           name={stats.topScorer?.playerName}
           detail={stats.topScorer?.reason}
           color="violet"
         />
         <AwardCard
-          title="Best Server"
-          icon={<Star className="w-5 h-5" />}
+          title="Top Attacker"
+          icon="💥"
           name={stats.topAssist?.playerName}
           detail={stats.topAssist?.reason}
-          color="sky"
+          color="orange"
         />
       </div>
-
-      {/* Top Scorers (attack points) */}
       {stats.topGoalScorers?.length > 0 && (
-        <LeaderboardTable
-          title="Top Scorers (Attack Points)"
-          icon={<Zap className="w-5 h-5" />}
-          columns={[
-            "Points",
-            "Aces",
-            "Blocks",
-            "Atk Err",
-            "Svc Err",
-            "Fantasy",
-          ]}
+        <Leaderboard
+          title="Top Scorers"
+          icon="🏸"
           accentColor="violet"
+          columns={["Points", "Smashes+Aces", "Faults"]}
           highlightCol={0}
           rows={stats.topGoalScorers.map((p) => ({
             name: p.playerName,
-            cols: [
-              p.goals,
-              p.assists,
-              p.futsalFouls ?? 0,
-              p.yellowCards ?? 0,
-              p.redCards ?? 0,
-              p.totalPoints ?? 0,
-            ],
+            cols: [p.goals, p.assists, p.futsalFouls || 0],
           }))}
         />
       )}
-
-      {/* Best Servers (aces) */}
-      {stats.topAssisters?.length > 0 && (
-        <LeaderboardTable
-          title="Best Servers (Aces)"
-          icon={<Star className="w-5 h-5" />}
-          columns={["Aces", "Points", "Fantasy"]}
-          accentColor="sky"
-          highlightCol={0}
-          rows={stats.topAssisters.map((p) => ({
-            name: p.playerName,
-            cols: [p.assists, p.goals, p.totalPoints ?? 0],
-          }))}
-        />
-      )}
-
-      {/* Player of Match Awards */}
-      {stats.allAwards?.length > 0 && (
-        <PomList awards={stats.allAwards} violet />
-      )}
+      <PomList awards={stats.allAwards} />
     </div>
   );
 }
 
-// ─── SHARED COMPONENTS ────────────────────────────────────────────
+// ─── SHARED ──────────────────────────────────────────────────────
 
-function ManOfTournamentCard({ name }) {
+function ManOfTournament({ name }) {
+  if (!name) return null;
   return (
     <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg shadow-lg p-6">
       <div className="flex items-center gap-3 mb-2">
@@ -297,7 +264,6 @@ function ManOfTournamentCard({ name }) {
         <h3 className="text-lg font-semibold">Man of the Tournament</h3>
       </div>
       <div className="text-3xl font-bold">{name}</div>
-      <p className="text-yellow-100 mt-1">Outstanding Performance</p>
     </div>
   );
 }
@@ -307,16 +273,20 @@ function AwardCard({ title, icon, name, detail, color = "red" }) {
     red: "text-red-500",
     emerald: "text-emerald-500",
     blue: "text-blue-500",
-    amber: "text-amber-500",
+    purple: "text-purple-500",
     violet: "text-violet-500",
-    sky: "text-sky-500",
+    orange: "text-orange-500",
   };
   return (
     <div className="bg-white rounded-lg shadow-md p-5">
       <div
-        className={`flex items-center gap-2 ${colors[color] ?? "text-red-500"} mb-3`}
+        className={`flex items-center gap-2 ${colors[color] || "text-red-500"} mb-3`}
       >
-        {icon}
+        {typeof icon === "string" ? (
+          <span className="text-xl">{icon}</span>
+        ) : (
+          icon
+        )}
         <h4 className="font-semibold">{title}</h4>
       </div>
       <div className="text-2xl font-bold text-gray-800">{name || "TBD"}</div>
@@ -325,7 +295,7 @@ function AwardCard({ title, icon, name, detail, color = "red" }) {
   );
 }
 
-function LeaderboardTable({
+function Leaderboard({
   title,
   icon,
   columns,
@@ -333,32 +303,33 @@ function LeaderboardTable({
   accentColor = "red",
   highlightCol = 0,
 }) {
-  const gradients = {
+  const g = {
     red: "from-red-500 to-red-600",
     emerald: "from-emerald-500 to-emerald-600",
     blue: "from-blue-500 to-blue-600",
-    violet: "from-violet-500 to-purple-600",
-    sky: "from-sky-500 to-blue-600",
+    purple: "from-purple-500 to-purple-600",
+    violet: "from-violet-500 to-violet-600",
+    orange: "from-orange-500 to-orange-600",
   };
-  const textAccents = {
+  const t = {
     red: "text-red-500",
     emerald: "text-emerald-500",
     blue: "text-blue-500",
-    violet: "text-violet-600",
-    sky: "text-sky-600",
+    purple: "text-purple-500",
+    violet: "text-violet-500",
+    orange: "text-orange-500",
   };
-  const gradient = gradients[accentColor] ?? gradients.red;
-  const textAccent = textAccents[accentColor] ?? textAccents.red;
-
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className={`bg-gradient-to-r ${gradient} text-white px-6 py-4`}>
+      <div
+        className={`bg-gradient-to-r ${g[accentColor] || g.red} text-white px-6 py-4`}
+      >
         <h3 className="text-lg font-bold flex items-center gap-2">
-          {icon} {title}
+          {typeof icon === "string" ? <span>{icon}</span> : icon} {title}
         </h3>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full" style={{ minWidth: 400 }}>
+        <table className="w-full" style={{ minWidth: 380 }}>
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase sticky left-0 bg-gray-50">
@@ -389,7 +360,7 @@ function LeaderboardTable({
                 {row.cols.map((v, j) => (
                   <td
                     key={j}
-                    className={`px-4 py-3 text-center text-sm ${j === highlightCol ? `font-bold ${textAccent}` : "text-gray-600"}`}
+                    className={`px-4 py-3 text-center text-sm ${j === highlightCol ? `font-bold ${t[accentColor] || t.red}` : "text-gray-600"}`}
                   >
                     {v}
                   </td>
@@ -403,15 +374,11 @@ function LeaderboardTable({
   );
 }
 
-function PomList({ awards, violet }) {
-  const headerGradient = violet
-    ? "from-violet-500 to-purple-600"
-    : "from-amber-500 to-yellow-500";
+function PomList({ awards }) {
+  if (!awards?.length) return null;
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div
-        className={`bg-gradient-to-r ${headerGradient} text-white px-6 py-4`}
-      >
+      <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white px-6 py-4">
         <h3 className="text-lg font-bold flex items-center gap-2">
           <Trophy className="w-5 h-5" /> Player of the Match Awards
         </h3>
@@ -420,9 +387,7 @@ function PomList({ awards, violet }) {
         {awards.map((a, i) => (
           <div key={i} className="flex items-center justify-between px-6 py-3">
             <span className="font-semibold text-gray-800">{a.playerName}</span>
-            <span className="text-xs text-gray-400">
-              {a.reason ?? (a.points != null ? `${a.points} pts` : "")}
-            </span>
+            <span className="text-xs text-gray-400">{a.reason}</span>
           </div>
         ))}
       </div>
@@ -431,7 +396,7 @@ function PomList({ awards, violet }) {
 }
 
 function RankBadge({ rank }) {
-  const color =
+  const c =
     rank === 1
       ? "bg-gradient-to-br from-yellow-400 to-yellow-500 text-white"
       : rank === 2
@@ -441,7 +406,7 @@ function RankBadge({ rank }) {
           : "bg-gray-200 text-gray-700";
   return (
     <div
-      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${color}`}
+      className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${c}`}
     >
       {rank}
     </div>

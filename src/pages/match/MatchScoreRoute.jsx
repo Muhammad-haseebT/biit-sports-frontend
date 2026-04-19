@@ -17,6 +17,7 @@ import {
 import CricketScoring from "../../components/sports/cricket/CricketScoring";
 import FutsalScoring from "../../components/sports/football/FutsalScoring.jsx";
 import VolleyballScoring from "../../components/sports/volleyBall/VolleyballScoring.jsx";
+import BadmintonScoring from "../../components/sports/badminton/BadmintonScoring.jsx";
 
 export default function MatchScoreRoute() {
   const location = useLocation();
@@ -51,8 +52,8 @@ export default function MatchScoreRoute() {
     "Cricket",
     "Futsal",
     "Volleyball",
-    "Badminton",
     "Table Tennis",
+    "Badminton",
     "Ludo",
     "Tug Of War",
     "Chess",
@@ -61,7 +62,7 @@ export default function MatchScoreRoute() {
   const isCricket = sports[sportId - 1] === "Cricket";
   const isFutsal = sports[sportId - 1] === "Futsal";
   const isVolleyball = sports[sportId - 1] === "Volleyball";
-
+  const isBadminton = sports[sportId - 1] === "Badminton";
   if (!location.state) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500">
@@ -674,6 +675,183 @@ export default function MatchScoreRoute() {
               ) : (
                 <>
                   🏐 Start Volleyball Match <ChevronRight size={18} />
+                </>
+              )}
+            </button>
+            <button
+              className="w-full py-3 rounded-xl text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center justify-center gap-2 transition-all"
+              onClick={handleAbandon}
+            >
+              <AlertTriangle size={14} /> Abandon Match
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isBadminton && (status === "LIVE" || status === "COMPLETED") && (
+        <div className="flex-1 overflow-auto">
+          <BadmintonScoring
+            matchId={matchId}
+            status={status}
+            team1Id={team1Id}
+            team2Id={team2Id}
+            team1Name={team1Name}
+            team2Name={team2Name}
+          />
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════
+    BADMINTON — UPCOMING (match setup)
+   ══════════════════════════════════════════════════════ */}
+      {isBadminton && status === "UPCOMING" && (
+        <div className="flex-1 flex flex-col p-4 max-w-lg mx-auto w-full space-y-4">
+          {/* Header */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-xl shadow-violet-500/10 border border-slate-100 dark:border-slate-700 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-3 opacity-10">
+              <Trophy size={64} className="text-violet-600" />
+            </div>
+            <div className="flex items-center justify-between relative z-10">
+              <div className="flex flex-col items-center flex-1">
+                <div className="w-16 h-16 rounded-2xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center text-violet-600 font-bold text-2xl mb-2 border border-violet-100 dark:border-violet-900/30">
+                  {team1Name?.substring(0, 2).toUpperCase()}
+                </div>
+                <h3 className="text-sm font-bold text-center line-clamp-1">
+                  {team1Name}
+                </h3>
+              </div>
+              <div className="px-4 flex flex-col items-center">
+                <div className="bg-violet-600 text-white text-xs font-black px-3 py-1 rounded-full mb-1">
+                  VS
+                </div>
+                <div className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">
+                  Badminton Setup
+                </div>
+              </div>
+              <div className="flex flex-col items-center flex-1">
+                <div className="w-16 h-16 rounded-2xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center text-orange-600 font-bold text-2xl mb-2 border border-orange-100 dark:border-orange-900/30">
+                  {team2Name?.substring(0, 2).toUpperCase()}
+                </div>
+                <h3 className="text-sm font-bold text-center line-clamp-1">
+                  {team2Name}
+                </h3>
+              </div>
+            </div>
+          </div>
+
+          {/* Match details */}
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { icon: MapPin, label: "Venue", value: venue },
+              {
+                icon: Calendar,
+                label: "Date",
+                value: match?.date?.split("T")[0],
+              },
+              { icon: Clock, label: "Time", value: match?.time },
+              {
+                icon: Hash,
+                label: "Format",
+                value: `Best of ${(match?.sets || 2) * 2 - 1}`,
+              },
+            ].map((item, idx) => (
+              <div
+                key={idx}
+                className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-3 border border-slate-100 dark:border-slate-700 flex items-center gap-3"
+              >
+                <div className="p-2 bg-slate-100 dark:bg-slate-700 rounded-xl">
+                  <item.icon size={16} className="text-violet-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">
+                    {item.label}
+                  </p>
+                  <p className="text-xs font-semibold">{item.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Who serves first */}
+          <div className="space-y-2">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <Zap size={14} className="text-violet-600" />
+              <span className="text-violet-600">Who Serves First?</span>
+            </label>
+            <div className="flex gap-2">
+              {[team1Name, team2Name].map((team, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setTossWinnerId(team === team1Name ? team1Id : team2Id);
+                    setTossWinner(team);
+                  }}
+                  className={`flex-1 py-3 px-2 rounded-2xl text-xs font-bold transition-all duration-300 border-2 ${
+                    tossWinner === team
+                      ? "bg-violet-600 border-violet-600 text-white shadow-lg shadow-violet-500/30"
+                      : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-violet-200"
+                  }`}
+                >
+                  {team}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Scorer */}
+          <div className="space-y-2">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <User size={14} className="text-violet-500" /> Scorer Username
+            </label>
+            <input
+              type="text"
+              value={scorerUsername}
+              onChange={(e) => setScorerUsername(e.target.value)}
+              className="w-full py-3 px-4 rounded-2xl text-sm font-bold transition-all duration-300 border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
+              placeholder="Enter scorer username"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="pt-2 flex flex-col gap-2">
+            <button
+              disabled={!tossWinner || starting}
+              className={`w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 ${
+                tossWinner && !starting
+                  ? "bg-violet-600 text-white shadow-xl shadow-violet-500/40 hover:-translate-y-1 active:scale-95"
+                  : "bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed"
+              }`}
+              onClick={async () => {
+                setStarting(true);
+                try {
+                  await startmatch(matchId, {
+                    tossWinnerId,
+                    decision: "SERVE",
+                    scorerId: scorerUsername,
+                    sportId,
+                    sets: match?.sets || 2, // games to win
+                    pointsPerSet: match?.pointsPerSet || 21, // points per game
+                    finalSetPoints: match?.finalSetPoints || 30, // max points (deuce cap)
+                  });
+                  navigate(-1);
+                } catch (err) {
+                  Swal.fire({
+                    title: "Error",
+                    text:
+                      err?.response?.data?.message || "Failed to start match.",
+                    icon: "error",
+                  });
+                } finally {
+                  setStarting(false);
+                }
+              }}
+            >
+              {starting ? (
+                <Spinner />
+              ) : (
+                <>
+                  {" "}
+                  🏸 Start Badminton Match <ChevronRight size={18} />
                 </>
               )}
             </button>
