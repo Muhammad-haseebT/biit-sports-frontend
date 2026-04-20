@@ -873,7 +873,7 @@ export default function MatchScoreRoute() {
           />
         </div>
       )}
-      // 6. UPCOMING block — add karo badminton ke baad:
+
       {isTableTennis && status === "UPCOMING" && (
         <div className="flex-1 flex flex-col p-4 max-w-lg mx-auto w-full space-y-4 overflow-auto">
           {/* Header */}
