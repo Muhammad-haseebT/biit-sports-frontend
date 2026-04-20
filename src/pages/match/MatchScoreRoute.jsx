@@ -18,7 +18,7 @@ import FutsalScoring from "../../components/sports/football/FutsalScoring.jsx";
 import VolleyballScoring from "../../components/sports/volleyBall/VolleyballScoring.jsx";
 import BadmintonScoring from "../../components/sports/badminton/BadmintonScoring.jsx";
 import TableTennisScoring from "../../components/sports/tabletennis/TableTennisScoring.jsx";
-import TugOfWarScoring from "../../components/sports/tugofwar/TugOfWarScoring.jsx";
+import TugOfWarScoring from "../../components/sports/TugOfWar/TugOfWarScoring.jsx";
 import LudoScoring from "../../components/sports/ludo/LudoScoring.jsx";
 
 // Sport index matches DB sportId
