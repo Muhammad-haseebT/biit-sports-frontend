@@ -122,6 +122,7 @@ export default function TugOfWarScoring({
     };
     ws.onmessage = (e) => {
       const d = JSON.parse(e.data);
+      console.log(d);
       setScore((p) => ({ ...p, ...d }));
       setWaiting(false);
       if (d.comment === "UNDO") showToast("↩ Undo done", "info");

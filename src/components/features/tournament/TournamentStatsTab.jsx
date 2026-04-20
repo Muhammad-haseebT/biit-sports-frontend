@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trophy, TrendingUp, Target, Award, Crown, Users } from "lucide-react";
+import { Trophy, TrendingUp, Target, Award, Crown } from "lucide-react";
 import LoadingSpinner from "../../common/LoadingSpinner";
 import { getTournamentStats } from "../../../api/statsApi";
 
@@ -42,7 +42,7 @@ export default function TournamentStatsTab({ tournamentId }) {
       </div>
     );
 
-  switch (stats.sport?.toLowerCase()) {
+  switch (stats.sport) {
     case "futsal":
       return <FutsalStats stats={stats} />;
     case "volleyball":
@@ -52,15 +52,13 @@ export default function TournamentStatsTab({ tournamentId }) {
     case "table tennis":
     case "tabletennis":
       return <TableTennisStats stats={stats} />;
-    case "tug of war":
-    case "tugofwar":
-      return <TugOfWarStats stats={stats} />;
+    case "ludo":
+      return <LudoStats stats={stats} />;
     default:
       return <CricketStats stats={stats} />;
   }
 }
 
-// ── Cricket ──────────────────────────────────────────────────────
 function CricketStats({ stats }) {
   return (
     <div className="space-y-6">
@@ -124,7 +122,6 @@ function CricketStats({ stats }) {
   );
 }
 
-// ── Futsal ───────────────────────────────────────────────────────
 function FutsalStats({ stats }) {
   return (
     <div className="space-y-6">
@@ -164,25 +161,11 @@ function FutsalStats({ stats }) {
           }))}
         />
       )}
-      {stats.topAssisters?.length > 0 && (
-        <Leaderboard
-          title="Top Assisters"
-          icon="🤝"
-          accentColor="blue"
-          columns={["Assists", "Goals", "G+A"]}
-          highlightCol={0}
-          rows={stats.topAssisters.map((p) => ({
-            name: p.playerName,
-            cols: [p.assists, p.goals, (p.goals || 0) + (p.assists || 0)],
-          }))}
-        />
-      )}
       <PomList awards={stats.allAwards} />
     </div>
   );
 }
 
-// ── Volleyball ───────────────────────────────────────────────────
 function VolleyballStats({ stats }) {
   return (
     <div className="space-y-6">
@@ -205,7 +188,7 @@ function VolleyballStats({ stats }) {
       </div>
       {stats.topGoalScorers?.length > 0 && (
         <Leaderboard
-          title="Top Point Scorers"
+          title="Top Scorers"
           icon="🏐"
           accentColor="blue"
           columns={["Points", "Aces", "Blocks"]}
@@ -221,7 +204,6 @@ function VolleyballStats({ stats }) {
   );
 }
 
-// ── Badminton ────────────────────────────────────────────────────
 function BadmintonStats({ stats }) {
   return (
     <div className="space-y-6">
@@ -260,7 +242,6 @@ function BadmintonStats({ stats }) {
   );
 }
 
-// ── Table Tennis ─────────────────────────────────────────────────
 function TableTennisStats({ stats }) {
   return (
     <div className="space-y-6">
@@ -299,57 +280,45 @@ function TableTennisStats({ stats }) {
   );
 }
 
-// ── Tug of War ───────────────────────────────────────────────────
-function TugOfWarStats({ stats }) {
+function LudoStats({ stats }) {
   return (
     <div className="space-y-6">
       <ManOfTournament name={stats.manOfTournament?.playerName} />
-
-      {/* Note: team sport */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-700 flex items-center gap-2">
-        <Users className="w-4 h-4 flex-shrink-0" />
-        Tug of War is a team sport. Tournament awards are based on team
-        performance and round wins.
-      </div>
-
       <div className="grid md:grid-cols-2 gap-4">
         <AwardCard
-          title="Best Team"
-          icon="🪢"
+          title="Top Home Runs"
+          icon="🏠"
           name={stats.topScorer?.playerName}
           detail={stats.topScorer?.reason}
           color="amber"
         />
         <AwardCard
-          title="Most Dominant"
-          icon="💪"
+          title="Top Captures"
+          icon="⚔️"
           name={stats.topAssist?.playerName}
           detail={stats.topAssist?.reason}
-          color="orange"
+          color="red"
         />
       </div>
-
-      {/* Top teams by rounds won */}
       {stats.topGoalScorers?.length > 0 && (
         <Leaderboard
-          title="Top Performers"
-          icon="🪢"
+          title="Top Players"
+          icon="🎲"
           accentColor="amber"
-          columns={["Rounds Won", "Matches Won", "POM"]}
+          columns={["Home Runs", "Captures"]}
           highlightCol={0}
           rows={stats.topGoalScorers.map((p) => ({
             name: p.playerName,
-            cols: [p.goals || 0, p.assists || 0, p.playerOfMatchCount || 0],
+            cols: [p.goals, p.assists],
           }))}
         />
       )}
-
       <PomList awards={stats.allAwards} />
     </div>
   );
 }
 
-// ── Shared sub-components ─────────────────────────────────────────
+// ── Shared ────────────────────────────────────────────────────────
 
 function ManOfTournament({ name }) {
   if (!name) return null;
@@ -372,7 +341,7 @@ function AwardCard({ title, icon, name, detail, color = "red" }) {
     purple: "text-purple-500",
     violet: "text-violet-500",
     orange: "text-orange-500",
-    amber: "text-amber-600",
+    amber: "text-amber-500",
   };
   return (
     <div className="bg-white rounded-lg shadow-md p-5">
@@ -407,7 +376,7 @@ function Leaderboard({
     purple: "from-purple-500 to-purple-600",
     violet: "from-violet-500 to-violet-600",
     orange: "from-orange-500 to-orange-600",
-    amber: "from-amber-600 to-yellow-500",
+    amber: "from-amber-500 to-amber-600",
   };
   const t = {
     red: "text-red-500",
@@ -416,7 +385,7 @@ function Leaderboard({
     purple: "text-purple-500",
     violet: "text-violet-500",
     orange: "text-orange-500",
-    amber: "text-amber-600",
+    amber: "text-amber-500",
   };
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -428,13 +397,13 @@ function Leaderboard({
         </h3>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full" style={{ minWidth: 380 }}>
+        <table className="w-full" style={{ minWidth: 360 }}>
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase sticky left-0 bg-gray-50">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                 Rank
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase sticky left-12 bg-gray-50">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
                 Player
               </th>
               {columns.map((c, i) => (
@@ -450,10 +419,10 @@ function Leaderboard({
           <tbody className="divide-y divide-gray-100">
             {rows.map((row, i) => (
               <tr key={i} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 sticky left-0 bg-white">
+                <td className="px-4 py-3">
                   <RankBadge rank={i + 1} />
                 </td>
-                <td className="px-4 py-3 font-semibold text-gray-800 text-sm sticky left-12 bg-white">
+                <td className="px-4 py-3 font-semibold text-gray-800 text-sm">
                   {row.name}
                 </td>
                 {row.cols.map((v, j) => (

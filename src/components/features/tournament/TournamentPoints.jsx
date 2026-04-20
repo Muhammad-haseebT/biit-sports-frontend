@@ -21,6 +21,7 @@ export default function TournamentPoints({ tournamentId, sport }) {
           setDs(sport.toLowerCase());
           return;
         }
+        // Auto-detect from data shape
         const hasGD = list[0]?.goalDifference !== undefined;
         const hasDraws = list.some((r) => (r.draws ?? 0) > 0);
         setDs(!hasGD ? "cricket" : hasDraws ? "futsal" : "volleyball");
@@ -41,21 +42,30 @@ export default function TournamentPoints({ tournamentId, sport }) {
     );
 
   const s = sport?.toLowerCase() || ds;
-  console.log(s);
+
   if (s === "futsal") return <FutsalTable rows={points} />;
   if (s === "volleyball") return <VolleyballTable rows={points} />;
   if (s === "badminton")
-    return <SimpleTable rows={points} color="violet" title="Badminton" />;
+    return <SimpleTable rows={points} color="violet" legend="Win = 2 pts" />;
   if (s === "table tennis" || s === "tabletennis")
-    return <SimpleTable rows={points} color="blue" title="Table Tennis" />;
+    return <SimpleTable rows={points} color="blue" legend="Win = 2 pts" />;
   if (s === "tug of war" || s === "tugofwar")
-    return <SimpleTable rows={points} color="amber" title="Tug of War" />;
+    return (
+      <SimpleTable
+        rows={points}
+        color="amber"
+        legend="Win = 2 pts · Best of rounds"
+      />
+    );
+  if (s === "ludo")
+    return <SimpleTable rows={points} color="orange" legend="Win = 2 pts" />;
   return <CricketTable rows={points} />;
 }
 
+// ─── Cricket ─────────────────────────────────────────────────────
 function CricketTable({ rows }) {
   return (
-    <Wrapper>
+    <Wrapper legend="P W L Pts NRR">
       <thead>
         <tr className="bg-red-600 text-white">
           <Th first>Team</Th>
@@ -70,12 +80,15 @@ function CricketTable({ rows }) {
       </thead>
       <tbody className="divide-y divide-gray-100">
         {rows.map((t, i) => (
-          <tr key={t.teamId || i} className="hover:bg-red-50 even:bg-gray-50">
+          <tr
+            key={t.teamId || i}
+            className="hover:bg-red-50 even:bg-gray-50 transition-colors"
+          >
             <td className="p-4 font-medium text-gray-900 flex items-center gap-2">
               <Rank r={i + 1} />
               {t.teamName}
             </td>
-            <td className="p-4 text-center">{t.played}</td>
+            <td className="p-4 text-center text-gray-600">{t.played}</td>
             <td className="p-4 text-center text-green-600 font-semibold">
               {t.wins}
             </td>
@@ -93,9 +106,10 @@ function CricketTable({ rows }) {
   );
 }
 
+// ─── Futsal ──────────────────────────────────────────────────────
 function FutsalTable({ rows }) {
   return (
-    <Wrapper mw={560} legend="P W D L GF GA GD Pts">
+    <Wrapper mw={580} legend="Win=3 Draw=1 Loss=0 · GD = Goal Difference">
       <thead>
         <tr className="bg-emerald-600 text-white">
           <Th first>Team</Th>
@@ -118,7 +132,7 @@ function FutsalTable({ rows }) {
           return (
             <tr
               key={t.teamId || i}
-              className="hover:bg-emerald-50 even:bg-gray-50"
+              className="hover:bg-emerald-50 even:bg-gray-50 transition-colors"
             >
               <td className="p-4 font-medium text-gray-900 flex items-center gap-2">
                 <Rank r={i + 1} />
@@ -148,11 +162,12 @@ function FutsalTable({ rows }) {
   );
 }
 
+// ─── Volleyball ──────────────────────────────────────────────────
 function VolleyballTable({ rows }) {
   return (
     <Wrapper
       mw={520}
-      legend="SW=Sets Won SL=Sets Lost — 3-0/3-1: 3pts | 3-2: 3pts (loser 1pt)"
+      legend="SW=Sets Won  SL=Sets Lost  SD=Set Diff · 3-0/3-1: winner 3pts | 3-2: winner 3 loser 1"
     >
       <thead>
         <tr className="bg-blue-600 text-white">
@@ -175,7 +190,7 @@ function VolleyballTable({ rows }) {
           return (
             <tr
               key={t.teamId || i}
-              className="hover:bg-blue-50 even:bg-gray-50"
+              className="hover:bg-blue-50 even:bg-gray-50 transition-colors"
             >
               <td className="p-4 font-medium text-gray-900 flex items-center gap-2">
                 <Rank r={i + 1} />
@@ -188,8 +203,10 @@ function VolleyballTable({ rows }) {
               <td className="p-4 text-center text-red-500 font-semibold">
                 {t.losses}
               </td>
-              <td className="p-4 text-center text-blue-600">{sw}</td>
-              <td className="p-4 text-center">{sl}</td>
+              <td className="p-4 text-center text-blue-600 font-semibold">
+                {sw}
+              </td>
+              <td className="p-4 text-center text-gray-600">{sl}</td>
               <td className="p-4 text-center font-mono font-semibold">
                 <Gd v={sw - sl} />
               </td>
@@ -202,27 +219,24 @@ function VolleyballTable({ rows }) {
   );
 }
 
-// Badminton / Table Tennis / Tug of War — simple P W L Pts
-function SimpleTable({ rows, color, title }) {
-  const bgs = {
+// ─── Simple (Badminton / Table Tennis / Tug of War / Ludo) ───────
+function SimpleTable({ rows, color, legend }) {
+  const bg = {
     violet: "bg-violet-600",
     blue: "bg-blue-600",
     amber: "bg-amber-600",
+    orange: "bg-orange-600",
   };
-  const hovers = {
+  const hover = {
     violet: "hover:bg-violet-50",
     blue: "hover:bg-blue-50",
     amber: "hover:bg-amber-50",
-  };
-  const legend = {
-    violet: "Win = 2pts",
-    blue: "Win = 2pts",
-    amber: "Win = 2pts · Best of rounds",
+    orange: "hover:bg-orange-50",
   };
   return (
-    <Wrapper legend={legend[color]}>
+    <Wrapper legend={legend}>
       <thead>
-        <tr className={`${bgs[color] || "bg-gray-700"} text-white`}>
+        <tr className={`${bg[color] || "bg-gray-700"} text-white`}>
           <Th first>Team</Th>
           <Th c>P</Th>
           <Th c>W</Th>
@@ -236,7 +250,7 @@ function SimpleTable({ rows, color, title }) {
         {rows.map((t, i) => (
           <tr
             key={t.teamId || i}
-            className={`${hovers[color] || ""} even:bg-gray-50 transition-colors`}
+            className={`${hover[color] || ""} even:bg-gray-50 transition-colors`}
           >
             <td className="p-4 font-medium text-gray-900 flex items-center gap-2">
               <Rank r={i + 1} />
@@ -257,6 +271,7 @@ function SimpleTable({ rows, color, title }) {
   );
 }
 
+// ─── Shared helpers ───────────────────────────────────────────────
 function Wrapper({ children, mw = 420, legend }) {
   return (
     <div className="overflow-hidden bg-white rounded-xl shadow border border-gray-100">
@@ -303,8 +318,8 @@ function Rank({ r }) {
   );
 }
 function Nrr({ v }) {
-  const n = Number(v) || 0,
-    c = n > 0 ? "text-green-600" : n < 0 ? "text-red-500" : "text-gray-500";
+  const n = Number(v) || 0;
+  const c = n > 0 ? "text-green-600" : n < 0 ? "text-red-500" : "text-gray-500";
   return (
     <span className={`font-mono font-semibold ${c}`}>
       {n > 0 ? "+" : ""}
