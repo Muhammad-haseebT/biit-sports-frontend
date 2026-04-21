@@ -8,6 +8,7 @@ import VolleyballPlayerStats from "./VolleyballPlayerStats";
 import BadmintonPlayerStats from "./BadmintonPlayerStats";
 import TableTennisPlayerStats from "./TableTennisPlayerStats";
 import LudoPlayerStats from "./LudoPlayerStats";
+import ChessPlayerStats from "./ChessPlayerStats";
 import {
   getPlayerStats,
   getPlayerTournamentStats,
@@ -21,6 +22,7 @@ const SPORTS = [
   { key: "badminton", label: "Badminton", emoji: "🏸" },
   { key: "table tennis", label: "Table Tennis", emoji: "🏓" },
   { key: "ludo", label: "Ludo", emoji: "🎲" },
+  { key: "chess", label: "Chess", emoji: "♟️" },
 ];
 
 function StatsComponent({ activeSport, stats }) {
@@ -31,6 +33,7 @@ function StatsComponent({ activeSport, stats }) {
   if (s === "table tennis" || s === "tabletennis")
     return <TableTennisPlayerStats stats={stats} />;
   if (s === "ludo") return <LudoPlayerStats stats={stats} />;
+  if (s === "chess") return <ChessPlayerStats stats={stats} />;
   return <CricketPlayerStats stats={stats} />;
 }
 
@@ -41,6 +44,7 @@ export default function PlayerStats() {
   const [selectedTournament, setSelectedTournament] = useState("");
   const [loading, setLoading] = useState(true);
   const [tournamentLoading, setTournamentLoading] = useState(false);
+  const [sportLoading, setSportLoading] = useState(false); // ✅ naya state
   const [error, setError] = useState(null);
   const [playerId, setPlayerId] = useState(null);
   const [activeView, setActiveView] = useState("overall");
@@ -95,9 +99,12 @@ export default function PlayerStats() {
     setManualSport(sport);
     if (activeView === "overall" && playerId) {
       try {
+        setSportLoading(true); // ✅ loading shuru
         setOverallStats(await getPlayerStats(playerId, sport));
       } catch (err) {
         console.error(err);
+      } finally {
+        setSportLoading(false); // ✅ loading khatam
       }
     }
   };
@@ -149,11 +156,12 @@ export default function PlayerStats() {
               <button
                 key={key}
                 onClick={() => handleSportChange(key)}
+                disabled={sportLoading} // ✅ loading mein disable
                 className={`px-3 py-2 rounded-full font-medium transition-all whitespace-nowrap border-2 flex items-center gap-1.5 flex-shrink-0 text-sm ${
                   activeSport === key
                     ? "bg-red-500 text-white border-red-500"
                     : "bg-white text-gray-700 border-gray-200 hover:border-red-300"
-                }`}
+                } ${sportLoading ? "opacity-60 cursor-not-allowed" : ""}`}
               >
                 <span>{emoji}</span> {label}
               </button>
@@ -190,6 +198,13 @@ export default function PlayerStats() {
         </div>
       )}
 
+      {/* ✅ Sport change loading */}
+      {sportLoading && (
+        <div className="flex justify-center items-center min-h-[200px]">
+          <LoadingSpinner size="medium" />
+        </div>
+      )}
+
       {tournamentLoading && (
         <div className="flex justify-center items-center min-h-[200px]">
           <LoadingSpinner size="medium" />
@@ -210,7 +225,8 @@ export default function PlayerStats() {
           </div>
         )}
 
-      {stats && !tournamentLoading && (
+      {/* ✅ Stats tab mein bhi loading check */}
+      {stats && !tournamentLoading && !sportLoading && (
         <StatsComponent activeSport={activeSport} stats={stats} />
       )}
     </div>

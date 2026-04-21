@@ -20,7 +20,7 @@ import BadmintonScoring from "../../components/sports/badminton/BadmintonScoring
 import TableTennisScoring from "../../components/sports/tabletennis/TableTennisScoring.jsx";
 import TugOfWarScoring from "../../components/sports/TugOfWar/TugOfWarScoring.jsx";
 import LudoScoring from "../../components/sports/ludo/LudoScoring.jsx";
-
+import ChessScoring from "../../components/sports/chess/ChessScoring.jsx";
 // Sport index matches DB sportId
 const SPORTS = [
   "Cricket", // 1
@@ -83,7 +83,7 @@ export default function MatchScoreRoute() {
   const isTT = currentSport === "Table Tennis";
   const isTOW = currentSport === "Tug Of War";
   const isLudo = currentSport === "Ludo";
-
+  const isChess = currentSport === "Chess";
   if (!location.state) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500">
@@ -397,7 +397,6 @@ export default function MatchScoreRoute() {
           />
         </div>
       )}
-
       {/* ══ FUTSAL ════════════════════════════════════════════════ */}
       {isFutsal && (status === "LIVE" || status === "COMPLETED") && (
         <div className="flex-1 overflow-auto">
@@ -479,7 +478,6 @@ export default function MatchScoreRoute() {
           />
         </div>
       )}
-
       {/* ══ VOLLEYBALL ════════════════════════════════════════════ */}
       {isVB && (status === "LIVE" || status === "COMPLETED") && (
         <div className="flex-1 overflow-auto">
@@ -596,7 +594,6 @@ export default function MatchScoreRoute() {
           />
         </div>
       )}
-
       {/* ══ BADMINTON ═════════════════════════════════════════════ */}
       {isBD && (status === "LIVE" || status === "COMPLETED") && (
         <div className="flex-1 overflow-auto">
@@ -714,7 +711,6 @@ export default function MatchScoreRoute() {
           />
         </div>
       )}
-
       {/* ══ TABLE TENNIS ══════════════════════════════════════════ */}
       {isTT && (status === "LIVE" || status === "COMPLETED") && (
         <div className="flex-1 overflow-auto">
@@ -824,7 +820,6 @@ export default function MatchScoreRoute() {
           />
         </div>
       )}
-
       {/* ══ TUG OF WAR ════════════════════════════════════════════ */}
       {isTOW && (status === "LIVE" || status === "COMPLETED") && (
         <div className="flex-1 overflow-auto">
@@ -933,7 +928,6 @@ export default function MatchScoreRoute() {
           />
         </div>
       )}
-
       {/* ══ LUDO ══════════════════════════════════════════════════ */}
       {isLudo && (status === "LIVE" || status === "COMPLETED") && (
         <div className="flex-1 overflow-auto">
@@ -1009,6 +1003,88 @@ export default function MatchScoreRoute() {
                 await startmatch(matchId, {
                   tossWinnerId,
                   decision: "START",
+                  scorerId: scorerUsername,
+                  sportId,
+                });
+                navigate(-1);
+              } catch (err) {
+                Swal.fire({
+                  title: "Error",
+                  text: err?.response?.data?.message || "Failed.",
+                  icon: "error",
+                });
+              } finally {
+                setStarting(false);
+              }
+            }}
+          />
+        </div>
+      )}
+      //{" "}
+      {isChess && (status === "LIVE" || status === "COMPLETED") && (
+        <div className="flex-1 overflow-auto">
+          <ChessScoring
+            matchId={matchId}
+            status={status}
+            team1Id={team1Id}
+            team2Id={team2Id}
+            team1Name={team1Name}
+            team2Name={team2Name}
+          />
+        </div>
+      )}
+      ══ CHESS UPCOMING ═══════════════════════════════════════════════
+      {isChess && status === "UPCOMING" && (
+        <div className="flex-1 flex flex-col p-4 max-w-lg mx-auto w-full space-y-4 overflow-auto">
+          <TeamHeader
+            shadow="shadow-slate-500/10"
+            vs="bg-slate-700"
+            subtitle="Chess Setup"
+            c1="bg-slate-50 dark:bg-slate-900/20 text-slate-700 border-slate-100 dark:border-slate-900/30"
+            c2="bg-gray-50 dark:bg-gray-900/20 text-gray-700 border-gray-100 dark:border-gray-900/30"
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <DetailCard
+              icon={MapPin}
+              label="Venue"
+              value={venue}
+              accent="text-slate-500"
+            />
+            <DetailCard
+              icon={Calendar}
+              label="Date"
+              value={match?.date?.split("T")[0]}
+              accent="text-slate-500"
+            />
+            <DetailCard
+              icon={Clock}
+              label="Time"
+              value={match?.time}
+              accent="text-slate-500"
+            />
+            <DetailCard
+              icon={Hash}
+              label="Sport"
+              value="♟️ Chess"
+              accent="text-slate-500"
+            />
+          </div>
+          <TossButtons
+            accentActive="text-slate-700"
+            hoverBorder="hover:border-slate-300"
+          />
+          <ScorerInput focusColor="focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20" />
+          <StartBtn
+            label="♟️ Start Chess Match"
+            bg="bg-slate-700"
+            shadow="shadow-slate-500/40"
+            disabled={!tossWinner}
+            onClick={async () => {
+              setStarting(true);
+              try {
+                await startmatch(matchId, {
+                  tossWinnerId,
+                  decision: "WHITE",
                   scorerId: scorerUsername,
                   sportId,
                 });
