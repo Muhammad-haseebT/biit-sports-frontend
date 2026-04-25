@@ -158,6 +158,7 @@ export default function TableTennisScoring({
     };
     ws.onmessage = (e) => {
       const d = JSON.parse(e.data);
+      console.log(d);
       setScore((p) => ({
         ...p,
         ...d,

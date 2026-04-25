@@ -366,7 +366,18 @@ export default function MatchScoreRoute() {
               ))}
             </div>
           </div>
-          <ScorerInput focusColor="focus:border-green-500 focus:ring-2 focus:ring-green-500/20" />
+          <div className="space-y-2">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <User size={14} /> Scorer Username
+            </label>
+            <input
+              type="text"
+              value={scorerUsername}
+              onChange={(e) => setScorerUsername(e.target.value)}
+              className={`w-full py-3 px-4 rounded-2xl text-sm font-bold border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 `}
+              placeholder="Enter scorer username"
+            />
+          </div>
           <StartBtn
             label="Start Match"
             bg="bg-red-600"
@@ -449,7 +460,18 @@ export default function MatchScoreRoute() {
             accentActive="text-emerald-600"
             hoverBorder="hover:border-emerald-200"
           />
-          <ScorerInput focusColor="focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" />
+          <div className="space-y-2">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <User size={14} /> Scorer Username
+            </label>
+            <input
+              type="text"
+              value={scorerUsername}
+              onChange={(e) => setScorerUsername(e.target.value)}
+              className={`w-full py-3 px-4 rounded-2xl text-sm font-bold border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 `}
+              placeholder="Enter scorer username"
+            />
+          </div>
           <StartBtn
             label="⚽ Start Futsal Match"
             bg="bg-emerald-600"
@@ -562,7 +584,18 @@ export default function MatchScoreRoute() {
             accentActive="text-violet-600"
             hoverBorder="hover:border-violet-200"
           />
-          <ScorerInput focusColor="focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20" />
+          <div className="space-y-2">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <User size={14} /> Scorer Username
+            </label>
+            <input
+              type="text"
+              value={scorerUsername}
+              onChange={(e) => setScorerUsername(e.target.value)}
+              className={`w-full py-3 px-4 rounded-2xl text-sm font-bold border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 `}
+              placeholder="Enter scorer username"
+            />
+          </div>
           <StartBtn
             label="🏐 Start Volleyball Match"
             bg="bg-violet-600"
@@ -679,7 +712,18 @@ export default function MatchScoreRoute() {
             accentActive="text-violet-600"
             hoverBorder="hover:border-violet-200"
           />
-          <ScorerInput focusColor="focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20" />
+          <div className="space-y-2">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <User size={14} /> Scorer Username
+            </label>
+            <input
+              type="text"
+              value={scorerUsername}
+              onChange={(e) => setScorerUsername(e.target.value)}
+              className={`w-full py-3 px-4 rounded-2xl text-sm font-bold border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 `}
+              placeholder="Enter scorer username"
+            />
+          </div>
           <StartBtn
             label="🏸 Start Badminton Match"
             bg="bg-violet-600"
@@ -788,7 +832,18 @@ export default function MatchScoreRoute() {
             accentActive="text-blue-600"
             hoverBorder="hover:border-blue-200"
           />
-          <ScorerInput focusColor="focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" />
+          <div className="space-y-2">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <User size={14} /> Scorer Username
+            </label>
+            <input
+              type="text"
+              value={scorerUsername}
+              onChange={(e) => setScorerUsername(e.target.value)}
+              className={`w-full py-3 px-4 rounded-2xl text-sm font-bold border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 ${focusColor}`}
+              placeholder="Enter scorer username"
+            />
+          </div>
           <StartBtn
             label="🏓 Start Table Tennis Match"
             bg="bg-blue-600"
@@ -1033,7 +1088,6 @@ export default function MatchScoreRoute() {
           />
         </div>
       )}
-      ══ CHESS UPCOMING ═══════════════════════════════════════════════
       {isChess && status === "UPCOMING" && (
         <div className="flex-1 flex flex-col p-4 max-w-lg mx-auto w-full space-y-4 overflow-auto">
           <TeamHeader
@@ -1073,7 +1127,18 @@ export default function MatchScoreRoute() {
             accentActive="text-slate-700"
             hoverBorder="hover:border-slate-300"
           />
-          <ScorerInput focusColor="focus:border-slate-500 focus:ring-2 focus:ring-slate-500/20" />
+          <div className="space-y-2">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <User size={14} /> Scorer Username
+            </label>
+            <input
+              type="text"
+              value={scorerUsername}
+              onChange={(e) => setScorerUsername(e.target.value)}
+              className={`w-full py-3 px-4 rounded-2xl text-sm font-bold border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 `}
+              placeholder="Enter scorer username"
+            />
+          </div>
           <StartBtn
             label="♟️ Start Chess Match"
             bg="bg-slate-700"

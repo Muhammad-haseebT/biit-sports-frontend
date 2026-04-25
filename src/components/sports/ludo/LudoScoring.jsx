@@ -2,9 +2,9 @@ import { useEffect, useState, useRef } from "react";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { getPlayersByTeamId } from "../../../api/teamApi";
-// import FavouritePlayerModal from "../football/modals/FavouritePlayerModal";
 import { ArrowLeft, Trophy, RotateCcw } from "lucide-react";
 
+// ─── Event config ──────────────────────────────────────────────────
 const EV = {
   HOME_RUN: { icon: "🏠", label: "Home Run" },
   CAPTURE: { icon: "⚔️", label: "Capture" },
@@ -12,6 +12,7 @@ const EV = {
   END_MATCH: { icon: "🏁", label: "Match End" },
 };
 
+// ─── Timer ─────────────────────────────────────────────────────────
 function useMatchTimer(startTime, status) {
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
@@ -39,6 +40,7 @@ function PanelHeading({ title }) {
   );
 }
 
+// ─── MAIN COMPONENT ────────────────────────────────────────────────
 export default function LudoScoring({
   matchId,
   status,
@@ -64,14 +66,19 @@ export default function LudoScoring({
 
   const [team1P, setTeam1P] = useState([]);
   const [team2P, setTeam2P] = useState([]);
-  const [activeModal, setActiveModal] = useState(null); // "homeRun" | "capture" | "win" | null
-  const [wizStep, setWizStep] = useState(1);
+
+  // ── Modal state ─────────────────────────────────────────────────
+  // activeModal: null | "homeRun" | "capture" | "win"
+  const [activeModal, setActiveModal] = useState(null);
+  const [wizStep, setWizStep] = useState(1); // 1=team, 2=player
   const [selTeam, setSelTeam] = useState(null);
   const [selPlayer, setSelPlayer] = useState(null);
+  // Which eventType the current wizard is for
+  const [wizEventType, setWizEventType] = useState(null);
+
   const [activeTab, setActiveTab] = useState("Scoring");
   const [toast, setToast] = useState(null);
   const [waiting, setWaiting] = useState(false);
-  const [showFav, setShowFav] = useState(false);
 
   const timer = useMatchTimer(score.matchStartTime, score.status);
 
@@ -106,10 +113,7 @@ export default function LudoScoring({
       setScore((p) => ({ ...p, ...d }));
       setWaiting(false);
       if (d.comment === "UNDO") showToast("↩ Undo done", "info");
-      if (d.status === "COMPLETED") {
-        showToast("🏆 Match Complete!", "info");
-        setTimeout(() => setShowFav(true), 1500);
-      }
+      if (d.status === "COMPLETED") showToast("🏆 Match Complete!", "info");
     };
     ws.onerror = () => showToast("WebSocket error", "error");
     ws.onclose = () => (wsRef.current = null);
@@ -132,17 +136,36 @@ export default function LudoScoring({
     setWizStep(1);
     setSelTeam(null);
     setSelPlayer(null);
+    setWizEventType(null);
   };
 
-  const submitEvent = (type, skipPlayer = false) => {
-    if (!selTeam) return;
-    const p = { eventType: type, teamId: selTeam };
+  // Open homeRun or capture wizard
+  const openWizard = (eventType) => {
+    setWizEventType(eventType);
+    setWizStep(1);
+    setSelTeam(null);
+    setSelPlayer(null);
+    setActiveModal("wizard");
+  };
+
+  const submitEvent = (skipPlayer = false) => {
+    if (!selTeam || !wizEventType) return;
+    const p = { eventType: wizEventType, teamId: selTeam };
     if (selPlayer && !skipPlayer) p.playerId = selPlayer;
     send(p);
     closeModal();
   };
 
+  // ✅ Team select: update state only, do NOT advance step here
+  // Step advances only via explicit button click or onChange + setTimeout
+  const handleTeamChange = (e) => {
+    const val = Number(e.target.value);
+    if (!val) return;
+    setSelTeam(val);
+  };
+
   const activePlayers = () => (selTeam === team1Id ? team1P : team2P);
+
   const showToast = (msg, type = "info") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
@@ -150,6 +173,7 @@ export default function LudoScoring({
 
   const isCompleted = score.status === "COMPLETED";
 
+  // ── Styles ──────────────────────────────────────────────────────
   const selectCls =
     "w-full p-3 rounded-lg text-xl sm:text-2xl bg-white text-red-600 font-bold border border-red-200 shadow-sm";
   const primaryBtn =
@@ -159,72 +183,16 @@ export default function LudoScoring({
   const backBtn =
     "w-full bg-gray-100 text-gray-700 p-3 rounded-lg text-xl font-bold shadow-sm flex items-center justify-center active:bg-gray-200 transition-colors border border-gray-300";
 
-  const WizardHeader = ({ title }) => (
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-xl font-bold text-red-600">{title}</h2>
-      <button
-        className="text-gray-500 text-sm border border-gray-300 px-3 py-1 rounded-lg hover:bg-gray-100"
-        onClick={closeModal}
-      >
-        ✕ Close
-      </button>
-    </div>
-  );
-
-  // Wizard: team select → player select
-  const TeamPlayerWizard = ({ title, eventType }) => (
-    <div className="bg-red-600 p-3 rounded-xl shadow-md">
-      <WizardHeader title={title} />
-      <div className="flex flex-col gap-3">
-        {wizStep === 1 && (
-          <select
-            className={selectCls}
-            onChange={(e) => {
-              setSelTeam(Number(e.target.value));
-              setWizStep(2);
-            }}
-          >
-            <option value="">Select Team</option>
-            <option value={team1Id}>{team1Name}</option>
-            <option value={team2Id}>{team2Name}</option>
-          </select>
-        )}
-        {wizStep === 2 && (
-          <>
-            <select
-              className={selectCls}
-              onChange={(e) => setSelPlayer(Number(e.target.value))}
-            >
-              <option value="">Select Player (Optional)</option>
-              {activePlayers().map((p) => (
-                <option key={p.id ?? p.playerId} value={p.id ?? p.playerId}>
-                  {p.name ?? p.playerName}
-                </option>
-              ))}
-            </select>
-            <button
-              className={confirmBtn}
-              onClick={() => submitEvent(eventType, false)}
-            >
-              CONFIRM
-            </button>
-            <button
-              className="w-full bg-gray-100 text-gray-600 p-3 rounded-lg text-base font-bold shadow-sm active:bg-gray-200 border border-gray-300"
-              onClick={() => submitEvent(eventType, true)}
-            >
-              Skip Player
-            </button>
-            <button className={backBtn} onClick={() => setWizStep(1)}>
-              Back
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
+  const wizTitle =
+    wizEventType === "HOME_RUN"
+      ? "🏠 Record Home Run"
+      : wizEventType === "CAPTURE"
+        ? "⚔️ Record Capture"
+        : "";
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
+      {/* Toast */}
       {toast && (
         <div
           className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] px-5 py-2.5 rounded-2xl text-sm font-bold shadow-2xl text-white ${
@@ -239,6 +207,7 @@ export default function LudoScoring({
         </div>
       )}
 
+      {/* Header */}
       <div className="flex items-center bg-red-600 h-16 px-4">
         <ArrowLeft
           className="w-6 h-6 text-white cursor-pointer"
@@ -247,11 +216,16 @@ export default function LudoScoring({
         <h1 className="text-white font-semibold text-2xl ml-2">Match Center</h1>
       </div>
 
+      {/* Tabs */}
       <div className="flex justify-between mt-4 px-4 gap-2">
         {["Scoring", "Events", "Info"].map((item) => (
           <button
             key={item}
-            className={`flex-1 py-2 rounded-lg font-semibold text-base transition-colors ${activeTab === item ? "bg-red-600 text-white shadow" : "bg-gray-100 text-gray-600 border border-gray-200"}`}
+            className={`flex-1 py-2 rounded-lg font-semibold text-base transition-colors ${
+              activeTab === item
+                ? "bg-red-600 text-white shadow"
+                : "bg-gray-100 text-gray-600 border border-gray-200"
+            }`}
             onClick={() => setActiveTab(item)}
           >
             {item}
@@ -260,11 +234,13 @@ export default function LudoScoring({
       </div>
       <hr className="my-3 border-gray-200" />
 
+      {/* ══ SCORING TAB ══════════════════════════════════════════ */}
       {activeTab === "Scoring" && (
         <PanelWrapper>
           <PanelHeading title="🎲 Ludo" />
 
           {isCompleted ? (
+            /* ── Completed ── */
             <div className="flex flex-col items-center justify-center bg-gradient-to-b from-yellow-50 to-white border border-yellow-200 rounded-2xl p-6 shadow-md mb-4 gap-4">
               <Trophy className="text-yellow-500 w-16 h-16" />
               <h2 className="text-2xl font-black text-red-600">
@@ -335,7 +311,7 @@ export default function LudoScoring({
                 </div>
               </div>
 
-              {/* Recent events */}
+              {/* Recent events strip */}
               <div
                 className="flex flex-row overflow-x-auto w-full border border-gray-200 rounded-xl p-2 bg-gray-50 shadow-inner space-x-2 mb-4"
                 style={{ maxHeight: 120 }}
@@ -367,26 +343,20 @@ export default function LudoScoring({
                 )}
               </div>
 
-              {/* Action panel */}
+              {/* ── ACTION PANEL ── */}
               {!activeModal && isAdmin.current && (
                 <div
                   className={`bg-red-600 p-3 rounded-xl shadow-md flex flex-col gap-3 ${waiting ? "opacity-50 pointer-events-none" : ""}`}
                 >
                   <button
                     className={primaryBtn}
-                    onClick={() => {
-                      setActiveModal("homeRun");
-                      setWizStep(1);
-                    }}
+                    onClick={() => openWizard("HOME_RUN")}
                   >
                     🏠 Record Home Run
                   </button>
                   <button
                     className={primaryBtn}
-                    onClick={() => {
-                      setActiveModal("capture");
-                      setWizStep(1);
-                    }}
+                    onClick={() => openWizard("CAPTURE")}
                   >
                     ⚔️ Record Capture
                   </button>
@@ -413,23 +383,134 @@ export default function LudoScoring({
                 </div>
               )}
 
-              {activeModal === "homeRun" && isAdmin.current && (
-                <TeamPlayerWizard
-                  title="🏠 Record Home Run"
-                  eventType="HOME_RUN"
-                />
-              )}
-              {activeModal === "capture" && isAdmin.current && (
-                <TeamPlayerWizard
-                  title="⚔️ Record Capture"
-                  eventType="CAPTURE"
-                />
+              {/* ─────────────────────────────────────────────────────
+                  HOME RUN / CAPTURE WIZARD
+                  ✅ FIX: Inline JSX — no sub-component defined inside
+                     parent, so no remount on re-render → dropdown stays open
+                  ───────────────────────────────────────────────────── */}
+              {activeModal === "wizard" && isAdmin.current && (
+                <div className="bg-red-600 p-3 rounded-xl shadow-md">
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-red-600 bg-white px-2 py-1 rounded">
+                      {wizTitle}
+                    </h2>
+                    <button
+                      className="text-white text-sm border border-white/40 px-3 py-1 rounded-lg hover:bg-white/20"
+                      onClick={closeModal}
+                    >
+                      ✕ Close
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    {/* Step 1 — Select Team */}
+                    {wizStep === 1 && (
+                      <>
+                        <p className="text-white text-sm font-semibold text-center mb-1">
+                          Select team
+                        </p>
+                        {/* ✅ Two explicit buttons instead of <select>
+                            to avoid any auto-close issues on mobile */}
+                        <button
+                          className={`w-full p-3 rounded-lg text-xl font-black border-2 transition-colors ${
+                            selTeam === team1Id
+                              ? "bg-blue-600 border-blue-400 text-white"
+                              : "bg-white text-red-600 border-red-200"
+                          }`}
+                          onClick={() => setSelTeam(team1Id)}
+                        >
+                          🔵 {team1Name}
+                        </button>
+                        <button
+                          className={`w-full p-3 rounded-lg text-xl font-black border-2 transition-colors ${
+                            selTeam === team2Id
+                              ? "bg-rose-600 border-rose-400 text-white"
+                              : "bg-white text-red-600 border-red-200"
+                          }`}
+                          onClick={() => setSelTeam(team2Id)}
+                        >
+                          🔴 {team2Name}
+                        </button>
+
+                        <button
+                          disabled={!selTeam}
+                          className={confirmBtn}
+                          onClick={() => setWizStep(2)}
+                        >
+                          NEXT → Select Player
+                        </button>
+                      </>
+                    )}
+
+                    {/* Step 2 — Select Player */}
+                    {wizStep === 2 && (
+                      <>
+                        <p className="text-white text-sm font-semibold text-center mb-1">
+                          {selTeam === team1Id ? team1Name : team2Name} — select
+                          player
+                        </p>
+
+                        {/* ✅ Player list as buttons — no <select> dropdown */}
+                        <div className="max-h-48 overflow-y-auto flex flex-col gap-2 rounded-lg">
+                          {activePlayers().map((p) => {
+                            const pid = p.id ?? p.playerId;
+                            const pname = p.name ?? p.playerName;
+                            return (
+                              <button
+                                key={pid}
+                                className={`w-full p-2.5 rounded-lg text-base font-bold border-2 transition-colors ${
+                                  selPlayer === pid
+                                    ? "bg-emerald-600 border-emerald-400 text-white"
+                                    : "bg-white text-gray-800 border-gray-200 hover:border-emerald-300"
+                                }`}
+                                onClick={() => setSelPlayer(pid)}
+                              >
+                                {pname}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <button
+                          className={confirmBtn}
+                          onClick={() => submitEvent(false)}
+                          disabled={!selPlayer}
+                        >
+                          CONFIRM {selPlayer ? "WITH PLAYER" : ""}
+                        </button>
+                        <button
+                          className="w-full bg-white/80 text-gray-700 p-3 rounded-lg text-base font-bold shadow-sm active:bg-gray-200 border border-gray-300"
+                          onClick={() => submitEvent(true)}
+                        >
+                          Skip Player & Confirm
+                        </button>
+                        <button
+                          className={backBtn}
+                          onClick={() => setWizStep(1)}
+                        >
+                          ← Back
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
               )}
 
-              {/* Win wizard */}
+              {/* ── WIN WIZARD ── */}
               {activeModal === "win" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="🏆 Declare Winner" />
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-white">
+                      🏆 Declare Winner
+                    </h2>
+                    <button
+                      className="text-white text-sm border border-white/40 px-3 py-1 rounded-lg hover:bg-white/20"
+                      onClick={closeModal}
+                    >
+                      ✕ Close
+                    </button>
+                  </div>
                   <div className="flex flex-col gap-3">
                     <p className="text-white text-sm text-center font-semibold mb-2">
                       Which team won?
@@ -463,6 +544,7 @@ export default function LudoScoring({
         </PanelWrapper>
       )}
 
+      {/* ══ EVENTS TAB ════════════════════════════════════════════ */}
       {activeTab === "Events" && (
         <PanelWrapper>
           <PanelHeading title="Event Timeline" />
@@ -506,6 +588,7 @@ export default function LudoScoring({
         </PanelWrapper>
       )}
 
+      {/* ══ INFO TAB ══════════════════════════════════════════════ */}
       {activeTab === "Info" && (
         <PanelWrapper>
           <PanelHeading title="Match Info" />
@@ -533,13 +616,6 @@ export default function LudoScoring({
           </table>
         </PanelWrapper>
       )}
-      {/* 
-      {showFav && (
-        <FavouritePlayerModal matchId={matchId} team1Id={team1Id} team2Id={team2Id}
-          team1Name={team1Name} team2Name={team2Name}
-          team1Players={team1P} team2Players={team2P}
-          onClose={() => setShowFav(false)} />
-      )} */}
     </div>
   );
 }

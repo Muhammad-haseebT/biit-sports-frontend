@@ -171,6 +171,7 @@ export default function BadmintonScoring({
     };
     ws.onmessage = (e) => {
       const d = JSON.parse(e.data);
+      console.log(d);
       setScore((p) => ({
         ...p,
         ...d,
