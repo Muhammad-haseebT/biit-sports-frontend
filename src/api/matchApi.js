@@ -65,3 +65,24 @@ export const getMatchBalls = async (mid, tid) => {
   console.log(r.data);
   return r.data;
 };
+export const submitVote = (matchId, accountId, playerId, feedback = null) =>
+  axios
+    .post(`${BASE_URL}/api/favourite-player/vote`, {
+      matchId,
+      accountId,
+      playerId,
+      ...(feedback && { feedback }),
+    })
+    .then((r) => r.data);
+
+export const getVoteResults = (matchId) =>
+  axios
+    .get(`${BASE_URL}/api/favourite-player/results/${matchId}`)
+    .then((r) => r.data);
+
+export const checkVoted = (matchId, accountId) =>
+  axios
+    .get(`${BASE_URL}/api/favourite-player/check`, {
+      params: { matchId, accountId },
+    })
+    .then((r) => r.data);

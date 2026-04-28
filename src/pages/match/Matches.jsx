@@ -13,48 +13,60 @@ import { FaArrowLeft, FaSortAmountDown, FaSortAmountUp } from "react-icons/fa";
 
 export default function Matches() {
   const navigate = useNavigate();
+  const [allMatches, setAllMatches] = useState([]);
   const [matches, setMatches] = useState([]);
   const [selectedSport, setSelectedSport] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [loading, setLoading] = useState(false);
-  const [sortOrder, setSortOrder] = useState("asc"); // "asc" | "desc"
+  const [sortOrder, setSortOrder] = useState("asc");
 
+  // 1. Initial fetch on mount (reload)
   useEffect(() => {
     const fetchMatches = async () => {
       setLoading(true);
       try {
-        let response;
-
-        if (selectedSport === "All" && selectedStatus === "All") {
-          response = await getMatches();
-        } else if (selectedStatus !== "All") {
-          if (selectedSport === "All") {
-            response = await getMatchByStatus(selectedStatus);
-          } else {
-            // Both specific -> Use sport + status endpoint
-            response = await getMatchBySportAndStatus(
-              selectedSport,
-              selectedStatus,
-            );
-          }
-        } else {
-          response = await getMatchBySportAndStatus(
-            selectedSport,
-            selectedStatus,
-          );
-        }
-
-        console.log(response.data);
+        const response = await getMatches();
+        setAllMatches(response.data);
         setMatches(response.data);
       } catch (err) {
-        console.error(err);
+        console.error("Fetch error:", err);
         setMatches([]);
       } finally {
         setLoading(false);
       }
     };
     fetchMatches();
-  }, [selectedSport, selectedStatus]);
+  }, []); // Run only once when component mounts (reload)
+
+  const SPORT_MAP = {
+    Cricket: 1,
+    Futsal: 2,
+    VolleyBall: 3,
+    "Table Tennis": 4,
+    Badminton: 5,
+    "Tug Of War": 6,
+    Ludo: 7,
+    Chess: 8,
+  };
+
+  // 2. Local filtering when filters or data change
+  useEffect(() => {
+    if (allMatches.length > 0) {
+      let filtered = [...allMatches];
+
+      if (selectedSport !== "All") {
+        const targetSportId = SPORT_MAP[selectedSport];
+        filtered = filtered.filter((m) => m.sportId === targetSportId);
+      }
+
+      if (selectedStatus !== "All") {
+        filtered = filtered.filter(
+          (m) => m.status?.toUpperCase() === selectedStatus.toUpperCase(),
+        );
+      }
+      setMatches(filtered);
+    }
+  }, [selectedSport, selectedStatus, allMatches]);
 
   const handleClick = (
     matchId,
@@ -70,7 +82,7 @@ export default function Matches() {
     venue,
     match,
   ) => {
-    if (status === "LIVE" && decision == "BAT") {
+    if (status?.toUpperCase() === "LIVE" && decision == "BAT") {
       let name = "";
       if (tossWinnerId == team1Id) name = team1Name;
       else name = team2Name;
@@ -91,7 +103,7 @@ export default function Matches() {
           match: match,
         },
       });
-    } else if (status === "LIVE" && decision == "BOWL") {
+    } else if (status?.toUpperCase() === "LIVE" && decision == "BOWL") {
       if (tossWinnerId == team1Id) {
         navigate(`/match`, {
           state: {
@@ -171,20 +183,31 @@ export default function Matches() {
           id="sort-toggle"
           onClick={() => setSortOrder((o) => (o === "asc" ? "desc" : "asc"))}
           disabled={loading}
-          title={sortOrder === "asc" ? "Sorted: Oldest first" : "Sorted: Newest first"}
+          title={
+            sortOrder === "asc"
+              ? "Sorted: Oldest first"
+              : "Sorted: Newest first"
+          }
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
             loading
               ? "opacity-40 cursor-not-allowed border-gray-200 text-gray-400 bg-white"
               : "border-red-200 text-red-600 bg-white hover:bg-red-50 shadow-sm"
           }`}
         >
-          {sortOrder === "asc" ? <FaSortAmountDown size={12} /> : <FaSortAmountUp size={12} />}
+          {sortOrder === "asc" ? (
+            <FaSortAmountDown size={12} />
+          ) : (
+            <FaSortAmountUp size={12} />
+          )}
           {sortOrder === "asc" ? "Oldest First" : "Newest First"}
         </button>
       </div>
 
       <div className={loading ? "pointer-events-none opacity-60" : ""}>
-        <SportFilter onFilter={setSelectedSport} selectedSport={selectedSport} />
+        <SportFilter
+          onFilter={setSelectedSport}
+          selectedSport={selectedSport}
+        />
         <StatusFilter
           onFilter={setSelectedStatus}
           selectedStatus={selectedStatus}
@@ -195,7 +218,9 @@ export default function Matches() {
       ) : (
         <div className="flex flex-col gap-4">
           {sortedMatches.length === 0 ? (
-            <p className="text-center text-gray-400 py-8 text-sm">No matches found</p>
+            <p className="text-center text-gray-400 py-8 text-sm">
+              No matches found
+            </p>
           ) : (
             sortedMatches.map((match) => (
               <MatchCard
@@ -206,7 +231,7 @@ export default function Matches() {
                 team1Id={match.team1Id}
                 team2Id={match.team2Id}
                 extra={match.date?.split("T")[0] + " " + (match.time || "")}
-                live={match.status === "live" || match.status === "LIVE"}
+                live={match.status?.toUpperCase() === "LIVE"}
                 sportId={match.sportId}
                 onClick={() =>
                   handleClick(

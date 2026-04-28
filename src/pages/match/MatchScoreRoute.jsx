@@ -1075,7 +1075,7 @@ export default function MatchScoreRoute() {
           />
         </div>
       )}
-      //{" "}
+
       {isChess && (status === "LIVE" || status === "COMPLETED") && (
         <div className="flex-1 overflow-auto">
           <ChessScoring

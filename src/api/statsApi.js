@@ -281,3 +281,16 @@ export const getPlayerStats = async (playerId, sport = null) => {
     throw error;
   }
 };
+export const getTopVotedPlayers = async (tournamentId) => {
+  const r = await axios.get(
+    `${url}/api/favourite-player/top-voted/${tournamentId}`,
+  );
+  return r.data;
+};
+
+export const setManOfTournament = async (tournamentId, playerId) => {
+  const r = await axios.post(
+    `${url}/api/favourite-player/set-mot/${tournamentId}/${playerId}`,
+  );
+  return r.data;
+};

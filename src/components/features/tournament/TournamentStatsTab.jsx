@@ -1,25 +1,42 @@
 import { useState, useEffect } from "react";
-import { Trophy, TrendingUp, Target, Award, Crown } from "lucide-react";
+import {
+  Trophy,
+  TrendingUp,
+  Target,
+  Award,
+  Crown,
+  Pencil,
+  X,
+  Check,
+} from "lucide-react";
 import LoadingSpinner from "../../common/LoadingSpinner";
 import { getTournamentStats } from "../../../api/statsApi";
+import { getTopVotedPlayers, setManOfTournament } from "../../../api/statsApi";
+import Cookies from "js-cookie";
 
 export default function TournamentStatsTab({ tournamentId }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // check admin
+  const account = JSON.parse(Cookies.get("account") || "{}");
+  const isAdmin = account?.role === "ADMIN";
+
+  const loadStats = async () => {
+    try {
+      setLoading(true);
+      setStats(await getTournamentStats(tournamentId));
+    } catch {
+      setError("Failed to load stats");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!tournamentId) return;
-    (async () => {
-      try {
-        setLoading(true);
-        setStats(await getTournamentStats(tournamentId));
-      } catch {
-        setError("Failed to load stats");
-      } finally {
-        setLoading(false);
-      }
-    })();
+    loadStats();
   }, [tournamentId]);
 
   if (loading)
@@ -42,30 +59,37 @@ export default function TournamentStatsTab({ tournamentId }) {
       </div>
     );
 
+  const motProps = {
+    name: stats.manOfTournament?.playerName,
+    tournamentId,
+    isAdmin,
+    onUpdated: loadStats, // MoT set hone ke baad stats refresh karo
+  };
+
   switch (stats.sport) {
     case "futsal":
-      return <FutsalStats stats={stats} />;
+      return <FutsalStats stats={stats} motProps={motProps} />;
     case "volleyball":
-      return <VolleyballStats stats={stats} />;
+      return <VolleyballStats stats={stats} motProps={motProps} />;
     case "badminton":
-      return <BadmintonStats stats={stats} />;
+      return <BadmintonStats stats={stats} motProps={motProps} />;
     case "table tennis":
     case "tabletennis":
-      return <TableTennisStats stats={stats} />;
+      return <TableTennisStats stats={stats} motProps={motProps} />;
     case "ludo":
-      return <LudoStats stats={stats} />;
+      return <LudoStats stats={stats} motProps={motProps} />;
     case "chess":
-      return <ChessStats stats={stats} />;
+      return <ChessStats stats={stats} motProps={motProps} />;
     default:
-      return <CricketStats stats={stats} />;
+      return <CricketStats stats={stats} motProps={motProps} />;
   }
 }
 
 // ── Cricket ──────────────────────────────────────────────────────
-function CricketStats({ stats }) {
+function CricketStats({ stats, motProps }) {
   return (
     <div className="space-y-6">
-      <ManOfTournament name={stats.manOfTournament?.playerName} />
+      <ManOfTournament {...motProps} />
       <div className="grid md:grid-cols-3 gap-4">
         <AwardCard
           title="Best Batsman"
@@ -126,10 +150,10 @@ function CricketStats({ stats }) {
 }
 
 // ── Futsal ───────────────────────────────────────────────────────
-function FutsalStats({ stats }) {
+function FutsalStats({ stats, motProps }) {
   return (
     <div className="space-y-6">
-      <ManOfTournament name={stats.manOfTournament?.playerName} />
+      <ManOfTournament {...motProps} />
       <div className="grid md:grid-cols-2 gap-4">
         <AwardCard
           title="Top Scorer"
@@ -184,10 +208,10 @@ function FutsalStats({ stats }) {
 }
 
 // ── Volleyball ───────────────────────────────────────────────────
-function VolleyballStats({ stats }) {
+function VolleyballStats({ stats, motProps }) {
   return (
     <div className="space-y-6">
-      <ManOfTournament name={stats.manOfTournament?.playerName} />
+      <ManOfTournament {...motProps} />
       <div className="grid md:grid-cols-2 gap-4">
         <AwardCard
           title="Top Scorer"
@@ -223,10 +247,10 @@ function VolleyballStats({ stats }) {
 }
 
 // ── Badminton ────────────────────────────────────────────────────
-function BadmintonStats({ stats }) {
+function BadmintonStats({ stats, motProps }) {
   return (
     <div className="space-y-6">
-      <ManOfTournament name={stats.manOfTournament?.playerName} />
+      <ManOfTournament {...motProps} />
       <div className="grid md:grid-cols-2 gap-4">
         <AwardCard
           title="Top Scorer"
@@ -262,10 +286,10 @@ function BadmintonStats({ stats }) {
 }
 
 // ── Table Tennis ─────────────────────────────────────────────────
-function TableTennisStats({ stats }) {
+function TableTennisStats({ stats, motProps }) {
   return (
     <div className="space-y-6">
-      <ManOfTournament name={stats.manOfTournament?.playerName} />
+      <ManOfTournament {...motProps} />
       <div className="grid md:grid-cols-2 gap-4">
         <AwardCard
           title="Top Scorer"
@@ -301,10 +325,10 @@ function TableTennisStats({ stats }) {
 }
 
 // ── Ludo ─────────────────────────────────────────────────────────
-function LudoStats({ stats }) {
+function LudoStats({ stats, motProps }) {
   return (
     <div className="space-y-6">
-      <ManOfTournament name={stats.manOfTournament?.playerName} />
+      <ManOfTournament {...motProps} />
       <div className="grid md:grid-cols-2 gap-4">
         <AwardCard
           title="Top Home Runs"
@@ -340,10 +364,10 @@ function LudoStats({ stats }) {
 }
 
 // ── Chess ─────────────────────────────────────────────────────────
-function ChessStats({ stats }) {
+function ChessStats({ stats, motProps }) {
   return (
     <div className="space-y-6">
-      <ManOfTournament name={stats.manOfTournament?.playerName} color="slate" />
+      <ManOfTournament {...motProps} color="slate" />
       <div className="grid md:grid-cols-2 gap-4">
         <AwardCard
           title="Most Wins"
@@ -380,16 +404,163 @@ function ChessStats({ stats }) {
 
 // ── Shared components ─────────────────────────────────────────────
 
-function ManOfTournament({ name }) {
-  if (!name) return null;
+function ManOfTournament({ name, tournamentId, isAdmin, onUpdated }) {
+  const [editing, setEditing] = useState(false);
+  const [candidates, setCandidates] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [loadingCandidates, setLoadingCandidates] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+
+  const openEdit = async () => {
+    setEditing(true);
+    setErr("");
+    setSelectedId(null);
+    setLoadingCandidates(true);
+    try {
+      console.log("Tournament ID:", tournamentId);
+      const data = await getTopVotedPlayers(tournamentId);
+      console.log("Top voted players:", data);
+      setCandidates(data);
+    } catch {
+      setErr("Players load nahi hue");
+    } finally {
+      setLoadingCandidates(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!selectedId) return;
+    setSaving(true);
+    try {
+      await setManOfTournament(tournamentId, selectedId);
+      setEditing(false);
+      onUpdated(); // stats refresh
+    } catch {
+      setErr("Save nahi hua, dobara try karo");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg shadow-lg p-6">
-      <div className="flex items-center gap-3 mb-2">
-        <Crown className="w-8 h-8" />
-        <h3 className="text-lg font-semibold">Man of the Tournament</h3>
+    <>
+      <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg shadow-lg p-6">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <Crown className="w-8 h-8" />
+            <h3 className="text-lg font-semibold">Man of the Tournament</h3>
+          </div>
+          {isAdmin && (
+            <button
+              onClick={openEdit}
+              className="bg-white/20 hover:bg-white/30 transition rounded-lg px-3 py-1.5 flex items-center gap-1.5 text-sm font-semibold"
+            >
+              <Pencil className="w-4 h-4" />
+              Edit
+            </button>
+          )}
+        </div>
+        <div className="text-3xl font-bold">{name || "TBD"}</div>
       </div>
-      <div className="text-3xl font-bold">{name}</div>
-    </div>
+
+      {/* ── Edit Modal ── */}
+      {editing && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl w-full max-w-sm mx-4 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-800">
+                Man of Tournament Select Karo
+              </h3>
+              <button
+                onClick={() => setEditing(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {err && (
+              <p className="text-red-500 text-sm mb-3 bg-red-50 rounded-lg p-2 text-center">
+                {err}
+              </p>
+            )}
+
+            {loadingCandidates ? (
+              <div className="text-center py-6 text-gray-500">
+                Loading players...
+              </div>
+            ) : candidates.length === 0 ? (
+              <div className="text-center py-6 text-gray-400">
+                Koi votes nahi mile tournament mein
+              </div>
+            ) : (
+              <div className="space-y-2 mb-4">
+                <p className="text-xs text-gray-400 text-center mb-3">
+                  Top 3 favourite players by fan votes
+                </p>
+                {candidates.map((c, i) => {
+                  const isSelected = selectedId === c.playerId;
+                  return (
+                    <div
+                      key={c.playerId}
+                      onClick={() => setSelectedId(c.playerId)}
+                      className={`flex items-center justify-between border rounded-xl px-4 py-3 cursor-pointer transition-all ${
+                        isSelected
+                          ? "bg-yellow-50 border-yellow-500 ring-2 ring-yellow-300"
+                          : "bg-gray-100 border-gray-200 hover:bg-yellow-50 hover:border-yellow-300"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Radio */}
+                        <div
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                            isSelected
+                              ? "border-yellow-500 bg-yellow-500"
+                              : "border-gray-400"
+                          }`}
+                        >
+                          {isSelected && (
+                            <div className="w-2.5 h-2.5 rounded-full bg-white" />
+                          )}
+                        </div>
+                        {/* Rank + Name */}
+                        <div>
+                          <span className="font-semibold text-gray-800">
+                            {c.playerName || `Player #${c.playerId}`}
+                          </span>
+                          <span className="text-xs text-gray-400 ml-2">
+                            #{i + 1} ranked
+                          </span>
+                        </div>
+                      </div>
+                      {/* Vote count */}
+                      <span className="text-xs font-bold text-yellow-600 bg-yellow-100 rounded-full px-2 py-0.5">
+                        {c.votes} votes
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <button
+              disabled={!selectedId || saving}
+              onClick={handleSave}
+              className="w-full bg-yellow-500 text-white py-3 rounded-xl font-bold text-base hover:bg-yellow-600 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {saving ? (
+                "Saving..."
+              ) : (
+                <>
+                  <Check className="w-5 h-5" /> Confirm & Save
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

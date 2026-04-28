@@ -10,11 +10,19 @@ export const handleUndo = (data) => {
   data.undo = true;
   return data;
 };
-export const handleEndInnings = (data) => {
-  return {
-    ...data,
-    eventType: "End_Innings",
-    comment: null,
-    undo: false,
-  };
-};
+// scoring.js — yeh function is tarah hona chahiye
+export const handleSuperOver = (data) => ({
+  ...data,
+  eventType: "Super_Over",
+  event: "0",
+  comment: "",
+  undo: false,
+});
+
+export const handleEndInnings = (data) => ({
+  ...data,
+  eventType: "End_Innings",
+  event: "0",
+  comment: "",
+  undo: false,
+});
