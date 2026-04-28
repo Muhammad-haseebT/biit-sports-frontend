@@ -57,6 +57,8 @@ export default function MatchScoreRoute() {
   const [decision, setDecision] = useState(null);
   const [starting, setStarting] = useState(false);
   const [scorerUsername, setScorerUsername] = useState("");
+  const [t1Id, setT1Id] = useState(team1Id);
+  const [t2Id, setT2Id] = useState(team2Id);
 
   // Volleyball config
   const [vbSets, setVbSets] = useState(3);
@@ -339,6 +341,8 @@ export default function MatchScoreRoute() {
                   onClick={() => {
                     setTossWinnerId(team === team1Name ? team1Id : team2Id);
                     setTossWinner(team);
+                    setT1Id(team1Id);
+                    setT2Id(team2Id);
                   }}
                   className={`flex-1 py-3 px-2 rounded-2xl text-xs font-bold transition-all duration-300 border-2 ${tossWinner === team ? "bg-red-600 border-red-600 text-white shadow-lg shadow-red-500/30" : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-red-200"}`}
                 >
@@ -393,6 +397,8 @@ export default function MatchScoreRoute() {
                   sportId,
                   inningsId,
                   overs: match?.overs,
+                  team1Id: t1Id,
+                  team2Id: t2Id,
                 });
                 navigate(-1);
               } catch (err) {

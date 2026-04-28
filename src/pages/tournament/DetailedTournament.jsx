@@ -31,6 +31,16 @@ export default function DetailedTournament() {
   const [mediaPage, setMediaPage] = useState(0);
   const [hasMoreMedia, setHasMoreMedia] = useState(true);
   const [loadingMoreMedia, setLoadingMoreMedia] = useState(false);
+  const sports = [
+    "cricket",
+    "futsal",
+    "volleyball",
+    "tabletennis",
+    "badminton",
+    "ludo",
+    "tugofWar",
+    "chess",
+  ];
 
   const MEDIA_PAGE_SIZE = 6;
 
@@ -159,7 +169,10 @@ export default function DetailedTournament() {
             )}
 
             {activeTab === "Points" && (
-              <TournamentPoints tournamentId={state.tournamentId} />
+              <TournamentPoints
+                tournamentId={state.tournamentId}
+                sport={sports[state.sportId - 1]}
+              />
             )}
 
             {activeTab === "stats" && (

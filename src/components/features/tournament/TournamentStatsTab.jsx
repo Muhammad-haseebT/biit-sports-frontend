@@ -66,7 +66,8 @@ export default function TournamentStatsTab({ tournamentId }) {
     onUpdated: loadStats, // MoT set hone ke baad stats refresh karo
   };
 
-  switch (stats.sport) {
+  console.log(stats);
+  switch (stats.sport.toLowerCase()) {
     case "futsal":
       return <FutsalStats stats={stats} motProps={motProps} />;
     case "volleyball":

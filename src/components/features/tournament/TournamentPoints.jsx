@@ -18,6 +18,7 @@ export default function TournamentPoints({ tournamentId, sport }) {
         const list = Array.isArray(res.data) ? res.data : [];
         setPoints(list);
         if (sport) {
+          console.log("sport", sport.toLowerCase());
           setDs(sport.toLowerCase());
           return;
         }
@@ -42,6 +43,7 @@ export default function TournamentPoints({ tournamentId, sport }) {
     );
 
   const s = sport?.toLowerCase() || ds;
+  console.log(s);
 
   if (s === "futsal") return <FutsalTable rows={points} />;
   if (s === "volleyball") return <VolleyballTable rows={points} />;
