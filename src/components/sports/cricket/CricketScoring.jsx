@@ -86,7 +86,11 @@ export default function CricketScoring({
   const [isWaiting, setIsWaiting] = useState(false);
   const [isSuperOverPending, setIsSuperOverPending] = useState(false);
   const [isSuperOver, setIsSuperOver] = useState(false);
-
+  const [isSuperOverInnings, setIsSuperOverInnings] = useState(1); // ← ADD KARO
+  // battingTeamId already hai, bowlingTeamId bhi chahiye:
+  const [bowlingTeamId, setBowlingTeamId] = useState(
+    bTeamId === team1Id ? team2Id : team1Id,
+  );
   const [data, setData] = useState({
     runs: 0,
     overs: 0,
@@ -251,6 +255,7 @@ export default function CricketScoring({
     // Super Over tie detected
     if (receivedData.comment === "Super_Over") {
       setIsSuperOver(true);
+      setIsSuperOverInnings(1); // ← ADD
       openModal("end_InningsAndSuperOverModal");
       return;
     }
@@ -385,7 +390,13 @@ export default function CricketScoring({
     wide: "WD",
     penalty: "P",
   };
-
+  const fetchTeamPlayersForSuperOver = async (newBattingTeamId) => {
+    const newBowlingTeamId = newBattingTeamId === team1Id ? team2Id : team1Id;
+    const t1 = await getPlayersByTeamId(newBattingTeamId);
+    const t2 = await getPlayersByTeamId(newBowlingTeamId);
+    setTeam1Players(t1);
+    setTeam2Players(t2);
+  };
   const fetchScorecard = async (team) => {
     const sc =
       team === 1
@@ -1111,35 +1122,120 @@ export default function CricketScoring({
             <div className="bg-red-600 p-3 h-89.5">
               <div className="flex flex-col space-y-2 space-x-2 mt-5">
                 <p className="text-white text-lg font-semibold text-center">
-                  {data.firstInnings ? "End of First Innings?" : "End Match?"}
+                  {isSuperOver
+                    ? isSuperOverInnings === 1
+                      ? "⚡ End Super Over Innings 1?"
+                      : "⚡ End Super Over — End Match?"
+                    : data.firstInnings
+                      ? "End of First Innings?"
+                      : "End Match?"}
                 </p>
+
+                {/* ── End Innings / End Match button ── */}
                 <button
                   className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
                   onClick={() => {
-                    if (data.firstInnings === false) {
+                    if (isSuperOver && isSuperOverInnings === 1) {
+                      // Kotlin: SO innings 1 khatam → teams switch, innings 2 shuru
+                      const newBattingId = bowlingTeamId;
+                      const newBowlingId = battingTeamId;
+                      setBattingTeamId(newBattingId);
+                      setBowlingTeamId(newBowlingId);
+                      setIsSuperOverInnings(2);
+                      // Players reset
+                      setStrikerId(null);
+                      setNonStrikerId(null);
+                      setBowlerId(null);
+                      player1IdRef.current = null;
+                      player2IdRef.current = null;
+                      // Reload players for new batting team
+                      fetchTeamPlayersForSuperOver(newBattingId);
+                      // Send to backend
+                      socketRef.current.send(
+                        JSON.stringify({
+                          ...data,
+                          eventType: "End_Innings",
+                          event: "0",
+                          comment: "",
+                          undo: false,
+                          superOver: true,
+                          firstInnings: true,
+                        }),
+                      );
+                      openModal("playerSelectModal");
+                    } else if (isSuperOver && isSuperOverInnings === 2) {
+                      // Kotlin: SO innings 2 khatam → match end
                       isEndingMatch.current = true;
                       setIsWaiting(true);
+                      socketRef.current.send(
+                        JSON.stringify({
+                          ...data,
+                          eventType: "End_Innings",
+                          event: "0",
+                          comment: "",
+                          undo: false,
+                          superOver: true,
+                          firstInnings: false,
+                        }),
+                      );
+                      openModal("mainModal");
+                    } else if (!data.firstInnings) {
+                      // Normal match 2nd innings end
+                      isEndingMatch.current = true;
+                      setIsWaiting(true);
+                      socketRef.current.send(
+                        JSON.stringify(handleEndInnings(data)),
+                      );
+                      openModal("mainModal");
+                    } else {
+                      // Normal match 1st innings end
+                      socketRef.current.send(
+                        JSON.stringify(handleEndInnings(data)),
+                      );
+                      openModal("mainModal");
                     }
-                    socketRef.current.send(
-                      JSON.stringify(handleEndInnings(data)),
-                    );
-                    openModal("mainModal");
                   }}
                 >
-                  {data.firstInnings ? "End Innings" : "End Match"}
+                  {isSuperOver
+                    ? isSuperOverInnings === 1
+                      ? "End Super Over Innings"
+                      : "End Match"
+                    : data.firstInnings
+                      ? "End Innings"
+                      : "End Match"}
                 </button>
-                <button
-                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
-                  onClick={() => {
-                    setIsWaiting(true);
-                    socketRef.current.send(
-                      JSON.stringify(handleSuperOver(data)),
-                    );
-                    openModal("playerSelectModal");
-                  }}
-                >
-                  Super Over
-                </button>
+
+                {/* ── Super Over button — sirf normal 2nd innings mein dikhao ── */}
+                {!isSuperOver && !data.firstInnings && (
+                  <button
+                    className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
+                    onClick={() => {
+                      setIsWaiting(true);
+                      socketRef.current.send(
+                        JSON.stringify({
+                          ...data,
+                          eventType: "Super_Over",
+                          event: "0",
+                          comment: "",
+                          undo: false,
+                        }),
+                      );
+                      setIsSuperOver(true);
+                      setIsSuperOverInnings(1);
+                      // Players reset
+                      setStrikerId(null);
+                      setNonStrikerId(null);
+                      setBowlerId(null);
+                      player1IdRef.current = null;
+                      player2IdRef.current = null;
+                      openModal("playerSelectModal");
+                    }}
+                  >
+                    ⚡ Super Over
+                  </button>
+                )}
+
+                {/* ── Undo ── */}
                 <button
                   className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
                   onClick={() => {
