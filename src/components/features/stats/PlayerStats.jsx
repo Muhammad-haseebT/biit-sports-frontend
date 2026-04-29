@@ -57,6 +57,7 @@ export default function PlayerStats() {
         const account = JSON.parse(Cookies.get("account"));
         const pid = account.playerId;
         setPlayerId(pid);
+        console.log("PID", pid);
         const [statsRes, toursRes] = await Promise.all([
           getPlayerStats(pid),
           getTournamentNamesandIds(),

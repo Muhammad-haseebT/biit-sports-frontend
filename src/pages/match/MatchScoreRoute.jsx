@@ -26,7 +26,7 @@ const SPORTS = [
   "Cricket", // 1
   "Futsal", // 2
   "Volleyball", // 3
-  "Table Tennis", // 4
+  "TableTennis", // 4
   "Badminton", // 5
   "Ludo", // 6
   "Tug Of War", // 7
@@ -78,14 +78,17 @@ export default function MatchScoreRoute() {
   const [towRounds, setTowRounds] = useState(3);
 
   const currentSport = SPORTS[sportId - 1];
+
+  console.log("Sport", currentSport);
   const isCricket = currentSport === "Cricket";
   const isFutsal = currentSport === "Futsal";
   const isVB = currentSport === "Volleyball";
   const isBD = currentSport === "Badminton";
-  const isTT = currentSport === "Table Tennis";
+  const isTT = currentSport === "TableTennis";
   const isTOW = currentSport === "Tug Of War";
   const isLudo = currentSport === "Ludo";
   const isChess = currentSport === "Chess";
+
   if (!location.state) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500">
@@ -230,21 +233,6 @@ export default function MatchScoreRoute() {
           </button>
         ))}
       </div>
-    </div>
-  );
-
-  const ScorerInput = ({ focusColor }) => (
-    <div className="space-y-2">
-      <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-        <User size={14} /> Scorer Username
-      </label>
-      <input
-        type="text"
-        value={scorerUsername}
-        onChange={(e) => setScorerUsername(e.target.value)}
-        className={`w-full py-3 px-4 rounded-2xl text-sm font-bold border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 ${focusColor}`}
-        placeholder="Enter scorer username"
-      />
     </div>
   );
 
@@ -846,7 +834,7 @@ export default function MatchScoreRoute() {
               type="text"
               value={scorerUsername}
               onChange={(e) => setScorerUsername(e.target.value)}
-              className={`w-full py-3 px-4 rounded-2xl text-sm font-bold border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 ${focusColor}`}
+              className={`w-full py-3 px-4 rounded-2xl text-sm font-bold border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 `}
               placeholder="Enter scorer username"
             />
           </div>

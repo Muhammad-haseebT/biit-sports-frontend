@@ -13,6 +13,7 @@ export default function Out({
   battingTeamId,
   team1Id,
   team2Id,
+  setIsWaiting,
 }) {
   const [dismissalType, setDismissalType] = useState("");
   const [caughtModal, setCaughtModal] = useState(false);
@@ -185,6 +186,7 @@ export default function Out({
           <br />
           <button
             onClick={() => {
+              setIsWaiting?.(true);
               setCaughtModal(false);
               outModal(false);
               mainModal(true);
@@ -276,6 +278,7 @@ export default function Out({
           <br />
           <button
             onClick={() => {
+              setIsWaiting?.(true);
               setRunOutModal(false);
               outModal(false);
               mainModal(true);
@@ -330,6 +333,7 @@ export default function Out({
           <br />
           <button
             onClick={() => {
+              setIsWaiting?.(true);
               setBatsmanModal(false);
               mainModal(true);
               outModal(false);

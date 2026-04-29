@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { getPlayersByTeamId } from "../../../api/teamApi";
 import { ArrowLeft, Trophy, RotateCcw } from "lucide-react";
+import { PanelWrapper, PanelHeading, WizardHeader, UI_CLASSES } from "../common/ScoringUI";
 
 // ─── Event config ──────────────────────────────────────────────────
 const EV = {
@@ -29,15 +30,6 @@ function useMatchTimer(startTime, status) {
     mins: String(Math.floor(elapsed / 60)).padStart(2, "0"),
     secs: String(elapsed % 60).padStart(2, "0"),
   };
-}
-
-function PanelWrapper({ children }) {
-  return <div className="mt-2 mb-2 px-4">{children}</div>;
-}
-function PanelHeading({ title }) {
-  return (
-    <h1 className="text-2xl font-semibold text-red-600 mt-2 mb-4">{title}</h1>
-  );
 }
 
 // ─── MAIN COMPONENT ────────────────────────────────────────────────
@@ -173,15 +165,7 @@ export default function LudoScoring({
 
   const isCompleted = score.status === "COMPLETED";
 
-  // ── Styles ──────────────────────────────────────────────────────
-  const selectCls =
-    "w-full p-3 rounded-lg text-xl sm:text-2xl bg-white text-red-600 font-bold border border-red-200 shadow-sm";
-  const primaryBtn =
-    "w-full bg-white text-red-600 p-3 rounded-lg text-2xl sm:text-3xl font-black shadow-md flex items-center justify-center active:bg-gray-200 transition-colors border border-red-200";
-  const confirmBtn =
-    "w-full bg-emerald-500 text-white p-3 rounded-lg text-2xl sm:text-3xl font-black shadow-md flex items-center justify-center active:bg-emerald-400 transition-colors disabled:opacity-50";
-  const backBtn =
-    "w-full bg-gray-100 text-gray-700 p-3 rounded-lg text-xl font-bold shadow-sm flex items-center justify-center active:bg-gray-200 transition-colors border border-gray-300";
+  // Using centralized UI_CLASSES
 
   const wizTitle =
     wizEventType === "HOME_RUN"
@@ -349,13 +333,13 @@ export default function LudoScoring({
                   className={`bg-red-600 p-3 rounded-xl shadow-md flex flex-col gap-3 ${waiting ? "opacity-50 pointer-events-none" : ""}`}
                 >
                   <button
-                    className={primaryBtn}
+                    className={UI_CLASSES.primaryBtn}
                     onClick={() => openWizard("HOME_RUN")}
                   >
                     🏠 Record Home Run
                   </button>
                   <button
-                    className={primaryBtn}
+                    className={UI_CLASSES.primaryBtn}
                     onClick={() => openWizard("CAPTURE")}
                   >
                     ⚔️ Record Capture
@@ -390,18 +374,7 @@ export default function LudoScoring({
                   ───────────────────────────────────────────────────── */}
               {activeModal === "wizard" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  {/* Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-red-600 bg-white px-2 py-1 rounded">
-                      {wizTitle}
-                    </h2>
-                    <button
-                      className="text-white text-sm border border-white/40 px-3 py-1 rounded-lg hover:bg-white/20"
-                      onClick={closeModal}
-                    >
-                      ✕ Close
-                    </button>
-                  </div>
+                  <WizardHeader title={wizTitle} onClose={closeModal} />
 
                   <div className="flex flex-col gap-3">
                     {/* Step 1 — Select Team */}
@@ -435,7 +408,7 @@ export default function LudoScoring({
 
                         <button
                           disabled={!selTeam}
-                          className={confirmBtn}
+                          className={UI_CLASSES.confirmBtn}
                           onClick={() => setWizStep(2)}
                         >
                           NEXT → Select Player
@@ -473,7 +446,7 @@ export default function LudoScoring({
                         </div>
 
                         <button
-                          className={confirmBtn}
+                          className={UI_CLASSES.confirmBtn}
                           onClick={() => submitEvent(false)}
                           disabled={!selPlayer}
                         >
@@ -486,7 +459,7 @@ export default function LudoScoring({
                           Skip Player & Confirm
                         </button>
                         <button
-                          className={backBtn}
+                          className={UI_CLASSES.backBtn}
                           onClick={() => setWizStep(1)}
                         >
                           ← Back
@@ -500,23 +473,13 @@ export default function LudoScoring({
               {/* ── WIN WIZARD ── */}
               {activeModal === "win" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-white">
-                      🏆 Declare Winner
-                    </h2>
-                    <button
-                      className="text-white text-sm border border-white/40 px-3 py-1 rounded-lg hover:bg-white/20"
-                      onClick={closeModal}
-                    >
-                      ✕ Close
-                    </button>
-                  </div>
+                  <WizardHeader title="🏆 Declare Winner" onClose={closeModal} />
                   <div className="flex flex-col gap-3">
                     <p className="text-white text-sm text-center font-semibold mb-2">
                       Which team won?
                     </p>
                     <button
-                      className={confirmBtn}
+                      className={UI_CLASSES.confirmBtn}
                       onClick={() => {
                         send({ eventType: "WIN", teamId: team1Id });
                         closeModal();
@@ -525,7 +488,7 @@ export default function LudoScoring({
                       🔵 {team1Name}
                     </button>
                     <button
-                      className={confirmBtn}
+                      className={UI_CLASSES.confirmBtn}
                       onClick={() => {
                         send({ eventType: "WIN", teamId: team2Id });
                         closeModal();
@@ -533,7 +496,7 @@ export default function LudoScoring({
                     >
                       🔴 {team2Name}
                     </button>
-                    <button className={backBtn} onClick={closeModal}>
+                    <button className={UI_CLASSES.backBtn} onClick={closeModal}>
                       Cancel
                     </button>
                   </div>

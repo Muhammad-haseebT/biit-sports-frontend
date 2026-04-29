@@ -679,7 +679,6 @@ export default function CricketScoring({
                     disabled={isWaiting}
                     className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20 disabled:cursor-not-allowed"
                     onClick={() => {
-                      setIsWaiting(true);
                       handleExtraModal("legbye");
                     }}
                   >
@@ -689,7 +688,6 @@ export default function CricketScoring({
                     disabled={isWaiting}
                     className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20 disabled:cursor-not-allowed"
                     onClick={() => {
-                      setIsWaiting(true);
                       handleExtraModal("bye");
                     }}
                   >
@@ -699,7 +697,6 @@ export default function CricketScoring({
                     disabled={isWaiting}
                     className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20 disabled:cursor-not-allowed"
                     onClick={() => {
-                      setIsWaiting(true);
                       handleExtraModal("wide");
                     }}
                   >
@@ -709,7 +706,6 @@ export default function CricketScoring({
                     disabled={isWaiting}
                     className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20 disabled:cursor-not-allowed"
                     onClick={() => {
-                      setIsWaiting(true);
                       handleExtraModal("noball");
                     }}
                   >
@@ -773,7 +769,6 @@ export default function CricketScoring({
                     disabled={isWaiting}
                     className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20 disabled:cursor-not-allowed"
                     onClick={() => {
-                      setIsWaiting(true);
                       handleOutModal();
                     }}
                   >
@@ -895,6 +890,7 @@ export default function CricketScoring({
               setExtraModal={(val) => !val && openModal("mainModal")}
               setData={setData}
               socket={socketRef.current}
+              setIsWaiting={setIsWaiting}
             />
           )}
 
@@ -911,6 +907,7 @@ export default function CricketScoring({
               battingTeamId={battingTeamId}
               team1Id={team1Id}
               team2Id={team2Id}
+              setIsWaiting={setIsWaiting}
             />
           )}
 

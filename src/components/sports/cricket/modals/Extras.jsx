@@ -4,6 +4,7 @@ export default function Extras({
   setData,
   setExtraModal,
   socket,
+  setIsWaiting,
 }) {
   const list = [
     { name: extraType, value: 1 },
@@ -50,6 +51,7 @@ export default function Extras({
               key={index}
               className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20"
               onClick={() => {
+                setIsWaiting?.(true);
                 sendData(item.value - 1, extraType);
                 setExtraModal(false);
                 mainModal(true);
@@ -67,6 +69,7 @@ export default function Extras({
               key={index}
               className="bg-white text-red-600 p-1 rounded-lg text-2xl h-20"
               onClick={() => {
+                setIsWaiting?.(true);
                 sendData(item.value, extraType);
                 setExtraModal(false);
                 mainModal(true);

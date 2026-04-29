@@ -5,6 +5,7 @@ import Media from "../cricket/modals/Media";
 // import FavouritePlayerModal from "./modals/FavouritePlayerModal";
 import { ArrowLeft, Trophy, RotateCcw } from "lucide-react";
 import { getPlayersByTeamId } from "../../../api/teamApi";
+import { PanelWrapper, PanelHeading, ScoreCircles, UI_CLASSES } from "../common/ScoringUI";
 
 function useRoundTimer(roundStartTime, status) {
   const [elapsed, setElapsed] = useState(0);
@@ -26,38 +27,7 @@ function useRoundTimer(roundStartTime, status) {
   };
 }
 
-// Round circles
-function RoundCircles({ roundsWon, roundsToWin, color }) {
-  return (
-    <div className="flex items-center gap-2">
-      {Array.from({ length: roundsToWin }).map((_, i) => (
-        <div
-          key={i}
-          className={`w-6 h-6 rounded-full border-2 transition-all duration-500 flex items-center justify-center ${
-            i < roundsWon
-              ? color === "blue"
-                ? "bg-blue-500 border-blue-600 shadow-lg shadow-blue-500/50 scale-110"
-                : "bg-rose-500 border-rose-600 shadow-lg shadow-rose-500/50 scale-110"
-              : "bg-gray-100 border-gray-300"
-          }`}
-        >
-          {i < roundsWon && (
-            <span className="text-white text-xs font-black">✓</span>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function PanelWrapper({ children }) {
-  return <div className="mt-2 mb-2 px-4">{children}</div>;
-}
-function PanelHeading({ title }) {
-  return (
-    <h1 className="text-2xl font-semibold text-red-600 mt-2 mb-4">{title}</h1>
-  );
-}
+// ─── MAIN ─────────────────────────────────────────────────────────
 
 export default function TugOfWarScoring({
   matchId,
@@ -172,12 +142,7 @@ export default function TugOfWarScoring({
   const t1Pct = Math.min(100, ((score.team1Rounds || 0) / rtw) * 100);
   const t2Pct = Math.min(100, ((score.team2Rounds || 0) / rtw) * 100);
 
-  const primaryBtn =
-    "w-full bg-white text-red-600 p-3 rounded-lg text-2xl sm:text-3xl font-black shadow-md flex items-center justify-center active:bg-gray-200 transition-colors border border-red-200";
-  const confirmBtn =
-    "w-full bg-emerald-500 text-white p-3 rounded-lg text-2xl sm:text-3xl font-black shadow-md flex items-center justify-center active:bg-emerald-400 transition-colors disabled:opacity-50";
-  const backBtn =
-    "w-full bg-gray-100 text-gray-700 p-3 rounded-lg text-xl font-bold shadow-sm flex items-center justify-center active:bg-gray-200 transition-colors border border-gray-300";
+  // Styles using centralized UI_CLASSES
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -231,9 +196,9 @@ export default function TugOfWarScoring({
                   <p className="text-sm font-bold text-blue-600 mb-2">
                     {team1Name}
                   </p>
-                  <RoundCircles
-                    roundsWon={score.team1Rounds || 0}
-                    roundsToWin={rtw}
+                  <ScoreCircles size="lg" showCheckmark={true}
+                    won={score.team1Rounds || 0}
+                    toWin={rtw}
                     color="blue"
                   />
                 </div>
@@ -244,9 +209,9 @@ export default function TugOfWarScoring({
                   <p className="text-sm font-bold text-rose-600 mb-2">
                     {team2Name}
                   </p>
-                  <RoundCircles
-                    roundsWon={score.team2Rounds || 0}
-                    roundsToWin={rtw}
+                  <ScoreCircles size="lg" showCheckmark={true}
+                    won={score.team2Rounds || 0}
+                    toWin={rtw}
                     color="rose"
                   />
                 </div>
@@ -273,9 +238,9 @@ export default function TugOfWarScoring({
                   <p className="text-base sm:text-xl font-bold text-blue-600 truncate">
                     {team1Name}
                   </p>
-                  <RoundCircles
-                    roundsWon={score.team1Rounds || 0}
-                    roundsToWin={rtw}
+                  <ScoreCircles size="lg" showCheckmark={true}
+                    won={score.team1Rounds || 0}
+                    toWin={rtw}
                     color="blue"
                   />
                   <p className="text-3xl font-black text-blue-600">
@@ -292,9 +257,9 @@ export default function TugOfWarScoring({
                   <p className="text-base sm:text-xl font-bold text-rose-600 truncate">
                     {team2Name}
                   </p>
-                  <RoundCircles
-                    roundsWon={score.team2Rounds || 0}
-                    roundsToWin={rtw}
+                  <ScoreCircles size="lg" showCheckmark={true}
+                    won={score.team2Rounds || 0}
+                    toWin={rtw}
                     color="rose"
                   />
                   <p className="text-3xl font-black text-rose-600">
@@ -332,13 +297,13 @@ export default function TugOfWarScoring({
                     💪 Who Won This Round?
                   </p>
                   <button
-                    className={primaryBtn}
+                    className={UI_CLASSES.primaryBtn}
                     onClick={() => setConfirm(team1Id)}
                   >
                     🔵 {team1Name} Won Round
                   </button>
                   <button
-                    className={primaryBtn}
+                    className={UI_CLASSES.primaryBtn}
                     onClick={() => setConfirm(team2Id)}
                   >
                     🔴 {team2Name} Won Round
@@ -369,12 +334,12 @@ export default function TugOfWarScoring({
                     won this round?
                   </p>
                   <button
-                    className={confirmBtn}
+                    className={UI_CLASSES.confirmBtn}
                     onClick={() => recordRoundWin(confirm)}
                   >
                     ✅ YES — Record Round Win
                   </button>
-                  <button className={backBtn} onClick={() => setConfirm(null)}>
+                  <button className={UI_CLASSES.backBtn} onClick={() => setConfirm(null)}>
                     Cancel
                   </button>
                 </div>

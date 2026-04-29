@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Trophy,
 } from "lucide-react";
+import { PanelWrapper, PanelHeading, WizardHeader, UI_CLASSES } from "../common/ScoringUI";
 
 const FOUL_LIMIT = 5;
 
@@ -48,15 +49,6 @@ function useMatchTimer(halfStartTime, halfDurationMinutes, status) {
   return { mins, secs, elapsed, totalSec };
 }
 
-function PanelWrapper({ children }) {
-  return <div className="mt-2 mb-2 px-4">{children}</div>;
-}
-
-function PanelHeading({ title }) {
-  return (
-    <h1 className="text-2xl font-semibold text-red-600 mt-2 mb-4">{title}</h1>
-  );
-}
 
 export default function FutsalScoring({
   matchId,
@@ -249,26 +241,7 @@ export default function FutsalScoring({
   const isHalfTime = score.status === "HALF_TIME";
   const isExtraTime = score.status === "EXTRA_TIME";
 
-  const selectCls =
-    "w-full p-3 rounded-lg text-xl sm:text-2xl bg-white text-red-600 font-bold border border-red-200 shadow-sm";
-  const primaryBtn =
-    "w-full bg-white text-red-600 p-3 rounded-lg text-2xl sm:text-3xl font-black shadow-md flex items-center justify-center active:bg-gray-200 transition-colors border border-red-200";
-  const confirmBtn =
-    "w-full bg-emerald-500 text-white p-3 rounded-lg text-2xl sm:text-3xl font-black shadow-md flex items-center justify-center active:bg-emerald-400 transition-colors disabled:opacity-50";
-  const backBtn =
-    "w-full bg-gray-100 text-gray-700 p-3 rounded-lg text-xl font-bold shadow-sm flex items-center justify-center active:bg-gray-200 transition-colors border border-gray-300";
-
-  const WizardHeader = ({ title }) => (
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-xl font-bold text-red-600">{title}</h2>
-      <button
-        className="text-gray-500 text-sm border border-gray-300 px-3 py-1 rounded-lg hover:bg-gray-100"
-        onClick={closeModal}
-      >
-        ✕ Close
-      </button>
-    </div>
-  );
+  // Using centralized UI_CLASSES
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -490,33 +463,33 @@ export default function FutsalScoring({
                   className={`bg-red-600 p-3 rounded-xl shadow-md flex flex-col gap-3 ${isWaiting ? "opacity-50 pointer-events-none" : ""}`}
                 >
                   <button
-                    className={primaryBtn}
+                    className={UI_CLASSES.primaryBtn}
                     onClick={() => setActiveModal("goal")}
                   >
                     Record Goal
                   </button>
                   <button
-                    className={primaryBtn}
+                    className={UI_CLASSES.primaryBtn}
                     onClick={() => setActiveModal("foul")}
                   >
                     Record Foul
                   </button>
                   <button
-                    className={primaryBtn}
+                    className={UI_CLASSES.primaryBtn}
                     onClick={() => setActiveModal("sub")}
                   >
                     Substitution
                   </button>
                   {isHalfTime ? (
                     <button
-                      className={confirmBtn}
+                      className={UI_CLASSES.confirmBtn}
                       onClick={() => send({ eventType: "START_SECOND_HALF" })}
                     >
                       Start 2nd Half
                     </button>
                   ) : (
                     <button
-                      className={primaryBtn}
+                      className={UI_CLASSES.primaryBtn}
                       onClick={() => setActiveModal("endHalf")}
                     >
                       End Match / Half
@@ -534,11 +507,11 @@ export default function FutsalScoring({
               {/* ── GOAL WIZARD ── */}
               {activeModal === "goal" && isAdminRef.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="Record Goal" />
+                  <WizardHeader title="Record Goal" onClose={closeModal} />
                   <div className="flex flex-col gap-3">
                     {goalStep === 1 && (
                       <select
-                        className={selectCls}
+                        className={UI_CLASSES.selectCls}
                         onChange={(e) => {
                           setSelTeamId(Number(e.target.value));
                           setGoalStep(2);
@@ -552,7 +525,7 @@ export default function FutsalScoring({
                     {goalStep === 2 && (
                       <>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) => {
                             setSelGoalType(e.target.value);
                             setGoalStep(3);
@@ -565,7 +538,7 @@ export default function FutsalScoring({
                           <option value="OWN_GOAL">Own Goal</option>
                         </select>
                         <button
-                          className={backBtn}
+                          className={UI_CLASSES.backBtn}
                           onClick={() => setGoalStep(1)}
                         >
                           Back
@@ -575,7 +548,7 @@ export default function FutsalScoring({
                     {goalStep === 3 && (
                       <>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) =>
                             setSelPlayerId(Number(e.target.value))
                           }
@@ -591,7 +564,7 @@ export default function FutsalScoring({
                           ))}
                         </select>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) =>
                             setSelAssistId(Number(e.target.value))
                           }
@@ -607,13 +580,13 @@ export default function FutsalScoring({
                         </select>
                         <button
                           disabled={!selPlayerId}
-                          className={confirmBtn}
+                          className={UI_CLASSES.confirmBtn}
                           onClick={submitGoal}
                         >
                           CONFIRM GOAL
                         </button>
                         <button
-                          className={backBtn}
+                          className={UI_CLASSES.backBtn}
                           onClick={() => setGoalStep(2)}
                         >
                           Back
@@ -627,11 +600,11 @@ export default function FutsalScoring({
               {/* ── FOUL WIZARD ── */}
               {activeModal === "foul" && isAdminRef.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="Record Foul / Card" />
+                  <WizardHeader title="Record Foul / Card" onClose={closeModal} />
                   <div className="flex flex-col gap-3">
                     {foulStep === 1 && (
                       <select
-                        className={selectCls}
+                        className={UI_CLASSES.selectCls}
                         onChange={(e) => {
                           setSelTeamId(Number(e.target.value));
                           setFoulStep(2);
@@ -645,7 +618,7 @@ export default function FutsalScoring({
                     {foulStep === 2 && (
                       <>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) => {
                             setSelCardType(
                               e.target.value === "null" ? null : e.target.value,
@@ -659,7 +632,7 @@ export default function FutsalScoring({
                           <option value="RED">Red Card</option>
                         </select>
                         <button
-                          className={backBtn}
+                          className={UI_CLASSES.backBtn}
                           onClick={() => setFoulStep(1)}
                         >
                           Back
@@ -669,7 +642,7 @@ export default function FutsalScoring({
                     {foulStep === 3 && (
                       <>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) =>
                             setSelPlayerId(Number(e.target.value))
                           }
@@ -683,13 +656,13 @@ export default function FutsalScoring({
                         </select>
                         <button
                           disabled={!selPlayerId}
-                          className={confirmBtn}
+                          className={UI_CLASSES.confirmBtn}
                           onClick={submitFoul}
                         >
                           CONFIRM FOUL
                         </button>
                         <button
-                          className={backBtn}
+                          className={UI_CLASSES.backBtn}
                           onClick={() => setFoulStep(2)}
                         >
                           Back
@@ -703,11 +676,11 @@ export default function FutsalScoring({
               {/* ── SUB WIZARD ── */}
               {activeModal === "sub" && isAdminRef.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="Substitution" />
+                  <WizardHeader title="Substitution" onClose={closeModal} />
                   <div className="flex flex-col gap-3">
                     {subStep === 1 && (
                       <select
-                        className={selectCls}
+                        className={UI_CLASSES.selectCls}
                         onChange={(e) => {
                           setSelTeamId(Number(e.target.value));
                           setSubStep(2);
@@ -721,7 +694,7 @@ export default function FutsalScoring({
                     {subStep === 2 && (
                       <>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) => {
                             setSelOutId(Number(e.target.value));
                             setSubStep(3);
@@ -735,7 +708,7 @@ export default function FutsalScoring({
                           ))}
                         </select>
                         <button
-                          className={backBtn}
+                          className={UI_CLASSES.backBtn}
                           onClick={() => setSubStep(1)}
                         >
                           Back
@@ -745,7 +718,7 @@ export default function FutsalScoring({
                     {subStep === 3 && (
                       <>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) => setSelInId(Number(e.target.value))}
                         >
                           <option value="">Select Player IN</option>
@@ -759,13 +732,13 @@ export default function FutsalScoring({
                         </select>
                         <button
                           disabled={!selInId}
-                          className={confirmBtn}
+                          className={UI_CLASSES.confirmBtn}
                           onClick={submitSub}
                         >
                           CONFIRM SUB
                         </button>
                         <button
-                          className={backBtn}
+                          className={UI_CLASSES.backBtn}
                           onClick={() => setSubStep(2)}
                         >
                           Back
@@ -779,10 +752,10 @@ export default function FutsalScoring({
               {/* ── END HALF WIZARD ── */}
               {activeModal === "endHalf" && isAdminRef.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="End Match / End Half" />
+                  <WizardHeader title="End Match / End Half" onClose={closeModal} />
                   <div className="flex flex-col gap-3">
                     <button
-                      className={confirmBtn}
+                      className={UI_CLASSES.confirmBtn}
                       onClick={() => {
                         send({ eventType: "END_HALF" });
                         closeModal();
@@ -792,7 +765,7 @@ export default function FutsalScoring({
                     </button>
                     {isHalfTime && (
                       <button
-                        className={confirmBtn}
+                        className={UI_CLASSES.confirmBtn}
                         onClick={() => {
                           send({ eventType: "START_SECOND_HALF" });
                           closeModal();
@@ -803,7 +776,7 @@ export default function FutsalScoring({
                     )}
                     {isExtraTime && (
                       <button
-                        className={confirmBtn}
+                        className={UI_CLASSES.confirmBtn}
                         onClick={() => {
                           send({ eventType: "EXTRA_TIME" });
                           closeModal();
@@ -812,7 +785,7 @@ export default function FutsalScoring({
                         Start Extra Time
                       </button>
                     )}
-                    <button className={backBtn} onClick={closeModal}>
+                    <button className={UI_CLASSES.backBtn} onClick={closeModal}>
                       Cancel
                     </button>
                   </div>

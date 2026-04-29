@@ -13,6 +13,7 @@ import {
   XCircle,
   ChevronRight,
 } from "lucide-react";
+import { PanelWrapper, PanelHeading, WizardHeader, ScoreCircles, UI_CLASSES } from "../common/ScoringUI";
 
 // ─── EVENT CONFIG ─────────────────────────────────────────────────
 const EV = {
@@ -62,39 +63,6 @@ function useSetTimer(setStartTime, status) {
     mins: String(Math.floor(elapsed / 60)).padStart(2, "0"),
     secs: String(elapsed % 60).padStart(2, "0"),
   };
-}
-
-// ─── SHARED LAYOUT HELPERS (matches Futsal style) ────────────────
-function PanelWrapper({ children }) {
-  return <div className="mt-2 mb-2 px-4">{children}</div>;
-}
-function PanelHeading({ title }) {
-  return (
-    <h1 className="text-2xl font-semibold text-red-600 mt-2 mb-4">{title}</h1>
-  );
-}
-// ─── SET CIRCLES ──────────────────────────────────────────────────
-function SetCircles({ setsWon, setsToWin, colorClass }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      {Array.from({ length: setsToWin }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            width: 16,
-            height: 16,
-            borderRadius: "50%",
-            border: i < setsWon ? "none" : "2px solid #d1d5db",
-            backgroundColor: i < setsWon ? undefined : "#e5e7eb",
-            transition: "all 0.4s ease",
-            transform: i < setsWon ? "scale(1.25)" : "scale(1)",
-            boxShadow: i < setsWon ? "0 0 6px rgba(0,0,0,0.25)" : "none",
-          }}
-          className={i < setsWon ? colorClass : ""}
-        />
-      ))}
-    </div>
-  );
 }
 
 // ─── MAIN ─────────────────────────────────────────────────────────
@@ -262,26 +230,6 @@ export default function VolleyballScoring({
     totalPlayed === maxSets - 1 ? "Tiebreak" : `Set ${score.currentSet}`;
 
   // Futsal-style class strings
-  const selectCls =
-    "w-full p-3 rounded-lg text-xl sm:text-2xl bg-white text-red-600 font-bold border border-red-200 shadow-sm";
-  const primaryBtn =
-    "w-full bg-white text-red-600 p-3 rounded-lg text-2xl sm:text-3xl font-black shadow-md flex items-center justify-center active:bg-gray-200 transition-colors border border-red-200";
-  const confirmBtn =
-    "w-full bg-emerald-500 text-white p-3 rounded-lg text-2xl sm:text-3xl font-black shadow-md flex items-center justify-center active:bg-emerald-400 transition-colors disabled:opacity-50";
-  const backBtn =
-    "w-full bg-gray-100 text-gray-700 p-3 rounded-lg text-xl font-bold shadow-sm flex items-center justify-center active:bg-gray-200 transition-colors border border-gray-300";
-
-  const WizardHeader = ({ title }) => (
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-xl font-bold text-red-600">{title}</h2>
-      <button
-        className="text-gray-500 text-sm border border-gray-300 px-3 py-1 rounded-lg hover:bg-gray-100"
-        onClick={closeModal}
-      >
-        ✕ Close
-      </button>
-    </div>
-  );
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -347,10 +295,10 @@ export default function VolleyballScoring({
                   <p className="text-sm font-bold text-blue-600 mb-1">
                     {team1Name}
                   </p>
-                  <SetCircles
-                    setsWon={Number(score.team1Sets) || 0}
-                    setsToWin={stw}
-                    colorClass="bg-blue-500"
+                  <ScoreCircles
+                    won={Number(score.team1Sets) || 0}
+                    toWin={stw}
+                    color="blue"
                   />
                 </div>
                 <div className="text-3xl font-black text-gray-800 px-2">
@@ -360,10 +308,10 @@ export default function VolleyballScoring({
                   <p className="text-sm font-bold text-rose-600 mb-1">
                     {team2Name}
                   </p>
-                  <SetCircles
-                    setsWon={Number(score.team2Sets) || 0}
-                    setsToWin={stw}
-                    colorClass="bg-rose-500"
+                  <ScoreCircles
+                    won={Number(score.team2Sets) || 0}
+                    toWin={stw}
+                    color="rose"
                   />
                 </div>
               </div>
@@ -441,10 +389,10 @@ export default function VolleyballScoring({
                   <p className="text-base sm:text-xl font-bold truncate text-blue-600">
                     {team1Name}
                   </p>
-                  <SetCircles
-                    setsWon={Number(score.team1Sets) || 0}
-                    setsToWin={stw}
-                    colorClass="bg-blue-500"
+                  <ScoreCircles
+                    won={Number(score.team1Sets) || 0}
+                    toWin={stw}
+                    color="blue"
                   />
                 </div>
                 <div className="text-4xl sm:text-5xl font-black bg-white px-4 py-2 rounded-xl border border-gray-300 shadow-inner flex items-center gap-3">
@@ -456,10 +404,10 @@ export default function VolleyballScoring({
                   <p className="text-base sm:text-xl font-bold truncate text-rose-600">
                     {team2Name}
                   </p>
-                  <SetCircles
-                    setsWon={Number(score.team2Sets) || 0}
-                    setsToWin={stw}
-                    colorClass="bg-rose-500"
+                  <ScoreCircles
+                    won={Number(score.team2Sets) || 0}
+                    toWin={stw}
+                    color="rose"
                   />
                 </div>
               </div>
@@ -528,13 +476,13 @@ export default function VolleyballScoring({
                   className={`bg-red-600 p-3 rounded-xl shadow-md flex flex-col gap-3 ${waiting ? "opacity-50 pointer-events-none" : ""}`}
                 >
                   <button
-                    className={primaryBtn}
+                    className={UI_CLASSES.primaryBtn}
                     onClick={() => setModal("point")}
                   >
                     Record Point
                   </button>
                   <button
-                    className={primaryBtn}
+                    className={UI_CLASSES.primaryBtn}
                     onClick={() => setModal("sub")}
                   >
                     Substitution
@@ -565,11 +513,11 @@ export default function VolleyballScoring({
               {/* ── POINT WIZARD ── */}
               {modal === "point" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="Record Point" />
+                  <WizardHeader title="Record Point" onClose={closeModal} />
                   <div className="flex flex-col gap-3">
                     {step === 1 && (
                       <select
-                        className={selectCls}
+                        className={UI_CLASSES.selectCls}
                         onChange={(e) => {
                           setSelType(e.target.value);
                           setStep(2);
@@ -586,7 +534,7 @@ export default function VolleyballScoring({
                     {step === 2 && (
                       <>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) => {
                             setSelTeam(Number(e.target.value));
                             setStep(3);
@@ -600,7 +548,7 @@ export default function VolleyballScoring({
                           <option value={team1Id}>{team1Name}</option>
                           <option value={team2Id}>{team2Name}</option>
                         </select>
-                        <button className={backBtn} onClick={() => setStep(1)}>
+                        <button className={UI_CLASSES.backBtn} onClick={() => setStep(1)}>
                           Back
                         </button>
                       </>
@@ -608,7 +556,7 @@ export default function VolleyballScoring({
                     {step === 3 && (
                       <>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) => setSelPlayer(Number(e.target.value))}
                         >
                           <option value="">Select Player (Optional)</option>
@@ -622,7 +570,7 @@ export default function VolleyballScoring({
                           ))}
                         </select>
                         <button
-                          className={confirmBtn}
+                          className={UI_CLASSES.confirmBtn}
                           onClick={() => submitPoint(false)}
                         >
                           CONFIRM POINT
@@ -633,7 +581,7 @@ export default function VolleyballScoring({
                         >
                           Skip Player & Confirm
                         </button>
-                        <button className={backBtn} onClick={() => setStep(2)}>
+                        <button className={UI_CLASSES.backBtn} onClick={() => setStep(2)}>
                           Back
                         </button>
                       </>
@@ -645,23 +593,23 @@ export default function VolleyballScoring({
               {/* ── TIMEOUT WIZARD ── */}
               {modal === "timeout" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="Timeout" />
+                  <WizardHeader title="Timeout" onClose={closeModal} />
                   <div className="flex flex-col gap-3">
                     <button
-                      className={confirmBtn}
+                      className={UI_CLASSES.confirmBtn}
                       disabled={score.team1Timeouts >= 2}
                       onClick={() => submitTimeout(team1Id)}
                     >
                       {team1Name} Timeout
                     </button>
                     <button
-                      className={confirmBtn}
+                      className={UI_CLASSES.confirmBtn}
                       disabled={score.team2Timeouts >= 2}
                       onClick={() => submitTimeout(team2Id)}
                     >
                       {team2Name} Timeout
                     </button>
-                    <button className={backBtn} onClick={closeModal}>
+                    <button className={UI_CLASSES.backBtn} onClick={closeModal}>
                       Cancel
                     </button>
                   </div>
@@ -671,11 +619,11 @@ export default function VolleyballScoring({
               {/* ── SUB WIZARD ── */}
               {modal === "sub" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="Substitution" />
+                  <WizardHeader title="Substitution" onClose={closeModal} />
                   <div className="flex flex-col gap-3">
                     {subStep === 1 && (
                       <select
-                        className={selectCls}
+                        className={UI_CLASSES.selectCls}
                         onChange={(e) => {
                           setSelTeam(Number(e.target.value));
                           setSubStep(2);
@@ -689,7 +637,7 @@ export default function VolleyballScoring({
                     {subStep === 2 && (
                       <>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) => {
                             setSelOut(Number(e.target.value));
                             setSubStep(3);
@@ -706,7 +654,7 @@ export default function VolleyballScoring({
                           ))}
                         </select>
                         <button
-                          className={backBtn}
+                          className={UI_CLASSES.backBtn}
                           onClick={() => setSubStep(1)}
                         >
                           Back
@@ -716,7 +664,7 @@ export default function VolleyballScoring({
                     {subStep === 3 && (
                       <>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) => setSelIn(Number(e.target.value))}
                         >
                           <option value="">Select Player IN</option>
@@ -733,13 +681,13 @@ export default function VolleyballScoring({
                         </select>
                         <button
                           disabled={!selIn}
-                          className={confirmBtn}
+                          className={UI_CLASSES.confirmBtn}
                           onClick={submitSub}
                         >
                           CONFIRM SUB
                         </button>
                         <button
-                          className={backBtn}
+                          className={UI_CLASSES.backBtn}
                           onClick={() => setSubStep(2)}
                         >
                           Back
@@ -753,15 +701,15 @@ export default function VolleyballScoring({
               {/* ── END SET WIZARD ── */}
               {modal === "endSet" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title={`End ${setLabel}?`} />
+                  <WizardHeader title={`End ${setLabel}?`} onClose={closeModal} />
                   <p className="text-white text-sm text-center mb-3 font-semibold">
                     Current: {score.team1Points} – {score.team2Points}
                   </p>
                   <div className="flex flex-col gap-3">
-                    <button className={confirmBtn} onClick={submitEndSet}>
+                    <button className={UI_CLASSES.confirmBtn} onClick={submitEndSet}>
                       CONFIRM END SET
                     </button>
-                    <button className={backBtn} onClick={closeModal}>
+                    <button className={UI_CLASSES.backBtn} onClick={closeModal}>
                       Cancel
                     </button>
                   </div>

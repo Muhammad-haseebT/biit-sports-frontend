@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { getPlayersByTeamId } from "../../../api/teamApi";
 // import FavouritePlayerModal from "../football/modals/FavouritePlayerModal";
 import { ArrowLeft, Trophy, RotateCcw, Clock } from "lucide-react";
+import { PanelWrapper, PanelHeading, WizardHeader, UI_CLASSES } from "../common/ScoringUI";
 
 const EV = {
   MOVE: { icon: "♟️", label: "Move" },
@@ -45,14 +46,6 @@ function useMatchTimer(startTime, status) {
     : `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-function PanelWrapper({ children }) {
-  return <div className="mt-2 mb-2 px-4">{children}</div>;
-}
-function PanelHeading({ title }) {
-  return (
-    <h1 className="text-2xl font-semibold text-red-600 mt-2 mb-4">{title}</h1>
-  );
-}
 
 export default function ChessScoring({
   matchId,
@@ -190,26 +183,8 @@ export default function ChessScoring({
   const isCurrentlyT1 = score.currentTurnTeamId === team1Id;
   const currentTurnName = score.currentTurnTeamName || team1Name;
 
-  const primaryBtn =
-    "w-full bg-white text-red-600 p-3 rounded-lg text-xl font-black shadow-md flex items-center justify-center active:bg-gray-200 transition-colors border border-red-200";
-  const confirmBtn =
-    "w-full bg-emerald-500 text-white p-3 rounded-lg text-xl font-black shadow-md flex items-center justify-center active:bg-emerald-400 transition-colors disabled:opacity-50";
-  const backBtn =
-    "w-full bg-gray-100 text-gray-700 p-3 rounded-lg text-lg font-bold shadow-sm flex items-center justify-center active:bg-gray-200 transition-colors border border-gray-300";
   const dangerBtn =
     "w-full bg-red-50 text-red-600 p-3 rounded-lg text-lg font-black shadow-md flex items-center justify-center active:bg-red-100 border border-red-200";
-
-  const WizardHeader = ({ title }) => (
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-xl font-bold text-red-600">{title}</h2>
-      <button
-        className="text-gray-500 text-sm border border-gray-300 px-3 py-1 rounded-lg hover:bg-gray-100"
-        onClick={closeModal}
-      >
-        ✕ Close
-      </button>
-    </div>
-  );
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -447,7 +422,7 @@ export default function ChessScoring({
                   {/* Quick move buttons */}
                   <div className="grid grid-cols-2 gap-3">
                     <button
-                      className={primaryBtn}
+                      className={UI_CLASSES.primaryBtn}
                       onClick={() => {
                         setSelTeam(team1Id);
                         setActiveModal("move");
@@ -456,7 +431,7 @@ export default function ChessScoring({
                       ⬜ {team1Name}
                     </button>
                     <button
-                      className={primaryBtn}
+                      className={UI_CLASSES.primaryBtn}
                       onClick={() => {
                         setSelTeam(team2Id);
                         setActiveModal("move");
@@ -493,7 +468,7 @@ export default function ChessScoring({
               {/* ── MOVE WIZARD ── */}
               {activeModal === "move" && isAdmin.current && (
                 <div className="bg-slate-800 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="♟️ Record Move" />
+                  <WizardHeader title="♟️ Record Move" onClose={closeModal} />
                   <div className="flex flex-col gap-3">
                     <input
                       type="text"
@@ -516,13 +491,13 @@ export default function ChessScoring({
                         </option>
                       ))}
                     </select>
-                    <button className={confirmBtn} onClick={submitMove}>
+                    <button className={UI_CLASSES.confirmBtn} onClick={submitMove}>
                       ✅ CONFIRM MOVE —{" "}
                       {selTeam === team1Id
                         ? "⬜ " + team1Name
                         : "⬛ " + team2Name}
                     </button>
-                    <button className={backBtn} onClick={closeModal}>
+                    <button className={UI_CLASSES.backBtn} onClick={closeModal}>
                       Cancel
                     </button>
                   </div>
@@ -532,13 +507,13 @@ export default function ChessScoring({
               {/* ── CHECK WIZARD ── */}
               {activeModal === "check" && isAdmin.current && (
                 <div className="bg-slate-800 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="⚔️ Record Check" />
+                  <WizardHeader title="⚔️ Record Check" onClose={closeModal} />
                   <div className="flex flex-col gap-3">
                     <p className="text-white text-sm font-semibold text-center">
                       Which team delivered check?
                     </p>
                     <button
-                      className={confirmBtn}
+                      className={UI_CLASSES.confirmBtn}
                       onClick={() => {
                         setSelTeam(team1Id);
                         submitCheck();
@@ -547,7 +522,7 @@ export default function ChessScoring({
                       ⬜ {team1Name} delivered check
                     </button>
                     <button
-                      className={confirmBtn}
+                      className={UI_CLASSES.confirmBtn}
                       onClick={() => {
                         setSelTeam(team2Id);
                         submitCheck();
@@ -555,7 +530,7 @@ export default function ChessScoring({
                     >
                       ⬛ {team2Name} delivered check
                     </button>
-                    <button className={backBtn} onClick={closeModal}>
+                    <button className={UI_CLASSES.backBtn} onClick={closeModal}>
                       Cancel
                     </button>
                   </div>
@@ -565,7 +540,7 @@ export default function ChessScoring({
               {/* ── TERMINAL EVENTS ── */}
               {activeModal === "terminal" && isAdmin.current && (
                 <div className="bg-slate-800 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="End Game" />
+                  <WizardHeader title="End Game" onClose={closeModal} />
                   <div className="flex flex-col gap-2">
                     <p className="text-white text-xs text-center font-semibold mb-2">
                       Select how the game ended:
@@ -577,7 +552,7 @@ export default function ChessScoring({
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       <button
-                        className={confirmBtn}
+                        className={UI_CLASSES.confirmBtn}
                         onClick={() => {
                           send({ eventType: "CHECKMATE", teamId: team1Id });
                           closeModal();
@@ -586,7 +561,7 @@ export default function ChessScoring({
                         ⬜ {team1Name}
                       </button>
                       <button
-                        className={confirmBtn}
+                        className={UI_CLASSES.confirmBtn}
                         onClick={() => {
                           send({ eventType: "CHECKMATE", teamId: team2Id });
                           closeModal();
@@ -671,7 +646,7 @@ export default function ChessScoring({
                       </button>
                     </div>
 
-                    <button className={backBtn} onClick={closeModal}>
+                    <button className={UI_CLASSES.backBtn} onClick={closeModal}>
                       Cancel
                     </button>
                   </div>

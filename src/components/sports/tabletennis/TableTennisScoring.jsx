@@ -5,6 +5,7 @@ import { getPlayersByTeamId } from "../../../api/teamApi";
 import Media from "../cricket/modals/Media";
 // import FavouritePlayerModal from "./modals/FavouritePlayerModal";
 import { ArrowLeft, Camera, Trophy } from "lucide-react";
+import { PanelWrapper, PanelHeading, WizardHeader, ScoreCircles, UI_CLASSES } from "../common/ScoringUI";
 
 const EV = {
   POINT: { icon: "🏓", label: "Point" },
@@ -59,33 +60,7 @@ function useGameTimer(gameStartTime, status) {
   };
 }
 
-function GameCircles({ gamesWon, gamesToWin, color }) {
-  return (
-    <div className="flex items-center gap-1">
-      {Array.from({ length: gamesToWin }).map((_, i) => (
-        <div
-          key={i}
-          className={`w-3.5 h-3.5 rounded-full border transition-all duration-500 ${
-            i < gamesWon
-              ? color === "blue"
-                ? "bg-blue-500 border-transparent scale-110"
-                : "bg-rose-500 border-transparent scale-110"
-              : "bg-gray-200 border-gray-300"
-          }`}
-        />
-      ))}
-    </div>
-  );
-}
-
-function PanelWrapper({ children }) {
-  return <div className="mt-2 mb-2 px-4">{children}</div>;
-}
-function PanelHeading({ title }) {
-  return (
-    <h1 className="text-2xl font-semibold text-red-600 mt-2 mb-4">{title}</h1>
-  );
-}
+// ─── MAIN ─────────────────────────────────────────────────────────
 
 export default function TableTennisScoring({
   matchId,
@@ -219,25 +194,7 @@ export default function TableTennisScoring({
   const gameLabel = isDecider ? "Decider" : `Game ${score.currentGame}`;
   const ptw = score.pointsToWin || 11;
 
-  const selectCls =
-    "w-full p-3 rounded-lg text-xl sm:text-2xl bg-white text-red-600 font-bold border border-red-200 shadow-sm";
-  const primaryBtn =
-    "w-full bg-white text-red-600 p-3 rounded-lg text-2xl sm:text-3xl font-black shadow-md flex items-center justify-center active:bg-gray-200 transition-colors border border-red-200";
-  const confirmBtn =
-    "w-full bg-emerald-500 text-white p-3 rounded-lg text-2xl sm:text-3xl font-black shadow-md flex items-center justify-center active:bg-emerald-400 transition-colors disabled:opacity-50";
-  const backBtn =
-    "w-full bg-gray-100 text-gray-700 p-3 rounded-lg text-xl font-bold shadow-sm flex items-center justify-center active:bg-gray-200 transition-colors border border-gray-300";
-  const WH = ({ title }) => (
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-xl font-bold text-red-600">{title}</h2>
-      <button
-        className="text-gray-500 text-sm border border-gray-300 px-3 py-1 rounded-lg hover:bg-gray-100"
-        onClick={closeModal}
-      >
-        ✕ Close
-      </button>
-    </div>
-  );
+  // Styles using centralized UI_CLASSES
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -290,9 +247,9 @@ export default function TableTennisScoring({
                   <p className="text-sm font-bold text-blue-600 mb-1">
                     {team1Name}
                   </p>
-                  <GameCircles
-                    gamesWon={Number(score.team1Games) || 0}
-                    gamesToWin={gtw}
+                  <ScoreCircles size="sm"
+                    won={Number(score.team1Games) || 0}
+                    toWin={gtw}
                     color="blue"
                   />
                 </div>
@@ -303,9 +260,9 @@ export default function TableTennisScoring({
                   <p className="text-sm font-bold text-rose-600 mb-1">
                     {team2Name}
                   </p>
-                  <GameCircles
-                    gamesWon={Number(score.team2Games) || 0}
-                    gamesToWin={gtw}
+                  <ScoreCircles size="sm"
+                    won={Number(score.team2Games) || 0}
+                    toWin={gtw}
                     color="rose"
                   />
                 </div>
@@ -339,9 +296,9 @@ export default function TableTennisScoring({
                   <p className="text-base sm:text-xl font-bold truncate text-blue-600">
                     {team1Name}
                   </p>
-                  <GameCircles
-                    gamesWon={Number(score.team1Games) || 0}
-                    gamesToWin={gtw}
+                  <ScoreCircles size="sm"
+                    won={Number(score.team1Games) || 0}
+                    toWin={gtw}
                     color="blue"
                   />
                 </div>
@@ -354,9 +311,9 @@ export default function TableTennisScoring({
                   <p className="text-base sm:text-xl font-bold truncate text-rose-600">
                     {team2Name}
                   </p>
-                  <GameCircles
-                    gamesWon={Number(score.team2Games) || 0}
-                    gamesToWin={gtw}
+                  <ScoreCircles size="sm"
+                    won={Number(score.team2Games) || 0}
+                    toWin={gtw}
                     color="rose"
                   />
                 </div>
@@ -437,7 +394,7 @@ export default function TableTennisScoring({
                   className={`bg-red-600 p-3 rounded-xl shadow-md flex flex-col gap-3 ${waiting ? "opacity-50 pointer-events-none" : ""}`}
                 >
                   <button
-                    className={primaryBtn}
+                    className={UI_CLASSES.primaryBtn}
                     onClick={() => {
                       setActiveModal("score");
                       setWizStep(1);
@@ -446,7 +403,7 @@ export default function TableTennisScoring({
                     🏓 Record Point
                   </button>
                   <button
-                    className={primaryBtn}
+                    className={UI_CLASSES.primaryBtn}
                     onClick={() => {
                       setActiveModal("fault");
                       setWizStep(1);
@@ -472,11 +429,11 @@ export default function TableTennisScoring({
               {/* SCORE WIZARD */}
               {activeModal === "score" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WH title="Record Point" />
+                  <WizardHeader title="Record Point" onClose={closeModal} />
                   <div className="flex flex-col gap-3">
                     {wizStep === 1 && (
                       <select
-                        className={selectCls}
+                        className={UI_CLASSES.selectCls}
                         onChange={(e) => {
                           setSelEvent(e.target.value);
                           setWizStep(2);
@@ -493,7 +450,7 @@ export default function TableTennisScoring({
                     {wizStep === 2 && (
                       <>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) => {
                             setSelTeam(Number(e.target.value));
                             setWizStep(3);
@@ -504,7 +461,7 @@ export default function TableTennisScoring({
                           <option value={team2Id}>{team2Name}</option>
                         </select>
                         <button
-                          className={backBtn}
+                          className={UI_CLASSES.backBtn}
                           onClick={() => setWizStep(1)}
                         >
                           Back
@@ -514,7 +471,7 @@ export default function TableTennisScoring({
                     {wizStep === 3 && (
                       <>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) => setSelPlayer(Number(e.target.value))}
                         >
                           <option value="">Select Player (Optional)</option>
@@ -528,7 +485,7 @@ export default function TableTennisScoring({
                           ))}
                         </select>
                         <button
-                          className={confirmBtn}
+                          className={UI_CLASSES.confirmBtn}
                           onClick={() => submitEvent(false)}
                         >
                           CONFIRM POINT
@@ -540,7 +497,7 @@ export default function TableTennisScoring({
                           Skip Player
                         </button>
                         <button
-                          className={backBtn}
+                          className={UI_CLASSES.backBtn}
                           onClick={() => setWizStep(2)}
                         >
                           Back
@@ -554,11 +511,11 @@ export default function TableTennisScoring({
               {/* FAULT WIZARD */}
               {activeModal === "fault" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WH title="Record Fault (Opponent gets point)" />
+                  <WizardHeader title="Record Fault (Opponent gets point)" onClose={closeModal} />
                   <div className="flex flex-col gap-3">
                     {wizStep === 1 && (
                       <select
-                        className={selectCls}
+                        className={UI_CLASSES.selectCls}
                         onChange={(e) => {
                           setSelEvent(e.target.value);
                           setWizStep(2);
@@ -575,7 +532,7 @@ export default function TableTennisScoring({
                     {wizStep === 2 && (
                       <>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) => {
                             setSelTeam(Number(e.target.value));
                             setWizStep(3);
@@ -586,7 +543,7 @@ export default function TableTennisScoring({
                           <option value={team2Id}>{team2Name}</option>
                         </select>
                         <button
-                          className={backBtn}
+                          className={UI_CLASSES.backBtn}
                           onClick={() => setWizStep(1)}
                         >
                           Back
@@ -596,7 +553,7 @@ export default function TableTennisScoring({
                     {wizStep === 3 && (
                       <>
                         <select
-                          className={selectCls}
+                          className={UI_CLASSES.selectCls}
                           onChange={(e) => setSelPlayer(Number(e.target.value))}
                         >
                           <option value="">Select Player (Optional)</option>
@@ -610,7 +567,7 @@ export default function TableTennisScoring({
                           ))}
                         </select>
                         <button
-                          className={confirmBtn}
+                          className={UI_CLASSES.confirmBtn}
                           onClick={() => submitEvent(false)}
                         >
                           CONFIRM FAULT
@@ -622,7 +579,7 @@ export default function TableTennisScoring({
                           Skip Player
                         </button>
                         <button
-                          className={backBtn}
+                          className={UI_CLASSES.backBtn}
                           onClick={() => setWizStep(2)}
                         >
                           Back
@@ -636,13 +593,13 @@ export default function TableTennisScoring({
               {/* END GAME */}
               {activeModal === "endGame" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WH title={`End ${gameLabel}?`} />
+                  <WizardHeader title={`End ${gameLabel}?`} onClose={closeModal} />
                   <p className="text-white text-sm text-center mb-3 font-semibold">
                     Current: {score.team1Points} – {score.team2Points}
                   </p>
                   <div className="flex flex-col gap-3">
                     <button
-                      className={confirmBtn}
+                      className={UI_CLASSES.confirmBtn}
                       onClick={() => {
                         send({ eventType: "END_GAME" });
                         closeModal();
@@ -650,7 +607,7 @@ export default function TableTennisScoring({
                     >
                       CONFIRM END GAME
                     </button>
-                    <button className={backBtn} onClick={closeModal}>
+                    <button className={UI_CLASSES.backBtn} onClick={closeModal}>
                       Cancel
                     </button>
                   </div>
