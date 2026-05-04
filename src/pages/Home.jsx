@@ -185,14 +185,17 @@ export default function Home() {
     setCarouselIndex(next);
     if (carouselRef.current) {
       const cardWidth = carouselRef.current.offsetWidth;
-      carouselRef.current.scrollTo({ left: next * cardWidth, behavior: "smooth" });
+      carouselRef.current.scrollTo({
+        left: next * cardWidth,
+        behavior: "smooth",
+      });
     }
   };
 
   const handleCarouselScroll = () => {
     if (carouselRef.current) {
       const idx = Math.round(
-        carouselRef.current.scrollLeft / carouselRef.current.offsetWidth
+        carouselRef.current.scrollLeft / carouselRef.current.offsetWidth,
       );
       setCarouselIndex(idx);
     }
@@ -240,7 +243,9 @@ export default function Home() {
 
               {liveSlides.length === 0 ? (
                 <div className="bg-white rounded-2xl p-8 text-center text-gray-400 shadow-sm">
-                  <p className="text-sm font-medium">No live matches right now</p>
+                  <p className="text-sm font-medium">
+                    No live matches right now
+                  </p>
                 </div>
               ) : (
                 <>
@@ -251,7 +256,10 @@ export default function Home() {
                     style={{ scrollbarWidth: "none" }}
                   >
                     {liveSlides.map((match) => (
-                      <div key={match.id} className="flex-shrink-0 w-full snap-start">
+                      <div
+                        key={match.id}
+                        className="flex-shrink-0 w-full snap-start"
+                      >
                         <MatchCard
                           title={match.tournamentName}
                           team1={match.team1Name}

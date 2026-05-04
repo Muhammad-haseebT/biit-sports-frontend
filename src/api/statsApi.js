@@ -294,3 +294,23 @@ export const setManOfTournament = async (tournamentId, playerId) => {
   );
   return r.data;
 };
+
+export const setManOfTournamentRanked = async (
+  tournamentId,
+  playerId,
+  rank,
+) => {
+  const r = await axios.post(
+    `${url}/api/favourite-player/tournament/${tournamentId}/man-of-tournament`, // ← was /award/tournament
+    null,
+    { params: { playerId, rank } },
+  );
+  return r.data;
+};
+
+export const getTopStatPlayers = async (tournamentId) => {
+  const r = await axios.get(
+    `${url}/api/favourite-player/top-stats/${tournamentId}`,
+  );
+  return r.data;
+};

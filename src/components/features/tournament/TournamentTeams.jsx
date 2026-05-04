@@ -180,8 +180,11 @@ export default function TournamentTeams({ tournamentId, onCreateTeam }) {
       fetchedRef.current.teams = false;
       await fetchMyTeam();
     } catch (e) {
-      console.error("Error creating team:", e);
-      toast.error("Error creating team");
+      console.error(
+        "Error creating team:",
+        e.response?.data?.error || "Error creating team",
+      );
+      toast.error(e.response?.data?.error || "Error creating team");
     }
   };
 

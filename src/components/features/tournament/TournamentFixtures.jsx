@@ -53,6 +53,7 @@ export default function TournamentFixtures({ tournamentId, sportId }) {
     team1Id: "",
     team2Id: "",
     scorerId: "", // Optional
+    mediaScorerUsername: "",
     venue: "", // Required
     date: new Date().toISOString().split("T")[0], // YYYY-MM-DD
     time: "14:00", // Default 2:00 PM
@@ -71,6 +72,7 @@ export default function TournamentFixtures({ tournamentId, sportId }) {
       team1Id: fixture.team1Id,
       team2Id: fixture.team2Id,
       scorerId: fixture.scorerId || "",
+      mediaScorerUsername: fixture.mediaScorerUsername || "",
       venue: fixture.venue,
       date: fixture.date,
       time: fixture.time,
@@ -87,6 +89,7 @@ export default function TournamentFixtures({ tournamentId, sportId }) {
       team1Id: teams[0].id,
       team2Id: teams[1].id,
       scorerId: "",
+      mediaScorerUsername: "",
       venue: "",
       date: new Date().toISOString().split("T")[0],
       time: "14:00",
@@ -248,7 +251,14 @@ export default function TournamentFixtures({ tournamentId, sportId }) {
                 onChange={handleChange}
                 className="w-full border p-2 rounded-lg focus:ring-2 focus:ring-red-500"
               />
-
+              <input
+                type="text"
+                name="mediaScorerUsername"
+                placeholder="Media Person Username (Optional)"
+                value={form.mediaScorerUsername}
+                onChange={handleChange}
+                className="w-full border p-2 rounded-lg focus:ring-2 focus:ring-red-500"
+              />
               {/* Date, Time, Overs */}
               <div className="grid grid-cols-2 gap-3">
                 <div>

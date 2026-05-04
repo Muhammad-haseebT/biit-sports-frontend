@@ -3,31 +3,20 @@ import axios from "axios";
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 //take match id and file(multipart image)
-export const createMedia = async (matchId, ballId, file) => {
-  // ✅ Pehle check karo
-  console.log("createMedia called:", { matchId, ballId, file });
-
+export const createMedia = async (matchId, ballId, file, comment = "") => {
   if (!matchId || !ballId || !file) {
-    console.error("Missing params:", { matchId, ballId, file });
     throw new Error("matchId, ballId ya file missing hai");
   }
-
   try {
     const formData = new FormData();
-    formData.append("file", file); // sirf file FormData mein
+    formData.append("file", file);
 
-    // ✅ matchId aur ballId URL query params mein — Spring @RequestParam yahan se padha ta hai
+    // ✅ comment also as query param
     const response = await axios.post(
-      `${BASE_URL}/media?matchId=${matchId}&ballId=${ballId}`,
+      `${BASE_URL}/media?matchId=${matchId}&ballId=${ballId}&comment=${encodeURIComponent(comment)}`,
       formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      },
+      { headers: { "Content-Type": "multipart/form-data" } },
     );
-
-    console.log("Upload response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Upload error:", error.response?.data || error.message);
