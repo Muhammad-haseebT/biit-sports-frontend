@@ -13,7 +13,13 @@ import {
   XCircle,
   ChevronRight,
 } from "lucide-react";
-import { PanelWrapper, PanelHeading, WizardHeader, ScoreCircles, UI_CLASSES } from "../common/ScoringUI";
+import {
+  PanelWrapper,
+  PanelHeading,
+  WizardHeader,
+  ScoreCircles,
+  UI_CLASSES,
+} from "../common/ScoringUI";
 
 // ─── EVENT CONFIG ─────────────────────────────────────────────────
 const EV = {
@@ -113,7 +119,15 @@ export default function VolleyballScoring({
   const [toast, setToast] = useState(null);
   const [waiting, setWaiting] = useState(false);
   const [mediaId, setMediaId] = useState(null);
-
+  const [showLineupEditor, setShowLineupEditor] = useState(false);
+  const [team1Active, setTeam1Active] = useState([]); // ← ADD
+  const [team2Active, setTeam2Active] = useState([]);
+  const benchPlayersVB = () => {
+    const onField = selTeam === team1Id ? team1Active : team2Active;
+    const all = selTeam === team1Id ? team1P : team2P;
+    const ids = new Set(onField.map((p) => p.id));
+    return all.filter((p) => !ids.has(p.id));
+  };
   const timer = useSetTimer(score.setStartTime, score.status);
 
   useEffect(() => {
@@ -149,6 +163,8 @@ export default function VolleyballScoring({
     ws.onmessage = (e) => {
       const d = JSON.parse(e.data);
       console.log(d);
+      if (d.team1OnField?.length) setTeam1Active(d.team1OnField);
+      if (d.team2OnField?.length) setTeam2Active(d.team2OnField);
       setScore((p) => ({
         ...p,
         ...d,
@@ -166,7 +182,8 @@ export default function VolleyballScoring({
       if (ws.readyState === WebSocket.OPEN) ws.close();
     };
   }, []);
-
+  const onFieldPlayers = () =>
+    selTeam === team1Id ? team1Active : team2Active;
   const send = (payload) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       showToast("Not connected", "error");
@@ -509,7 +526,14 @@ export default function VolleyballScoring({
                   </button>
                 </div>
               )}
-
+              {isAdmin.current && (
+                <button
+                  onClick={() => setShowLineupEditor(true)}
+                  className="w-full mt-2 py-2 rounded-xl text-xs font-bold text-slate-500 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-400"
+                >
+                  ✏️ Edit Playing Lineup
+                </button>
+              )}
               {/* ── POINT WIZARD ── */}
               {modal === "point" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
@@ -548,7 +572,10 @@ export default function VolleyballScoring({
                           <option value={team1Id}>{team1Name}</option>
                           <option value={team2Id}>{team2Name}</option>
                         </select>
-                        <button className={UI_CLASSES.backBtn} onClick={() => setStep(1)}>
+                        <button
+                          className={UI_CLASSES.backBtn}
+                          onClick={() => setStep(1)}
+                        >
                           Back
                         </button>
                       </>
@@ -560,7 +587,7 @@ export default function VolleyballScoring({
                           onChange={(e) => setSelPlayer(Number(e.target.value))}
                         >
                           <option value="">Select Player (Optional)</option>
-                          {activePlayers().map((p) => (
+                          {onFieldPlayers().map((p) => (
                             <option
                               key={p.id ?? p.playerId}
                               value={p.id ?? p.playerId}
@@ -581,7 +608,10 @@ export default function VolleyballScoring({
                         >
                           Skip Player & Confirm
                         </button>
-                        <button className={UI_CLASSES.backBtn} onClick={() => setStep(2)}>
+                        <button
+                          className={UI_CLASSES.backBtn}
+                          onClick={() => setStep(2)}
+                        >
                           Back
                         </button>
                       </>
@@ -644,7 +674,7 @@ export default function VolleyballScoring({
                           }}
                         >
                           <option value="">Select Player OUT</option>
-                          {activePlayers().map((p) => (
+                          {onFieldPlayers().map((p) => (
                             <option
                               key={p.id ?? p.playerId}
                               value={p.id ?? p.playerId}
@@ -668,16 +698,14 @@ export default function VolleyballScoring({
                           onChange={(e) => setSelIn(Number(e.target.value))}
                         >
                           <option value="">Select Player IN</option>
-                          {activePlayers()
-                            .filter((p) => (p.id ?? p.playerId) !== selOut)
-                            .map((p) => (
-                              <option
-                                key={p.id ?? p.playerId}
-                                value={p.id ?? p.playerId}
-                              >
-                                {p.name ?? p.playerName}
-                              </option>
-                            ))}
+                          {benchPlayersVB().map((p) => (
+                            <option
+                              key={p.id ?? p.playerId}
+                              value={p.id ?? p.playerId}
+                            >
+                              {p.name ?? p.playerName}
+                            </option>
+                          ))}
                         </select>
                         <button
                           disabled={!selIn}
@@ -701,12 +729,18 @@ export default function VolleyballScoring({
               {/* ── END SET WIZARD ── */}
               {modal === "endSet" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title={`End ${setLabel}?`} onClose={closeModal} />
+                  <WizardHeader
+                    title={`End ${setLabel}?`}
+                    onClose={closeModal}
+                  />
                   <p className="text-white text-sm text-center mb-3 font-semibold">
                     Current: {score.team1Points} – {score.team2Points}
                   </p>
                   <div className="flex flex-col gap-3">
-                    <button className={UI_CLASSES.confirmBtn} onClick={submitEndSet}>
+                    <button
+                      className={UI_CLASSES.confirmBtn}
+                      onClick={submitEndSet}
+                    >
                       CONFIRM END SET
                     </button>
                     <button className={UI_CLASSES.backBtn} onClick={closeModal}>
@@ -870,6 +904,84 @@ export default function VolleyballScoring({
           matchId={matchId}
           onClose={() => setMediaId(null)}
         />
+      )}
+      {showLineupEditor && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-end justify-center">
+          <div className="bg-white dark:bg-slate-900 rounded-t-3xl p-5 w-full max-w-lg max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-black text-sm">Edit Playing Lineup</h3>
+              <button
+                onClick={() => setShowLineupEditor(false)}
+                className="text-slate-400"
+              >
+                ✕
+              </button>
+            </div>
+            {/* Team 1 */}
+            <p className="text-xs font-black text-emerald-600 uppercase mb-2">
+              {team1Name}
+            </p>
+            <div className="grid grid-cols-2 gap-1 mb-4">
+              {team1P.map((p) => {
+                const onField = team1Active.some((a) => a.id === p.id);
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      // Send substitution to toggle on/off — or just local state
+                      setTeam1Active((prev) =>
+                        onField
+                          ? prev.filter((a) => a.id !== p.id)
+                          : [...prev, p],
+                      );
+                    }}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      onField
+                        ? "bg-emerald-600 text-white border-emerald-600"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-500 border-transparent"
+                    }`}
+                  >
+                    {p.name ?? p.playerName}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Team 2 */}
+            <p className="text-xs font-black text-rose-600 uppercase mb-2">
+              {team2Name}
+            </p>
+            <div className="grid grid-cols-2 gap-1 mb-4">
+              {team2P.map((p) => {
+                const onField = team2Active.some((a) => a.id === p.id);
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() =>
+                      setTeam2Active((prev) =>
+                        onField
+                          ? prev.filter((a) => a.id !== p.id)
+                          : [...prev, p],
+                      )
+                    }
+                    className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      onField
+                        ? "bg-rose-500 text-white border-rose-500"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-500 border-transparent"
+                    }`}
+                  >
+                    {p.name ?? p.playerName}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setShowLineupEditor(false)}
+              className="w-full py-3 rounded-2xl bg-emerald-600 text-white text-sm font-black"
+            >
+              Save Lineup
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

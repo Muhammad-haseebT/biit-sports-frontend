@@ -5,7 +5,13 @@ import { getPlayersByTeamId } from "../../../api/teamApi";
 import Media from "../cricket/modals/Media";
 // import FavouritePlayerModal from "./modals/FavouritePlayerModal";
 import { ArrowLeft, Camera, Trophy } from "lucide-react";
-import { PanelWrapper, PanelHeading, WizardHeader, ScoreCircles, UI_CLASSES } from "../common/ScoringUI";
+import {
+  PanelWrapper,
+  PanelHeading,
+  WizardHeader,
+  ScoreCircles,
+  UI_CLASSES,
+} from "../common/ScoringUI";
 
 const EV = {
   POINT: { icon: "🏓", label: "Point" },
@@ -134,6 +140,8 @@ export default function TableTennisScoring({
     ws.onmessage = (e) => {
       const d = JSON.parse(e.data);
       console.log(d);
+      if (d.team1Players?.length) setTeam1P(d.team1Players);
+      if (d.team2Players?.length) setTeam2P(d.team2Players);
       setScore((p) => ({
         ...p,
         ...d,
@@ -247,7 +255,8 @@ export default function TableTennisScoring({
                   <p className="text-sm font-bold text-blue-600 mb-1">
                     {team1Name}
                   </p>
-                  <ScoreCircles size="sm"
+                  <ScoreCircles
+                    size="sm"
                     won={Number(score.team1Games) || 0}
                     toWin={gtw}
                     color="blue"
@@ -260,7 +269,8 @@ export default function TableTennisScoring({
                   <p className="text-sm font-bold text-rose-600 mb-1">
                     {team2Name}
                   </p>
-                  <ScoreCircles size="sm"
+                  <ScoreCircles
+                    size="sm"
                     won={Number(score.team2Games) || 0}
                     toWin={gtw}
                     color="rose"
@@ -296,7 +306,8 @@ export default function TableTennisScoring({
                   <p className="text-base sm:text-xl font-bold truncate text-blue-600">
                     {team1Name}
                   </p>
-                  <ScoreCircles size="sm"
+                  <ScoreCircles
+                    size="sm"
                     won={Number(score.team1Games) || 0}
                     toWin={gtw}
                     color="blue"
@@ -311,7 +322,8 @@ export default function TableTennisScoring({
                   <p className="text-base sm:text-xl font-bold truncate text-rose-600">
                     {team2Name}
                   </p>
-                  <ScoreCircles size="sm"
+                  <ScoreCircles
+                    size="sm"
                     won={Number(score.team2Games) || 0}
                     toWin={gtw}
                     color="rose"
@@ -511,7 +523,10 @@ export default function TableTennisScoring({
               {/* FAULT WIZARD */}
               {activeModal === "fault" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="Record Fault (Opponent gets point)" onClose={closeModal} />
+                  <WizardHeader
+                    title="Record Fault (Opponent gets point)"
+                    onClose={closeModal}
+                  />
                   <div className="flex flex-col gap-3">
                     {wizStep === 1 && (
                       <select
@@ -593,7 +608,10 @@ export default function TableTennisScoring({
               {/* END GAME */}
               {activeModal === "endGame" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title={`End ${gameLabel}?`} onClose={closeModal} />
+                  <WizardHeader
+                    title={`End ${gameLabel}?`}
+                    onClose={closeModal}
+                  />
                   <p className="text-white text-sm text-center mb-3 font-semibold">
                     Current: {score.team1Points} – {score.team2Points}
                   </p>

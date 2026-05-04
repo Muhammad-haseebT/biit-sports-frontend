@@ -12,7 +12,12 @@ import {
   ChevronRight,
   Trophy,
 } from "lucide-react";
-import { PanelWrapper, PanelHeading, WizardHeader, UI_CLASSES } from "../common/ScoringUI";
+import {
+  PanelWrapper,
+  PanelHeading,
+  WizardHeader,
+  UI_CLASSES,
+} from "../common/ScoringUI";
 
 const FOUL_LIMIT = 5;
 
@@ -48,7 +53,6 @@ function useMatchTimer(halfStartTime, halfDurationMinutes, status) {
   const secs = elapsed % 60;
   return { mins, secs, elapsed, totalSec };
 }
-
 
 export default function FutsalScoring({
   matchId,
@@ -102,12 +106,14 @@ export default function FutsalScoring({
   const [activeTab, setActiveTab] = useState("Scoring");
   const [toast, setToast] = useState(null);
   const [isWaiting, setIsWaiting] = useState(false);
-
+  const [showLineupEditor, setShowLineupEditor] = useState(false);
   const timer = useMatchTimer(
     score.halfStartTime,
     score.halfDurationMinutes,
     score.status,
   );
+  const [team1Active, setTeam1Active] = useState([]); // ← ADD
+  const [team2Active, setTeam2Active] = useState([]);
 
   useEffect(() => {
     try {
@@ -150,6 +156,8 @@ export default function FutsalScoring({
       setScore((prev) => ({ ...prev, ...d }));
       console.log(d);
       setIsWaiting(false);
+      if (d.team1OnField?.length) setTeam1Active(d.team1OnField);
+      if (d.team2OnField?.length) setTeam2Active(d.team2OnField);
       if (d.comment === "UNDO") showToast("↩ Undo successful", "info");
       if (d.status === "HALF_TIME") showToast("🔔 Half Time!", "info");
       if (d.status === "EXTRA_TIME") showToast("⏱ Draw! Extra Time?", "info");
@@ -240,8 +248,14 @@ export default function FutsalScoring({
   const isCompleted = score.status === "COMPLETED";
   const isHalfTime = score.status === "HALF_TIME";
   const isExtraTime = score.status === "EXTRA_TIME";
-
-  // Using centralized UI_CLASSES
+  const onFieldPlayers = () =>
+    selTeamId === team1Id ? team1Active : team2Active;
+  const benchPlayers = () => {
+    const onField = selTeamId === team1Id ? team1Active : team2Active;
+    const all = selTeamId === team1Id ? team1Players : team2Players;
+    const onFieldIds = new Set(onField.map((p) => p.id));
+    return all.filter((p) => !onFieldIds.has(p.id));
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -556,7 +570,7 @@ export default function FutsalScoring({
                           <option value="">Select Scorer</option>
                           {(selGoalType === "OWN_GOAL"
                             ? opposingPlayers()
-                            : activePlayers()
+                            : onFieldPlayers()
                           ).map((p) => (
                             <option key={p.id} value={p.id}>
                               {p.name}
@@ -570,7 +584,7 @@ export default function FutsalScoring({
                           }
                         >
                           <option value="">Select Assist (Optional)</option>
-                          {activePlayers()
+                          {onFieldPlayers()
                             .filter((p) => p.id !== selPlayerId)
                             .map((p) => (
                               <option key={p.id} value={p.id}>
@@ -600,7 +614,10 @@ export default function FutsalScoring({
               {/* ── FOUL WIZARD ── */}
               {activeModal === "foul" && isAdminRef.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="Record Foul / Card" onClose={closeModal} />
+                  <WizardHeader
+                    title="Record Foul / Card"
+                    onClose={closeModal}
+                  />
                   <div className="flex flex-col gap-3">
                     {foulStep === 1 && (
                       <select
@@ -648,7 +665,7 @@ export default function FutsalScoring({
                           }
                         >
                           <option value="">Select Player</option>
-                          {activePlayers().map((p) => (
+                          {onFieldPlayers().map((p) => (
                             <option key={p.id} value={p.id}>
                               {p.name}
                             </option>
@@ -701,7 +718,7 @@ export default function FutsalScoring({
                           }}
                         >
                           <option value="">Select Player OUT</option>
-                          {activePlayers().map((p) => (
+                          {onFieldPlayers().map((p) => (
                             <option key={p.id} value={p.id}>
                               {p.name}
                             </option>
@@ -722,7 +739,7 @@ export default function FutsalScoring({
                           onChange={(e) => setSelInId(Number(e.target.value))}
                         >
                           <option value="">Select Player IN</option>
-                          {activePlayers()
+                          {benchPlayers()
                             .filter((p) => p.id !== selOutId)
                             .map((p) => (
                               <option key={p.id} value={p.id}>
@@ -752,7 +769,10 @@ export default function FutsalScoring({
               {/* ── END HALF WIZARD ── */}
               {activeModal === "endHalf" && isAdminRef.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="End Match / End Half" onClose={closeModal} />
+                  <WizardHeader
+                    title="End Match / End Half"
+                    onClose={closeModal}
+                  />
                   <div className="flex flex-col gap-3">
                     <button
                       className={UI_CLASSES.confirmBtn}
@@ -790,6 +810,14 @@ export default function FutsalScoring({
                     </button>
                   </div>
                 </div>
+              )}
+              {isAdminRef.current && (
+                <button
+                  onClick={() => setShowLineupEditor(true)}
+                  className="w-full mt-2 py-2 rounded-xl text-xs font-bold text-slate-500 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-400"
+                >
+                  ✏️ Edit Playing Lineup
+                </button>
               )}
             </>
           )}
@@ -952,6 +980,84 @@ export default function FutsalScoring({
           matchId={matchId}
           onClose={() => setSelectedEventId(null)}
         />
+      )}
+      {showLineupEditor && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-end justify-center">
+          <div className="bg-white dark:bg-slate-900 rounded-t-3xl p-5 w-full max-w-lg max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-black text-sm">Edit Playing Lineup</h3>
+              <button
+                onClick={() => setShowLineupEditor(false)}
+                className="text-slate-400"
+              >
+                ✕
+              </button>
+            </div>
+            {/* Team 1 */}
+            <p className="text-xs font-black text-emerald-600 uppercase mb-2">
+              {team1Name}
+            </p>
+            <div className="grid grid-cols-2 gap-1 mb-4">
+              {team1Players.map((p) => {
+                const onField = team1Active.some((a) => a.id === p.id);
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      // Send substitution to toggle on/off — or just local state
+                      setTeam1Active((prev) =>
+                        onField
+                          ? prev.filter((a) => a.id !== p.id)
+                          : [...prev, p],
+                      );
+                    }}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      onField
+                        ? "bg-emerald-600 text-white border-emerald-600"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-500 border-transparent"
+                    }`}
+                  >
+                    {p.name ?? p.playerName}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Team 2 */}
+            <p className="text-xs font-black text-rose-600 uppercase mb-2">
+              {team2Name}
+            </p>
+            <div className="grid grid-cols-2 gap-1 mb-4">
+              {team2Players.map((p) => {
+                const onField = team2Active.some((a) => a.id === p.id);
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() =>
+                      setTeam2Active((prev) =>
+                        onField
+                          ? prev.filter((a) => a.id !== p.id)
+                          : [...prev, p],
+                      )
+                    }
+                    className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      onField
+                        ? "bg-rose-500 text-white border-rose-500"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-500 border-transparent"
+                    }`}
+                  >
+                    {p.name ?? p.playerName}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setShowLineupEditor(false)}
+              className="w-full py-3 rounded-2xl bg-emerald-600 text-white text-sm font-black"
+            >
+              Save Lineup
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { startmatch } from "../../api/matchApi";
+import { getPlayersByTeamId } from "../../api/teamApi";
 import {
   Trophy,
   MapPin,
@@ -59,7 +60,13 @@ export default function MatchScoreRoute() {
   const [scorerUsername, setScorerUsername] = useState("");
   const [t1Id, setT1Id] = useState(team1Id);
   const [t2Id, setT2Id] = useState(team2Id);
-
+  const [squadTeam1, setSquadTeam1] = useState([]);
+  const [squadTeam2, setSquadTeam2] = useState([]);
+  const [team1Playing, setTeam1Playing] = useState(new Set());
+  const [team2Playing, setTeam2Playing] = useState(new Set());
+  const [bdFormat, setBdFormat] = useState("singles"); // "singles" | "doubles"
+  const [ttFormat, setTtFormat] = useState("singles");
+  const [squadLoaded, setSquadLoaded] = useState(false);
   // Volleyball config
   const [vbSets, setVbSets] = useState(3);
   const [vbPointsPerSet, setVbPointsPerSet] = useState(25);
@@ -88,7 +95,31 @@ export default function MatchScoreRoute() {
   const isTOW = currentSport === "Tug Of War";
   const isLudo = currentSport === "Ludo";
   const isChess = currentSport === "Chess";
+  const needsLineup = isFutsal || isVB || isBD || isTT;
+  useEffect(() => {
+    if (!needsLineup || status !== "UPCOMING") return;
+    Promise.all([
+      getPlayersByTeamId(team1Id),
+      getPlayersByTeamId(team2Id),
+    ]).then(([a, b]) => {
+      setSquadTeam1(a || []);
+      setSquadTeam2(b || []);
+      setSquadLoaded(true);
+    });
+  }, [needsLineup, status, team1Id, team2Id]);
 
+  const togglePlayer = (teamSetter, id) =>
+    teamSetter((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const maxSelect = (sport) => {
+    if (sport === "bd") return bdFormat === "singles" ? 1 : 2;
+    if (sport === "tt") return ttFormat === "singles" ? 1 : 2;
+    return Infinity;
+  };
   if (!location.state) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500">
@@ -263,7 +294,95 @@ export default function MatchScoreRoute() {
       </button>
     </div>
   );
+  const PlayerLinePicker = ({ sport, accentColor }) => {
+    const max = maxSelect(sport);
+    const renderTeam = (teamName, squad, playing, setPlaying) => (
+      <div className="flex-1">
+        <p
+          className={`text-xs font-black uppercase tracking-widest mb-2 ${accentColor}`}
+        >
+          {teamName}{" "}
+          <span className="text-slate-400 font-medium">
+            ({playing.size}/{max === Infinity ? squad.length : max})
+          </span>
+        </p>
+        <div className="space-y-1 max-h-40 overflow-y-auto pr-1">
+          {squad.map((p) => {
+            const sel = playing.has(p.id);
+            const disabled = !sel && playing.size >= max;
+            return (
+              <button
+                key={p.id}
+                disabled={disabled}
+                onClick={() => togglePlayer(setPlaying, p.id)}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                  sel
+                    ? `${accentColor.replace("text-", "bg-").replace("-600", "-600")} text-white border-current`
+                    : disabled
+                      ? "bg-slate-100 dark:bg-slate-800 text-slate-300 border-transparent cursor-not-allowed"
+                      : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-current"
+                }`}
+              >
+                {p.name ?? p.playerName ?? "Player"}
+              </button>
+            );
+          })}
+          {squad.length === 0 && (
+            <p className="text-xs text-slate-400 italic p-2">
+              No players found in squad
+            </p>
+          )}
+        </div>
+      </div>
+    );
 
+    if (!squadLoaded)
+      return (
+        <div className="text-xs text-slate-400 text-center py-3">
+          Loading squad...
+        </div>
+      );
+
+    return (
+      <div className="bg-white/50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700 space-y-3">
+        <p
+          className={`text-xs font-black uppercase tracking-widest flex items-center gap-2 ${accentColor}`}
+        >
+          <User size={14} /> Select Playing Squad
+        </p>
+        {/* Format picker for badminton/TT */}
+        {(sport === "bd" || sport === "tt") && (
+          <div className="flex gap-2">
+            {["singles", "doubles"].map((f) => {
+              const current = sport === "bd" ? bdFormat : ttFormat;
+              const setter = sport === "bd" ? setBdFormat : setTtFormat;
+              return (
+                <button
+                  key={f}
+                  onClick={() => {
+                    setter(f);
+                    setTeam1Playing(new Set());
+                    setTeam2Playing(new Set());
+                  }}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold border-2 transition-all ${
+                    current === f
+                      ? `${accentColor.replace("text-", "bg-")} text-white border-current`
+                      : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                  }`}
+                >
+                  {f === "singles" ? "Singles (1v1)" : "Doubles (2v2)"}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <div className="flex gap-3">
+          {renderTeam(team1Name, squadTeam1, team1Playing, setTeam1Playing)}
+          {renderTeam(team2Name, squadTeam2, team2Playing, setTeam2Playing)}
+        </div>
+      </div>
+    );
+  };
   return (
     <div className="h-screen w-full bg-[#f8f9fa] dark:bg-[#0f172a] text-[#1e293b] dark:text-[#f1f5f9] overflow-hidden flex flex-col">
       {/* ══ CRICKET ══════════════════════════════════════════════ */}
@@ -450,6 +569,7 @@ export default function MatchScoreRoute() {
               accent="text-emerald-500"
             />
           </div>
+          <PlayerLinePicker sport="futsal" accentColor="text-emerald-600" />
           <TossButtons
             accentActive="text-emerald-600"
             hoverBorder="hover:border-emerald-200"
@@ -479,6 +599,8 @@ export default function MatchScoreRoute() {
                   decision: "KICKOFF",
                   scorerId: scorerUsername,
                   sportId,
+                  team1PlayingIds: [...team1Playing],
+                  team2PlayingIds: [...team2Playing],
                 });
                 navigate(-1);
               } catch (err) {
@@ -574,6 +696,7 @@ export default function MatchScoreRoute() {
               {vbFinalSetPoints} pts tiebreak
             </p>
           </div>
+          <PlayerLinePicker sport="futsal" accentColor="text-emerald-600" />
           <TossButtons
             accentActive="text-violet-600"
             hoverBorder="hover:border-violet-200"
@@ -606,6 +729,8 @@ export default function MatchScoreRoute() {
                   sets: vbSets,
                   pointsPerSet: vbPointsPerSet,
                   finalSetPoints: vbFinalSetPoints,
+                  team1PlayingIds: [...team1Playing],
+                  team2PlayingIds: [...team2Playing],
                 });
                 navigate(-1);
               } catch (err) {
@@ -702,6 +827,7 @@ export default function MatchScoreRoute() {
               {bdMaxPoints}
             </p>
           </div>
+          <PlayerLinePicker sport="bd" accentColor="text-violet-600" />
           <TossButtons
             accentActive="text-violet-600"
             hoverBorder="hover:border-violet-200"
@@ -734,6 +860,8 @@ export default function MatchScoreRoute() {
                   sets: bdGames,
                   pointsPerSet: bdPointsPerGame,
                   finalSetPoints: bdMaxPoints,
+                  team1PlayingIds: [...team1Playing],
+                  team2PlayingIds: [...team2Playing],
                 });
                 navigate(-1);
               } catch (err) {
@@ -822,6 +950,7 @@ export default function MatchScoreRoute() {
               cap)
             </p>
           </div>
+          <PlayerLinePicker sport="tt" accentColor="text-blue-600" />
           <TossButtons
             accentActive="text-blue-600"
             hoverBorder="hover:border-blue-200"
@@ -854,6 +983,8 @@ export default function MatchScoreRoute() {
                   sets: ttGames,
                   pointsPerSet: ttPointsPerGame,
                   finalSetPoints: 0,
+                  team1PlayingIds: [...team1Playing],
+                  team2PlayingIds: [...team2Playing],
                 });
                 navigate(-1);
               } catch (err) {

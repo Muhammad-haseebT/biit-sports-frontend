@@ -5,7 +5,13 @@ import { getPlayersByTeamId } from "../../../api/teamApi";
 import Media from "../cricket/modals/Media";
 // import FavouritePlayerModal from "../cricket/modals/FavouritePlayerModal";
 import { ArrowLeft, Camera, Trophy } from "lucide-react";
-import { PanelWrapper, PanelHeading, WizardHeader, ScoreCircles, UI_CLASSES } from "../common/ScoringUI";
+import {
+  PanelWrapper,
+  PanelHeading,
+  WizardHeader,
+  ScoreCircles,
+  UI_CLASSES,
+} from "../common/ScoringUI";
 
 // ─── EVENT CONFIG ─────────────────────────────────────────────────
 const EV = {
@@ -143,6 +149,8 @@ export default function BadmintonScoring({
     ws.onmessage = (e) => {
       const d = JSON.parse(e.data);
       console.log(d);
+      if (d.team1Players?.length) setTeam1P(d.team1Players);
+      if (d.team2Players?.length) setTeam2P(d.team2Players);
       setScore((p) => ({
         ...p,
         ...d,
@@ -574,7 +582,10 @@ export default function BadmintonScoring({
               {/* ── FAULT WIZARD ── */}
               {activeModal === "fault" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="Record Fault (Opponent gets point)" onClose={closeModal} />
+                  <WizardHeader
+                    title="Record Fault (Opponent gets point)"
+                    onClose={closeModal}
+                  />
                   <div className="flex flex-col gap-3">
                     {wizStep === 1 && (
                       <select
@@ -658,7 +669,10 @@ export default function BadmintonScoring({
               {/* ── SUB WIZARD ── */}
               {activeModal === "sub" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title="Substitution (Doubles)" onClose={closeModal} />
+                  <WizardHeader
+                    title="Substitution (Doubles)"
+                    onClose={closeModal}
+                  />
                   <div className="flex flex-col gap-3">
                     {subStep === 1 && (
                       <select
@@ -740,14 +754,20 @@ export default function BadmintonScoring({
               {/* ── END GAME WIZARD ── */}
               {activeModal === "endGame" && isAdmin.current && (
                 <div className="bg-red-600 p-3 rounded-xl shadow-md">
-                  <WizardHeader title={`End ${gameLabel}?`} onClose={closeModal} />
+                  <WizardHeader
+                    title={`End ${gameLabel}?`}
+                    onClose={closeModal}
+                  />
                   <p className="text-white text-sm text-center mb-3 font-semibold">
                     Current: {score.team1Points} – {score.team2Points}
                     <br />
                     <span className="text-yellow-200 text-xs"></span>
                   </p>
                   <div className="flex flex-col gap-3">
-                    <button className={UI_CLASSES.confirmBtn} onClick={submitEndGame}>
+                    <button
+                      className={UI_CLASSES.confirmBtn}
+                      onClick={submitEndGame}
+                    >
                       CONFIRM END GAME
                     </button>
                     <button className={UI_CLASSES.backBtn} onClick={closeModal}>
