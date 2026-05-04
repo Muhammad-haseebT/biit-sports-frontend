@@ -14,6 +14,7 @@ export default function Out({
   team1Id,
   team2Id,
   setIsWaiting,
+  availableBatters,
 }) {
   const [dismissalType, setDismissalType] = useState("");
   const [caughtModal, setCaughtModal] = useState(false);
@@ -171,17 +172,13 @@ export default function Out({
             onChange={(e) => setNewBatsmanId(e.target.value)}
           >
             <option value="">Select New Batsman</option>
-            {battingTeamId == team1Id
-              ? team2Players.map((item, index) => (
-                  <option key={index} value={item.id}>
-                    {item.name}
-                  </option>
-                ))
-              : team1Players.map((item, index) => (
-                  <option key={index} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
+            {(availableBatters?.length > 0 ? availableBatters : []).map(
+              (item, index) => (
+                <option key={index} value={item.id}>
+                  {item.name}
+                </option>
+              ),
+            )}
           </select>
           <br />
           <button
@@ -263,17 +260,13 @@ export default function Out({
             onChange={(e) => setNewBatsmanId(e.target.value)}
           >
             <option value="">Select New Batsman</option>
-            {battingTeamId == team1Id
-              ? team1Players.map((item, index) => (
-                  <option key={index} value={item.id}>
-                    {item.name}
-                  </option>
-                ))
-              : team2Players.map((item, index) => (
-                  <option key={index} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
+            {(availableBatters?.length > 0 ? availableBatters : []).map(
+              (item, index) => (
+                <option key={index} value={item.id}>
+                  {item.name}
+                </option>
+              ),
+            )}
           </select>
           <br />
           <button
@@ -310,25 +303,13 @@ export default function Out({
             onChange={(e) => setNewBatsmanId(e.target.value)}
           >
             <option value="">Select New Batsman</option>
-            {battingTeamId == team1Id
-              ? team2Players
-                  .filter(
-                    (item) => item.id != strikerId || item.id != nonStrikerId,
-                  )
-                  .map((item, index) => (
-                    <option key={index} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))
-              : team1Players
-                  .filter(
-                    (item) => item.id != strikerId || item.id != nonStrikerId,
-                  )
-                  .map((item, index) => (
-                    <option key={index} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
+            {(availableBatters?.length > 0 ? availableBatters : []).map(
+              (item, index) => (
+                <option key={index} value={item.id}>
+                  {item.name}
+                </option>
+              ),
+            )}
           </select>
           <br />
           <button

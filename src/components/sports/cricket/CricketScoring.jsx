@@ -78,6 +78,8 @@ export default function CricketScoring({
     favPlayerModal: false,
     end_InningsAndSuperOverModal: false,
   });
+  const [availableBatters, setAvailableBatters] = useState([]); // not dismissed, not on crease
+  const [availableBowlers, setAvailableBowlers] = useState([]); // excl. last-over bowler
 
   const openModal = (name) => setModals({ ...ALL_MODALS_OFF, [name]: true });
   const closeAllModals = () => setModals(ALL_MODALS_OFF);
@@ -222,6 +224,12 @@ export default function CricketScoring({
         const normalized = normalizeStats(receivedData);
         setData(normalized);
         setIsWaiting(false);
+        if (normalized.availableBatters?.length >= 0) {
+          setAvailableBatters(normalized.availableBatters);
+        }
+        if (normalized.availableBowlers?.length >= 0) {
+          setAvailableBowlers(normalized.availableBowlers);
+        }
         handleModalLogic(normalized);
 
         // Match ended
@@ -603,31 +611,38 @@ export default function CricketScoring({
             </div>
           )}
 
-          {/* ── Ball bubbles ── */}
           {activeTab === "Scoring" && (
             <div className="overflow-x-auto whitespace-nowrap py-2 no-scrollbar">
               <span className="flex flex-nowrap gap-2 min-w-max">
                 {data.cricketBalls?.map((ball, index) => (
-                  <span
-                    key={index}
-                    className={`${
-                      ball.eventType === "wicket"
-                        ? "bg-red-600"
-                        : ball.eventType === "penalty"
-                          ? "bg-orange-500"
-                          : ["bye", "legbye", "noball", "wide"].includes(
-                                ball.eventType,
-                              )
-                            ? "bg-blue-600"
-                            : ball.eventType === "run"
-                              ? "bg-green-600"
-                              : "bg-yellow-600"
-                    } p-2 rounded-full text-white w-12 h-12 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform`}
-                    onClick={() => setSelectedBallId(ball.id)}
-                  >
-                    {ball.eventType !== "run" && ball.eventType !== "boundary"
-                      ? `${ball.event}${eventLabel[ball.eventType] || ""}`
-                      : ball.event}
+                  <span key={index} className="relative inline-flex">
+                    {/* Media dot indicator */}
+                    {ball.mediaCount > 0 && (
+                      <Camera
+                        size={20}
+                        className="absolute -top-1 -right-1 z-10"
+                      />
+                    )}
+                    <span
+                      className={`${
+                        ball.eventType === "wicket"
+                          ? "bg-red-600"
+                          : ball.eventType === "penalty"
+                            ? "bg-orange-500"
+                            : ["bye", "legbye", "noball", "wide"].includes(
+                                  ball.eventType,
+                                )
+                              ? "bg-blue-600"
+                              : ball.eventType === "run"
+                                ? "bg-green-600"
+                                : "bg-yellow-600"
+                      } p-2 rounded-full text-white w-12 h-12 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform`}
+                      onClick={() => setSelectedBallId(ball.id)}
+                    >
+                      {ball.eventType !== "run" && ball.eventType !== "boundary"
+                        ? `${ball.event}${eventLabel[ball.eventType] || ""}`
+                        : ball.event}
+                    </span>
                   </span>
                 ))}
               </span>
@@ -860,17 +875,20 @@ export default function CricketScoring({
                     className="p-2 rounded-lg h-20 text-2xl bg-white text-red-600"
                   >
                     <option>Select Bowler</option>
-                    {data.firstInnings
-                      ? team2Players.map((p) => (
+                    {availableBowlers.length > 0
+                      ? availableBowlers.map((p) => (
                           <option key={p.id} value={p.id}>
                             {p.name}
                           </option>
                         ))
-                      : team1Players.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
+                      : // fallback: first load before WS data arrives
+                        (data.firstInnings ? team2Players : team1Players).map(
+                          (p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name}
+                            </option>
+                          ),
+                        )}
                   </select>
                   <button
                     className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
@@ -908,6 +926,7 @@ export default function CricketScoring({
               team1Id={team1Id}
               team2Id={team2Id}
               setIsWaiting={setIsWaiting}
+              availableBatters={availableBatters}
             />
           )}
 
