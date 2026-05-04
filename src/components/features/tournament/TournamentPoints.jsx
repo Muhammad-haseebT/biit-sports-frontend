@@ -45,23 +45,50 @@ export default function TournamentPoints({ tournamentId, sport }) {
   const s = sport?.toLowerCase() || ds;
   console.log(s);
 
-  if (s === "futsal") return <FutsalTable rows={points} />;
-  if (s === "volleyball") return <VolleyballTable rows={points} />;
+  const sortedPoints = [...points].sort((a, b) => {
+    // 1. Primary: Points (Desc)
+    if ((b.points || 0) !== (a.points || 0)) {
+      return (b.points || 0) - (a.points || 0);
+    }
+
+    // 2. Secondary: Sport-specific tie-breakers
+    if (s === "cricket") {
+      return (Number(b.nrr) || 0) - (Number(a.nrr) || 0);
+    }
+    if (s === "futsal") {
+      const gdA = a.goalDifference ?? (a.goalsFor ?? 0) - (a.goalsAgainst ?? 0);
+      const gdB = b.goalDifference ?? (b.goalsFor ?? 0) - (b.goalsAgainst ?? 0);
+      if (gdB !== gdA) return gdB - gdA;
+      return (b.goalsFor || 0) - (a.goalsFor || 0);
+    }
+    if (s === "volleyball") {
+      const sdA = (a.goalsFor || 0) - (a.goalsAgainst || 0);
+      const sdB = (b.goalsFor || 0) - (b.goalsAgainst || 0);
+      if (sdB !== sdA) return sdB - sdA;
+      return (b.goalsFor || 0) - (a.goalsFor || 0);
+    }
+
+    // 3. Tertiary: Wins (Desc)
+    return (b.wins || 0) - (a.wins || 0);
+  });
+
+  if (s === "futsal") return <FutsalTable rows={sortedPoints} />;
+  if (s === "volleyball") return <VolleyballTable rows={sortedPoints} />;
   if (s === "badminton")
-    return <SimpleTable rows={points} color="violet" legend="Win = 2 pts" />;
+    return <SimpleTable rows={sortedPoints} color="violet" legend="Win = 2 pts" />;
   if (s === "table tennis" || s === "tabletennis")
-    return <SimpleTable rows={points} color="blue" legend="Win = 2 pts" />;
+    return <SimpleTable rows={sortedPoints} color="blue" legend="Win = 2 pts" />;
   if (s === "tug of war" || s === "tugofwar")
     return (
       <SimpleTable
-        rows={points}
+        rows={sortedPoints}
         color="amber"
         legend="Win = 2 pts · Best of rounds"
       />
     );
   if (s === "ludo")
-    return <SimpleTable rows={points} color="orange" legend="Win = 2 pts" />;
-  return <CricketTable rows={points} />;
+    return <SimpleTable rows={sortedPoints} color="orange" legend="Win = 2 pts" />;
+  return <CricketTable rows={sortedPoints} />;
 }
 
 // ─── Cricket ─────────────────────────────────────────────────────

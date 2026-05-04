@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 import { ArrowLeft, Dot, Camera, Star, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BiCricketBall } from "react-icons/bi";
+
 import {
   handleRuns,
   handleUndo,
@@ -43,6 +44,8 @@ export default function CricketScoring({
   team2Name,
   battingTeamName,
   inningsId,
+  scorerId,
+  mediaScorerUsername,
 }) {
   const navigate = useNavigate();
   const [match, setMatch] = useState(null);
@@ -64,6 +67,11 @@ export default function CricketScoring({
   const player2IdRef = useRef(null);
   const socketRef = useRef(null);
   const isEndingMatch = useRef(false);
+  const rolesRef = useRef({
+    isAdmin: false,
+    isScorer: false,
+    isMediaPerson: false,
+  });
 
   // ── Single modal state object — enforces mutual exclusivity ──
   const [modals, setModals] = useState({
@@ -85,6 +93,8 @@ export default function CricketScoring({
   const closeAllModals = () => setModals(ALL_MODALS_OFF);
 
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isScorer, setIsScorer] = useState(false);
+  const [isMediaPerson, setIsMediaPerson] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [isSuperOverPending, setIsSuperOverPending] = useState(false);
   const [isSuperOver, setIsSuperOver] = useState(false);
@@ -142,12 +152,18 @@ export default function CricketScoring({
       if (account) {
         const parsedUser = JSON.parse(account);
         setUser(parsedUser);
-        if (
-          parsedUser.role == "ADMIN" ||
-          parsedUser.username == match?.scorerId
-        ) {
-          setIsAdmin(true);
-        }
+
+        const role = parsedUser.role?.toUpperCase();
+        const username = parsedUser.username;
+
+        const a = role === "ADMIN";
+        const s = a || username == scorerId;
+        const m = a || username == mediaScorerUsername;
+
+        rolesRef.current = { isAdmin: a, isScorer: s, isMediaPerson: m };
+        setIsAdmin(a);
+        setIsScorer(s);
+        setIsMediaPerson(m);
       }
       if (status == "COMPLETED") {
         fetchPlayers();
@@ -260,6 +276,9 @@ export default function CricketScoring({
   // MODAL LOGIC — all modal state goes through openModal()
   // ─────────────────────────────────────────────────────────────
   const handleModalLogic = (receivedData) => {
+    const { isAdmin, isScorer, isMediaPerson } = rolesRef.current;
+    if (!isAdmin && !isScorer && !isMediaPerson) return;
+
     // Super Over tie detected
     if (receivedData.comment === "Super_Over") {
       setIsSuperOver(true);
@@ -425,6 +444,8 @@ export default function CricketScoring({
     favPlayerModal,
     end_InningsAndSuperOverModal,
   } = modals;
+
+  const canEdit = isAdmin || isScorer || isMediaPerson;
 
   return (
     <>
@@ -636,8 +657,8 @@ export default function CricketScoring({
                               : ball.eventType === "run"
                                 ? "bg-green-600"
                                 : "bg-yellow-600"
-                      } p-2 rounded-full text-white w-12 h-12 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform`}
-                      onClick={() => setSelectedBallId(ball.id)}
+                      } p-2 rounded-full text-white w-12 h-12 flex items-center justify-center transition-transform ${canEdit ? "cursor-pointer hover:scale-105" : ""}`}
+                      onClick={() => canEdit && setSelectedBallId(ball.id)}
                     >
                       {ball.eventType !== "run" && ball.eventType !== "boundary"
                         ? `${ball.event}${eventLabel[ball.eventType] || ""}`
@@ -654,11 +675,29 @@ export default function CricketScoring({
               ballId={selectedBallId}
               matchId={matchId}
               onClose={() => setSelectedBallId(null)}
+              onSuccess={() => {
+                if (
+                  socketRef.current &&
+                  socketRef.current.readyState === WebSocket.OPEN
+                ) {
+                  setIsWaiting(true);
+                  socketRef.current.send(
+                    JSON.stringify({
+                      ...data,
+                      eventType: "refresh",
+                      event: "0",
+                    }),
+                  );
+                } else {
+                  // Fallback if socket is not connected
+                  window.location.reload();
+                }
+              }}
             />
           )}
 
           {/* ── Main scoring panel ── */}
-          {activeTab === "Scoring" && mainModal && isAdmin && (
+          {activeTab === "Scoring" && mainModal && canEdit && (
             <div className="mt-3">
               <div className="bg-red-600 p-3 h-74.5">
                 <div

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { createMedia } from "../../../../api/mediaApi";
 
-export default function Media({ ballId, matchId, onClose }) {
+export default function Media({ ballId, matchId, onClose, onSuccess }) {
   const [comment, setComment] = useState(""); // ✅ NEW
   const [pendingFile, setPendingFile] = useState(null); // ✅ NEW — hold file until comment submitted
   const [uploading, setUploading] = useState(false);
@@ -12,6 +12,7 @@ export default function Media({ ballId, matchId, onClose }) {
     try {
       await createMedia(matchId, ballId, file, commentText);
       alert("Upload Successful!");
+      if (onSuccess) onSuccess();
       onClose();
     } catch (error) {
       console.error("Upload failed:", error);

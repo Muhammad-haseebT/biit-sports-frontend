@@ -398,6 +398,8 @@ export default function MatchScoreRoute() {
             team2Name={team2Name}
             battingTeamName={battingTeamName}
             inningsId={inningsId}
+            scorerId={match?.scorerId}
+            mediaScorerUsername={match?.mediaScorerUsername}
           />
         </div>
       )}
@@ -531,6 +533,8 @@ export default function MatchScoreRoute() {
             team2Id={team2Id}
             team1Name={team1Name}
             team2Name={team2Name}
+            scorerId={match?.scorerId}
+            mediaScorerUsername={match?.mediaScorerUsername}
           />
         </div>
       )}
@@ -626,6 +630,8 @@ export default function MatchScoreRoute() {
             team2Id={team2Id}
             team1Name={team1Name}
             team2Name={team2Name}
+            scorerId={match?.scorerId}
+            mediaScorerUsername={match?.mediaScorerUsername}
           />
         </div>
       )}
@@ -756,6 +762,8 @@ export default function MatchScoreRoute() {
             team2Id={team2Id}
             team1Name={team1Name}
             team2Name={team2Name}
+            scorerId={match?.scorerId}
+            mediaScorerUsername={match?.mediaScorerUsername}
           />
         </div>
       )}
@@ -887,6 +895,8 @@ export default function MatchScoreRoute() {
             team2Id={team2Id}
             team1Name={team1Name}
             team2Name={team2Name}
+            scorerId={match?.scorerId}
+            mediaScorerUsername={match?.mediaScorerUsername}
           />
         </div>
       )}
@@ -1010,6 +1020,8 @@ export default function MatchScoreRoute() {
             team2Id={team2Id}
             team1Name={team1Name}
             team2Name={team2Name}
+            scorerId={match?.scorerId}
+            mediaScorerUsername={match?.mediaScorerUsername}
           />
         </div>
       )}
@@ -1118,6 +1130,8 @@ export default function MatchScoreRoute() {
             team2Id={team2Id}
             team1Name={team1Name}
             team2Name={team2Name}
+            scorerId={match?.scorerId}
+            mediaScorerUsername={match?.mediaScorerUsername}
           />
         </div>
       )}
@@ -1210,6 +1224,8 @@ export default function MatchScoreRoute() {
             team2Id={team2Id}
             team1Name={team1Name}
             team2Name={team2Name}
+            scorerId={match?.scorerId}
+            mediaScorerUsername={match?.mediaScorerUsername}
           />
         </div>
       )}
