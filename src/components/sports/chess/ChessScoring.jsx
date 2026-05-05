@@ -28,6 +28,15 @@ function useMatchTimer(startTime, status) {
   return `${mins}:${secs}`;
 }
 
+// FIX: human-readable result type labels
+const RESULT_LABELS = {
+  CHECKMATE: "Checkmate",
+  RESIGN: "Resignation",
+  TIMEOUT: "Timeout",
+  STALEMATE: "Stalemate",
+  DRAW_AGREED: "Draw by Agreement",
+};
+
 export default function ChessScoring({
   matchId,
   team1Id,
@@ -43,7 +52,7 @@ export default function ChessScoring({
     status: "LIVE",
     resultType: null,
     isDraw: false,
-    winnerTeamId: null,
+    winnerTeamId: null, // FIX: server now sends this
     matchStartTime: null,
     chessEvents: [],
   });
@@ -52,8 +61,10 @@ export default function ChessScoring({
   const [toast, setToast] = useState(null);
   const [waiting, setWaiting] = useState(false);
 
-  // pendingWinner: { id, name } | null — set when user picks a team, cleared after confirm/cancel
+  // pendingWinner: { id, name } | null — set when user picks a team
+  // pendingDraw: true | false — set when user clicks draw
   const [pendingWinner, setPendingWinner] = useState(null);
+  const [pendingDraw, setPendingDraw] = useState(false);
 
   const matchTimer = useMatchTimer(score.matchStartTime, score.status);
   const isCompleted = score.status === "COMPLETED";
@@ -79,6 +90,7 @@ export default function ChessScoring({
       console.log(d);
       setScore((prev) => ({ ...prev, ...d }));
       setWaiting(false);
+      if (d.comment === "UNDO") showToast("↩ Undo done", "info");
       if (d.status === "COMPLETED") showToast("♟️ Match Complete!", "info");
     };
     ws.onerror = () => showToast("WebSocket error", "error");
@@ -103,19 +115,36 @@ export default function ChessScoring({
     wsRef.current.send(JSON.stringify({ matchId, ...payload }));
   };
 
-  // Step 1: user picks a team → show confirmation
+  // Step 1: user picks winner
   const selectWinner = (teamId, teamName) => {
+    setPendingDraw(false);
     setPendingWinner({ id: teamId, name: teamName });
   };
 
-  // Step 2: user confirms → send WIN event, clear pending
+  // Step 1b: user clicks draw
+  const selectDraw = () => {
+    setPendingWinner(null);
+    setPendingDraw(true);
+  };
+
+  // Step 2a: confirm win
   const confirmWin = () => {
     send({ eventType: "CHECKMATE", teamId: pendingWinner.id });
     setPendingWinner(null);
   };
 
-  const cancelPending = () => setPendingWinner(null);
+  // Step 2b: confirm draw
+  const confirmDraw = () => {
+    send({ eventType: "DRAW_AGREED" });
+    setPendingDraw(false);
+  };
 
+  const cancelPending = () => {
+    setPendingWinner(null);
+    setPendingDraw(false);
+  };
+
+  // FIX: derive names from winnerTeamId (now provided by server)
   const winnerName =
     score.winnerTeamId === team1Id
       ? team1Name
@@ -132,6 +161,9 @@ export default function ChessScoring({
 
   const pendingLoserName =
     pendingWinner?.id === team1Id ? team2Name : team1Name;
+
+  // FIX: result type label for summary
+  const resultLabel = RESULT_LABELS[score.resultType] || score.resultType;
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -184,14 +216,37 @@ export default function ChessScoring({
         <PanelWrapper>
           <PanelHeading title="Live Chess" />
 
-          {/* Completed banner */}
+          {/* FIX: Completed banner — shows draw OR winner/loser with resultType */}
           {isCompleted ? (
             <div className="text-center p-6 border rounded-2xl shadow space-y-2">
-              <p className="text-4xl">🏆</p>
-              <h2 className="text-2xl font-black text-slate-700">
-                {winnerName} Wins!
-              </h2>
-              <p className="text-gray-500 text-sm">{loserName} loses</p>
+              {score.isDraw ? (
+                <>
+                  <p className="text-4xl">🤝</p>
+                  <h2 className="text-2xl font-black text-slate-700">
+                    It's a Draw!
+                  </h2>
+                  <p className="text-gray-500 text-sm font-semibold">
+                    {team1Name} vs {team2Name}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-4xl">🏆</p>
+                  <h2 className="text-2xl font-black text-slate-700">
+                    {winnerName ? `${winnerName} Wins!` : "Match Completed!"}
+                  </h2>
+                  {loserName && (
+                    <p className="text-red-500 text-sm font-semibold">
+                      ❌ {loserName} loses
+                    </p>
+                  )}
+                </>
+              )}
+              {resultLabel && (
+                <p className="text-xs text-gray-400 font-semibold uppercase tracking-widest mt-1">
+                  via {resultLabel}
+                </p>
+              )}
             </div>
           ) : (
             <>
@@ -217,11 +272,11 @@ export default function ChessScoring({
                 <div
                   className={`flex flex-col gap-3 ${waiting ? "opacity-50 pointer-events-none" : ""}`}
                 >
-                  {/* Step 1: pick winner — only shown when no pending pick */}
-                  {!pendingWinner && (
+                  {/* Step 1: pick winner or draw — only shown when no pending action */}
+                  {!pendingWinner && !pendingDraw && (
                     <div className="bg-slate-800 p-4 rounded-xl space-y-3">
                       <p className="text-white text-xs font-black uppercase tracking-widest text-center mb-1">
-                        🏆 Who Won?
+                        🏆 Record Result
                       </p>
                       <button
                         className={UI_CLASSES.confirmBtn}
@@ -235,10 +290,17 @@ export default function ChessScoring({
                       >
                         {team2Name} Wins
                       </button>
+                      {/* FIX: Draw button */}
+                      <button
+                        className="w-full bg-yellow-500 text-white p-3 rounded-lg text-sm font-black"
+                        onClick={selectDraw}
+                      >
+                        🤝 Draw
+                      </button>
                     </div>
                   )}
 
-                  {/* Step 2: confirm — shown after picking a winner */}
+                  {/* Step 2a: confirm win */}
                   {pendingWinner && (
                     <div className="bg-slate-800 p-4 rounded-xl space-y-3">
                       <WizardHeader
@@ -259,7 +321,38 @@ export default function ChessScoring({
                         className="w-full bg-green-600 text-white p-3 rounded-lg text-sm font-black"
                         onClick={confirmWin}
                       >
-                        ✅ Confirm
+                        ✅ Confirm Win
+                      </button>
+                      <button
+                        className="w-full bg-white/10 text-white p-3 rounded-lg text-sm font-bold"
+                        onClick={cancelPending}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Step 2b: confirm draw */}
+                  {pendingDraw && (
+                    <div className="bg-slate-800 p-4 rounded-xl space-y-3">
+                      <WizardHeader
+                        title="🤝 Confirm Draw"
+                        onClose={cancelPending}
+                      />
+                      <div className="bg-slate-700 rounded-xl p-3 text-center space-y-1">
+                        <p className="text-yellow-400 font-black text-base">
+                          🤝 {team1Name} <span className="text-white">vs</span>{" "}
+                          {team2Name}
+                        </p>
+                        <p className="text-slate-300 text-xs">
+                          Draw by Agreement — both teams get 1 point
+                        </p>
+                      </div>
+                      <button
+                        className="w-full bg-yellow-500 text-white p-3 rounded-lg text-sm font-black"
+                        onClick={confirmDraw}
+                      >
+                        ✅ Confirm Draw
                       </button>
                       <button
                         className="w-full bg-white/10 text-white p-3 rounded-lg text-sm font-bold"
@@ -291,10 +384,18 @@ export default function ChessScoring({
                 key={i}
                 className="border rounded-xl p-3 bg-gray-50 flex items-center gap-2"
               >
-                <span className="text-lg">♟️</span>
+                <span className="text-lg">
+                  {ev.eventType === "CHECKMATE"
+                    ? "♟️"
+                    : ev.eventType === "DRAW_AGREED" ||
+                        ev.eventType === "STALEMATE"
+                      ? "🤝"
+                      : "🏁"}
+                </span>
                 <div>
                   <p className="font-bold text-sm capitalize">
-                    {ev.eventType?.replace("_", " ")}
+                    {RESULT_LABELS[ev.eventType] ||
+                      ev.eventType?.replace("_", " ")}
                   </p>
                   {ev.teamName && (
                     <p className="text-xs text-gray-500">{ev.teamName}</p>
@@ -310,13 +411,41 @@ export default function ChessScoring({
       {activeTab === "Info" && (
         <PanelWrapper>
           <PanelHeading title="Match Info" />
-          <div className="space-y-2">
-            <p className="text-sm">
+          <div className="space-y-2 text-sm">
+            <p>
               <span className="font-bold">Status:</span> {score.status}
             </p>
-            <p className="text-sm">
+            <p>
               <span className="font-bold">Timer:</span> {matchTimer}
             </p>
+            {isCompleted && (
+              <>
+                {score.isDraw ? (
+                  <p>
+                    <span className="font-bold">Result:</span> 🤝 Draw
+                  </p>
+                ) : (
+                  <>
+                    {winnerName && (
+                      <p>
+                        <span className="font-bold">Winner:</span> 🏆{" "}
+                        {winnerName}
+                      </p>
+                    )}
+                    {loserName && (
+                      <p>
+                        <span className="font-bold">Loser:</span> ❌ {loserName}
+                      </p>
+                    )}
+                  </>
+                )}
+                {resultLabel && (
+                  <p>
+                    <span className="font-bold">Via:</span> {resultLabel}
+                  </p>
+                )}
+              </>
+            )}
           </div>
         </PanelWrapper>
       )}

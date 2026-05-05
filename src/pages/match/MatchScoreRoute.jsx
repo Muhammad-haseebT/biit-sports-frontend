@@ -67,8 +67,8 @@ export default function MatchScoreRoute() {
   const [team2Playing, setTeam2Playing] = useState(new Set());
   const [bdFormat, setBdFormat] = useState("singles"); // "singles" | "doubles"
   const [ttFormat, setTtFormat] = useState("singles");
-  const [ludoFormat, setLudoFormat] = useState("1v1"); // "1v1" | "2v2"
-  const [chessFormat, setChessFormat] = useState("1v1");
+  const [ludoFormat, setLudoFormat] = useState(match?.matchFormat || "1v1");
+  const [chessFormat, setChessFormat] = useState(match?.matchFormat || "1v1");
   const [squadLoaded, setSquadLoaded] = useState(false);
   // Volleyball config
   const [vbSets, setVbSets] = useState(3);
@@ -1325,6 +1325,7 @@ export default function MatchScoreRoute() {
                   decision: "START",
                   scorerId: scorerUsername,
                   sportId,
+                  matchFormat: ludoFormat, // ← FIX: send format to backend
                   team1PlayingIds: [...team1Playing],
                   team2PlayingIds: [...team2Playing],
                 });
@@ -1526,6 +1527,7 @@ export default function MatchScoreRoute() {
                   decision: "WHITE",
                   scorerId: scorerUsername,
                   sportId,
+                  matchFormat: chessFormat, // ← FIX: send format to backend
                   team1PlayingIds: [...team1Playing],
                   team2PlayingIds: [...team2Playing],
                 });

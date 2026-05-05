@@ -55,12 +55,13 @@ export default function LudoScoring({
   const wsRef = useRef(null);
   const isAdmin = useRef(false);
 
-  // 1v1 → 4 home runs to win, 2v2 → 8
-  const MAX_HOME_RUNS = format === "2v2" ? 8 : 4;
+  // FIX: prop-based max as initial fallback; server value overrides once received
+  const PROP_MAX = format === "2v2" ? 8 : 4;
 
   const [score, setScore] = useState({
     team1HomeRuns: 0,
     team2HomeRuns: 0,
+    maxHomeRuns: PROP_MAX, // will be updated from server
     status: "LIVE",
     winnerTeamId: null,
     matchStartTime: null,
@@ -74,6 +75,9 @@ export default function LudoScoring({
 
   const timer = useMatchTimer(score.matchStartTime, score.status);
   const isCompleted = score.status === "COMPLETED";
+
+  // FIX: use server's maxHomeRuns as authoritative; fallback to prop
+  const MAX_HOME_RUNS = score.maxHomeRuns || PROP_MAX;
 
   useEffect(() => {
     try {
@@ -120,15 +124,24 @@ export default function LudoScoring({
   };
 
   const recordHomeRun = (teamId) => {
-    send({ eventType: "HOME_RUN", teamId, maxHomeRuns: MAX_HOME_RUNS });
+    // Always send PROP_MAX so backend sets the correct max on first event
+    send({ eventType: "HOME_RUN", teamId, maxHomeRuns: PROP_MAX });
     setModal(null);
   };
 
+  // FIX: derive winner/loser name from winnerTeamId (now sent by backend)
   const winnerName =
     score.winnerTeamId === team1Id
       ? team1Name
       : score.winnerTeamId === team2Id
         ? team2Name
+        : null;
+
+  const loserName =
+    score.winnerTeamId === team1Id
+      ? team2Name
+      : score.winnerTeamId === team2Id
+        ? team1Name
         : null;
 
   return (
@@ -177,15 +190,30 @@ export default function LudoScoring({
         <PanelWrapper>
           <PanelHeading title="🎲 Ludo" />
 
+          {/* FIX: Completed banner shows winner AND loser */}
           {isCompleted && (
             <div className="text-center p-5 bg-orange-50 border border-orange-200 rounded-2xl mb-3">
               <p className="text-4xl">🏆</p>
               <h2 className="text-2xl font-black text-orange-700 mt-1">
                 {winnerName ? `${winnerName} Wins!` : "Match Completed!"}
               </h2>
+              {loserName && (
+                <p className="text-sm text-red-500 font-semibold mt-1">
+                  ❌ {loserName} loses
+                </p>
+              )}
+              <div className="mt-3 flex justify-center gap-6 text-sm text-orange-600 font-bold">
+                <span>
+                  {team1Name}: {score.team1HomeRuns}/{MAX_HOME_RUNS} 🏠
+                </span>
+                <span>
+                  {team2Name}: {score.team2HomeRuns}/{MAX_HOME_RUNS} 🏠
+                </span>
+              </div>
             </div>
           )}
 
+          {/* FIX: scoreboard now uses MAX_HOME_RUNS derived from server */}
           <div className="flex justify-around items-center bg-orange-700 rounded-2xl p-4 my-3">
             <div className="text-center flex-1">
               <p className="text-white font-black text-4xl">
@@ -194,6 +222,7 @@ export default function LudoScoring({
               <p className="text-orange-200 text-xs mt-1 font-bold">
                 {team1Name}
               </p>
+              {/* FIX: HomeRunDots correctly uses server-derived MAX_HOME_RUNS */}
               <HomeRunDots count={score.team1HomeRuns} max={MAX_HOME_RUNS} />
               <p className="text-orange-300 text-xs mt-1">
                 {score.team1HomeRuns}/{MAX_HOME_RUNS} 🏠
@@ -214,6 +243,7 @@ export default function LudoScoring({
               <p className="text-orange-200 text-xs mt-1 font-bold">
                 {team2Name}
               </p>
+              {/* FIX: HomeRunDots correctly uses server-derived MAX_HOME_RUNS */}
               <HomeRunDots count={score.team2HomeRuns} max={MAX_HOME_RUNS} />
               <p className="text-orange-300 text-xs mt-1">
                 {score.team2HomeRuns}/{MAX_HOME_RUNS} 🏠
@@ -221,7 +251,7 @@ export default function LudoScoring({
             </div>
           </div>
 
-          {/* ── Admin controls: HOME RUN + UNDO only ── */}
+          {/* Admin controls */}
           {!isCompleted && isAdmin.current && (
             <div
               className={`bg-red-600 p-3 rounded-xl flex flex-col gap-3 ${waiting ? "opacity-50 pointer-events-none" : ""}`}
@@ -332,6 +362,11 @@ export default function LudoScoring({
               <span className="font-bold">Target:</span> {MAX_HOME_RUNS} home
               runs
             </p>
+            {isCompleted && winnerName && (
+              <p>
+                <span className="font-bold">Winner:</span> 🏆 {winnerName}
+              </p>
+            )}
             {players1.length > 0 && (
               <div>
                 <p className="font-bold mt-2">{team1Name} Players:</p>
