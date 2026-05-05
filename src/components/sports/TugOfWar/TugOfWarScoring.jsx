@@ -36,6 +36,8 @@ export default function TugOfWarScoring({
   team2Id,
   team1Name,
   team2Name,
+  scorerId,
+  mediaScorerUsername,
 }) {
   const navigate = useNavigate();
   const wsRef = useRef(null);
@@ -398,30 +400,66 @@ export default function TugOfWarScoring({
       )}
 
       {activeTab === "Info" && (
-        <PanelWrapper>
-          <PanelHeading title="Match Info" />
-          <table className="w-full border border-gray-300 rounded-xl overflow-hidden shadow-sm">
-            <tbody>
-              {[
-                { label: "Match ID", value: matchId },
-                { label: "Status", value: score.status },
-                { label: "Current Round", value: score.currentRound },
-                { label: "Rounds to Win", value: rtw },
-                { label: "Best of", value: totalR },
-                { label: "Timer", value: `${timer.mins}:${timer.secs}` },
-              ].map(({ label, value }) => (
-                <tr key={label}>
-                  <td className="border border-gray-300 p-3 font-bold bg-gray-50 text-gray-600 w-1/3 text-sm">
-                    {label}
-                  </td>
-                  <td className="border border-gray-300 p-3 text-gray-800 font-medium">
-                    {value}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </PanelWrapper>
+        <div className="max-w-4xl mx-auto p-4 bg-gray-50 rounded-xl shadow-sm">
+          <h1 className="text-3xl font-bold text-gray-800 mb-6 border-b-2 border-red-600 pb-2">
+            Match Information
+          </h1>
+          <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
+            <table className="w-full border-collapse">
+              <tbody>
+                {[
+                  { label: "Match ID", value: matchId, icon: "🆔" },
+                  {
+                    label: "Status",
+                    value: (
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                          score.status === "LIVE"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {score.status}
+                      </span>
+                    ),
+                    icon: "📊",
+                  },
+                  { label: "Current Round", value: score.currentRound, icon: "🔄" },
+                  { label: "Rounds to Win", value: rtw, icon: "🏆" },
+                  { label: "Best of", value: totalR, icon: "🔢" },
+                  {
+                    label: "Timer",
+                    value: `${timer.mins}:${timer.secs}`,
+                    icon: "⏱",
+                  },
+                  { label: "Scorer ID", value: scorerId || "N/A", icon: "👤" },
+                  {
+                    label: "Media Scorer",
+                    value: mediaScorerUsername || "N/A",
+                    icon: "🎥",
+                  },
+                ].map(({ label, value, icon }) => (
+                  <tr
+                    key={label}
+                    className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="p-4 w-1/3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{icon}</span>
+                        <span className="font-bold text-gray-500 uppercase text-xs tracking-wider">
+                          {label}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4 text-gray-800 font-semibold text-sm">
+                      {value}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {mediaId && (

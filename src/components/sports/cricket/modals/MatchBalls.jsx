@@ -113,9 +113,9 @@ const BallByBallTab = ({ matchId, team1Name, team2Name, team1Id, team2Id }) => {
       {/* Ball List */}
       <div className="divide-y divide-gray-100">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2" />
-            <p className="text-sm">Fetching Timeline...</p>
+          <div className="flex flex-col items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
+            <p className="mt-4 text-gray-500">Fetching Timeline...</p>
           </div>
         ) : balls.length > 0 ? (
           balls.map((ball) => {

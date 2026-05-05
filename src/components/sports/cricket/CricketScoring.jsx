@@ -143,6 +143,7 @@ export default function CricketScoring({
 
   const [team1Scorecard, setTeam1Scorecard] = useState([]);
   const [cardFor, setCardFor] = useState(1);
+  const [scorecardLoading, setScorecardLoading] = useState(false);
   const [battingTeamId, setBattingTeamId] = useState(bTeamId);
   const [selectedBallId, setSelectedBallId] = useState(null);
 
@@ -279,27 +280,24 @@ export default function CricketScoring({
     const { isAdmin, isScorer, isMediaPerson } = rolesRef.current;
     if (!isAdmin && !isScorer && !isMediaPerson) return;
 
-    // Super Over tie detected
+    // Tie detected — backend says Super Over is possible
+    // Do NOT set isSuperOver here; wait for user choice
     if (receivedData.comment === "Super_Over") {
-      setIsSuperOver(true);
-      setIsSuperOverInnings(1); // ← ADD
+      setIsSuperOverPending(true);
       openModal("end_InningsAndSuperOverModal");
       return;
     }
 
-    // DLS target updated — back to main scoring
     if (receivedData.comment === "DLS_UPDATED") {
       openModal("mainModal");
       return;
     }
 
-    // End innings prompt
     if (receivedData.comment === "End_Innings") {
       openModal("end_InningsModal");
       return;
     }
 
-    // New innings OR super over new innings — all zeros → pick players
     if (
       receivedData.balls === 0 &&
       receivedData.overs === 0 &&
@@ -310,10 +308,8 @@ export default function CricketScoring({
       return;
     }
 
-    // Normal ball
     openModal("mainModal");
 
-    // New over — pick bowler
     if (receivedData.balls === 0 && receivedData.overs !== 0) {
       openModal("bowlerModal");
     }
@@ -425,11 +421,19 @@ export default function CricketScoring({
     setTeam2Players(t2);
   };
   const fetchScorecard = async (team) => {
-    const sc =
-      team === 1
-        ? await getScoreCard(matchId, team1Id)
-        : await getScoreCard(matchId, team2Id);
-    setTeam1Scorecard(sc);
+    setScorecardLoading(true);
+    setCardFor(team);
+    try {
+      const sc =
+        team === 1
+          ? await getScoreCard(matchId, team1Id)
+          : await getScoreCard(matchId, team2Id);
+      setTeam1Scorecard(sc);
+    } catch (err) {
+      console.error("Scorecard fetch error:", err);
+    } finally {
+      setScorecardLoading(false);
+    }
   };
 
   // Destructure for convenience
@@ -702,7 +706,12 @@ export default function CricketScoring({
               <div className="bg-red-600 p-3 h-74.5">
                 <div
                   className={`grid grid-cols-5 space-y-2 space-x-2 mt-4 ${
-                    isWaiting ? "opacity-50 pointer-events-none" : ""
+                    isWaiting ||
+                    end_InningsModal ||
+                    end_InningsAndSuperOverModal ||
+                    playerSelectModal
+                      ? "opacity-50 pointer-events-none"
+                      : ""
                   }`}
                 >
                   {["1", "2", "3", "4", "6"].map((run) => (
@@ -834,71 +843,90 @@ export default function CricketScoring({
           )}
 
           {/* ── Player select modal ── */}
+          {/* ── Player select modal ── */}
           {activeTab === "Scoring" && playerSelectModal && (
             <div className="mt-5">
               <div className="bg-red-600 p-3 h-89.5">
                 <div className="flex flex-col space-y-2 space-x-2 mt-5">
-                  <select
-                    onChange={(e) => setStrikerId(e.target.value)}
-                    className="p-2 rounded-lg h-20 text-2xl bg-white text-red-600"
-                  >
-                    <option>
-                      {isSuperOver
-                        ? "Select Batsman 1 (Super Over)"
-                        : "Select Batsman 1"}
-                    </option>
-                    {data.firstInnings
-                      ? team1Players.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
+                  {/* 
+          Super Over: use availableBatters/availableBowlers from backend.
+          Normal: use team1Players/team2Players based on innings.
+        */}
+                  {(() => {
+                    const batters =
+                      isSuperOver && availableBatters.length > 0
+                        ? availableBatters
+                        : data.firstInnings
+                          ? team1Players
+                          : team2Players;
+
+                    const bowlers =
+                      isSuperOver && availableBowlers.length > 0
+                        ? availableBowlers
+                        : data.firstInnings
+                          ? team2Players
+                          : team1Players;
+
+                    return (
+                      <>
+                        {/* Batsman 1 */}
+                        <select
+                          value={strikerId || ""}
+                          onChange={(e) => setStrikerId(e.target.value)}
+                          className="p-2 rounded-lg h-20 text-2xl bg-white text-red-600"
+                        >
+                          <option value="">
+                            {isSuperOver
+                              ? "Select Batsman 1 (Super Over)"
+                              : "Select Batsman 1"}
                           </option>
-                        ))
-                      : team2Players.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
-                  </select>
-                  <select
-                    onChange={(e) => setNonStrikerId(e.target.value)}
-                    className="p-2 rounded-lg h-20 text-2xl bg-white text-red-600"
-                  >
-                    <option>Select Batsman 2</option>
-                    {data.firstInnings
-                      ? team1Players.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))
-                      : team2Players.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
-                  </select>
-                  <select
-                    onChange={(e) => setBowlerId(e.target.value)}
-                    className="p-2 rounded-lg h-20 text-2xl bg-white text-red-600"
-                  >
-                    <option>Select Bowler</option>
-                    {data.firstInnings
-                      ? team2Players.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))
-                      : team1Players.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
-                  </select>
-                  <button
-                    className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
-                    onClick={handleStartMatch}
-                  >
-                    {isSuperOver ? "Start Super Over" : "Start Match"}
-                  </button>
+                          {batters.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name}
+                            </option>
+                          ))}
+                        </select>
+
+                        {/* Batsman 2 — filter out already-selected striker */}
+                        <select
+                          value={nonStrikerId || ""}
+                          onChange={(e) => setNonStrikerId(e.target.value)}
+                          className="p-2 rounded-lg h-20 text-2xl bg-white text-red-600"
+                        >
+                          <option value="">Select Batsman 2</option>
+                          {batters
+                            .filter((p) => String(p.id) !== String(strikerId))
+                            .map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name}
+                              </option>
+                            ))}
+                        </select>
+
+                        {/* Bowler */}
+                        <select
+                          value={bowlerId || ""}
+                          onChange={(e) => setBowlerId(e.target.value)}
+                          className="p-2 rounded-lg h-20 text-2xl bg-white text-red-600"
+                        >
+                          <option value="">Select Bowler</option>
+                          {bowlers.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name}
+                            </option>
+                          ))}
+                        </select>
+
+                        <button
+                          disabled={isWaiting}
+                          className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+                          onClick={handleStartMatch}
+                        >
+                          {isSuperOver ? "Start Super Over" : "Start Match"}
+                        </button>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -1045,119 +1073,138 @@ export default function CricketScoring({
               </h1>
               <div className="flex gap-2 mb-6 bg-gray-200 p-1 rounded-xl w-fit">
                 <button
+                  disabled={scorecardLoading}
                   onClick={() => fetchScorecard(1)}
-                  className="px-6 py-2 rounded-lg font-semibold bg-white text-red-600 shadow-sm hover:bg-red-50 active:scale-95 border border-red-100"
+                  className={`px-6 py-2 rounded-lg font-semibold shadow-sm transition-all active:scale-95 border ${
+                    cardFor === 1
+                      ? "bg-red-600 text-white border-red-600"
+                      : "bg-white text-red-600 border-red-100 hover:bg-red-50"
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {team1Name}
                 </button>
                 <button
+                  disabled={scorecardLoading}
                   onClick={() => fetchScorecard(2)}
-                  className="px-6 py-2 rounded-lg font-semibold bg-white text-red-600 shadow-sm hover:bg-red-50 active:scale-95 border border-red-100"
+                  className={`px-6 py-2 rounded-lg font-semibold shadow-sm transition-all active:scale-95 border ${
+                    cardFor === 2
+                      ? "bg-red-600 text-white border-red-600"
+                      : "bg-white text-red-600 border-red-100 hover:bg-red-50"
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {team2Name}
                 </button>
               </div>
 
-              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white mb-8 shadow-sm">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-800 text-white text-sm uppercase tracking-wider">
-                      <th className="px-4 py-3">Batter</th>
-                      <th className="px-4 py-3 text-center">R</th>
-                      <th className="px-4 py-3 text-center">B</th>
-                      <th className="px-4 py-3 text-center">4s</th>
-                      <th className="px-4 py-3 text-center">6s</th>
-                      <th className="px-4 py-3 text-center">SR</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {team1Scorecard.batsmanScores?.map((player) => (
-                      <tr key={player.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 font-medium text-gray-700">
-                          {player.name}
-                        </td>
-                        <td className="px-4 py-3 text-center font-bold">
-                          {player.runs}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {player.balls}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {player.fours}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {player.sixes}
-                        </td>
-                        <td className="px-4 py-3 text-center text-blue-600">
-                          {player.strikeRate.toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {scorecardLoading ? (
+                <div className="flex flex-col items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600"></div>
+                  <p className="mt-4 text-gray-500">Fetching Scorecard...</p>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-hidden rounded-lg border border-gray-200 bg-white mb-8 shadow-sm">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-gray-800 text-white text-sm uppercase tracking-wider">
+                          <th className="px-4 py-3">Batter</th>
+                          <th className="px-4 py-3 text-center">R</th>
+                          <th className="px-4 py-3 text-center">B</th>
+                          <th className="px-4 py-3 text-center">4s</th>
+                          <th className="px-4 py-3 text-center">6s</th>
+                          <th className="px-4 py-3 text-center">SR</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {team1Scorecard.batsmanScores?.map((player) => (
+                          <tr key={player.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 font-medium text-gray-700">
+                              {player.name}
+                            </td>
+                            <td className="px-4 py-3 text-center font-bold">
+                              {player.runs}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {player.balls}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {player.fours}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {player.sixes}
+                            </td>
+                            <td className="px-4 py-3 text-center text-blue-600">
+                              {player.strikeRate.toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div className="bg-white p-4 rounded-lg border-l-4 border-yellow-500 shadow-sm">
-                  <p className="text-sm text-gray-500 uppercase font-bold">
-                    Extras
-                  </p>
-                  <h2 className="text-xl font-semibold">
-                    {team1Scorecard.extras}
-                  </h2>
-                </div>
-                <div className="bg-red-600 p-4 rounded-lg shadow-md text-white">
-                  <p className="text-sm opacity-80 uppercase font-bold">
-                    Total Runs
-                  </p>
-                  <h2 className="text-3xl font-black">
-                    {team1Scorecard.totalRuns}
-                  </h2>
-                </div>
-                <div className="bg-white p-4 rounded-lg border-l-4 border-blue-500 shadow-sm">
-                  <p className="text-sm text-gray-500 uppercase font-bold">
-                    Overs
-                  </p>
-                  <h2 className="text-xl font-semibold">
-                    {team1Scorecard.overs}.{team1Scorecard.balls}
-                  </h2>
-                </div>
-              </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div className="bg-white p-4 rounded-lg border-l-4 border-yellow-500 shadow-sm">
+                      <p className="text-sm text-gray-500 uppercase font-bold">
+                        Extras
+                      </p>
+                      <h2 className="text-xl font-semibold">
+                        {team1Scorecard.extras}
+                      </h2>
+                    </div>
+                    <div className="bg-red-600 p-4 rounded-lg shadow-md text-white">
+                      <p className="text-sm opacity-80 uppercase font-bold">
+                        Total Runs
+                      </p>
+                      <h2 className="text-3xl font-black">
+                        {team1Scorecard.totalRuns}
+                      </h2>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border-l-4 border-blue-500 shadow-sm">
+                      <p className="text-sm text-gray-500 uppercase font-bold">
+                        Overs
+                      </p>
+                      <h2 className="text-xl font-semibold">
+                        {team1Scorecard.overs}.{team1Scorecard.balls}
+                      </h2>
+                    </div>
+                  </div>
 
-              <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-gray-100 text-gray-700 text-sm uppercase tracking-wider">
-                      <th className="px-4 py-3">Bowler</th>
-                      <th className="px-4 py-3 text-center">O</th>
-                      <th className="px-4 py-3 text-center">W</th>
-                      <th className="px-4 py-3 text-center">EC</th>
-                      <th className="px-4 py-3 text-center">RC</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {team1Scorecard.bowlerScores?.map((player) => (
-                      <tr key={player.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 font-medium text-gray-700">
-                          {player.name}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {player.overs}.{player.ballsBowled}
-                        </td>
-                        <td className="px-4 py-3 text-center font-bold text-red-600">
-                          {player.wickets}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {player.economy.toFixed(2)}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {player.runsConceded}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-gray-100 text-gray-700 text-sm uppercase tracking-wider">
+                          <th className="px-4 py-3">Bowler</th>
+                          <th className="px-4 py-3 text-center">O</th>
+                          <th className="px-4 py-3 text-center">W</th>
+                          <th className="px-4 py-3 text-center">EC</th>
+                          <th className="px-4 py-3 text-center">RC</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {team1Scorecard.bowlerScores?.map((player) => (
+                          <tr key={player.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 font-medium text-gray-700">
+                              {player.name}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {player.overs}.{player.ballsBowled}
+                            </td>
+                            <td className="px-4 py-3 text-center font-bold text-red-600">
+                              {player.wickets}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {player.economy.toFixed(2)}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {player.runsConceded}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -1171,137 +1218,242 @@ export default function CricketScoring({
               team2Id={team2Id}
             />
           )}
+
+          {/* ══ INFO TAB ══ */}
+          {activeTab === "Info" && (
+            <div className="max-w-4xl mx-auto p-4 bg-gray-50 rounded-xl shadow-sm">
+              <h1 className="text-3xl font-bold text-gray-800 mb-6 border-b-2 border-red-600 pb-2">
+                Match Information
+              </h1>
+              <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200">
+                <table className="w-full border-collapse">
+                  <tbody>
+                    {[
+                      { label: "Match ID", value: matchId, icon: "🆔" },
+                      {
+                        label: "Status",
+                        value: (
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                              status === "LIVE"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-100 text-gray-600"
+                            }`}
+                          >
+                            {status}
+                          </span>
+                        ),
+                        icon: "📊",
+                      },
+                      {
+                        label: "Teams",
+                        value: `${team1Name} vs ${team2Name}`,
+                        icon: "⚔️",
+                      },
+                      {
+                        label: "Current Innings",
+                        value: data.firstInnings
+                          ? "First Innings"
+                          : "Second Innings",
+                        icon: "🏏",
+                      },
+                      {
+                        label: "Innings Scorer",
+                        value: scorerId || "N/A",
+                        icon: "📝",
+                      },
+                      {
+                        label: "Media Scorer",
+                        value: mediaScorerUsername || "N/A",
+                        icon: "📸",
+                      },
+                    ].map(({ label, value, icon }) => (
+                      <tr
+                        key={label}
+                        className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="p-4 w-1/3">
+                          <div className="flex items-center gap-3">
+                            <span className="text-xl">{icon}</span>
+                            <span className="font-bold text-gray-500 uppercase text-xs tracking-wider">
+                              {label}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-4 text-gray-800 font-semibold text-sm">
+                          {value}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
         {end_InningsAndSuperOverModal && (
           <div className="mt-5">
             <div className="bg-red-600 p-3 h-89.5">
               <div className="flex flex-col space-y-2 space-x-2 mt-5">
-                <p className="text-white text-lg font-semibold text-center">
-                  {isSuperOver
-                    ? isSuperOverInnings === 1
-                      ? "⚡ End Super Over Innings 1?"
-                      : "⚡ End Super Over — End Match?"
-                    : data.firstInnings
-                      ? "End of First Innings?"
-                      : "End Match?"}
-                </p>
+                {/* ── PHASE A: Tie detected — choose End Match OR Super Over ── */}
+                {isSuperOverPending && !isSuperOver && (
+                  <>
+                    <p className="text-white text-lg font-semibold text-center">
+                      ⚡ Match Tied! Play Super Over?
+                    </p>
 
-                {/* ── End Innings / End Match button ── */}
-                <button
-                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
-                  onClick={() => {
-                    if (isSuperOver && isSuperOverInnings === 1) {
-                      // Kotlin: SO innings 1 khatam → teams switch, innings 2 shuru
-                      const newBattingId = bowlingTeamId;
-                      const newBowlingId = battingTeamId;
-                      setBattingTeamId(newBattingId);
-                      setBowlingTeamId(newBowlingId);
-                      setIsSuperOverInnings(2);
-                      // Players reset
-                      setStrikerId(null);
-                      setNonStrikerId(null);
-                      setBowlerId(null);
-                      player1IdRef.current = null;
-                      player2IdRef.current = null;
-                      // Reload players for new batting team
-                      fetchTeamPlayersForSuperOver(newBattingId);
-                      // Send to backend
-                      socketRef.current.send(
-                        JSON.stringify({
-                          ...data,
-                          eventType: "End_Innings",
-                          event: "0",
-                          comment: "",
-                          undo: false,
-                          superOver: true,
-                          firstInnings: true,
-                        }),
-                      );
-                      openModal("playerSelectModal");
-                    } else if (isSuperOver && isSuperOverInnings === 2) {
-                      // Kotlin: SO innings 2 khatam → match end
-                      isEndingMatch.current = true;
-                      setIsWaiting(true);
-                      socketRef.current.send(
-                        JSON.stringify({
-                          ...data,
-                          eventType: "End_Innings",
-                          event: "0",
-                          comment: "",
-                          undo: false,
-                          superOver: true,
-                          firstInnings: false,
-                        }),
-                      );
-                      openModal("mainModal");
-                    } else if (!data.firstInnings) {
-                      // Normal match 2nd innings end
-                      isEndingMatch.current = true;
-                      setIsWaiting(true);
-                      socketRef.current.send(
-                        JSON.stringify(handleEndInnings(data)),
-                      );
-                      openModal("mainModal");
-                    } else {
-                      // Normal match 1st innings end
-                      socketRef.current.send(
-                        JSON.stringify(handleEndInnings(data)),
-                      );
-                      openModal("mainModal");
-                    }
-                  }}
-                >
-                  {isSuperOver
-                    ? isSuperOverInnings === 1
-                      ? "End Super Over Innings"
-                      : "End Match"
-                    : data.firstInnings
-                      ? "End Innings"
-                      : "End Match"}
-                </button>
+                    {/* End Match (no super over) */}
+                    <button
+                      disabled={isWaiting}
+                      className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => {
+                        isEndingMatch.current = true;
+                        setIsWaiting(true);
+                        socketRef.current.send(
+                          JSON.stringify(handleEndInnings(data)),
+                        );
+                        openModal("mainModal");
+                      }}
+                    >
+                      End Match
+                    </button>
 
-                {/* ── Super Over button — sirf normal 2nd innings mein dikhao ── */}
-                {!isSuperOver && !data.firstInnings && (
-                  <button
-                    className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
-                    onClick={() => {
-                      setIsWaiting(true);
-                      socketRef.current.send(
-                        JSON.stringify({
-                          ...data,
-                          eventType: "Super_Over",
-                          event: "0",
-                          comment: "",
-                          undo: false,
-                        }),
-                      );
-                      setIsSuperOver(true);
-                      setIsSuperOverInnings(1);
-                      // Players reset
-                      setStrikerId(null);
-                      setNonStrikerId(null);
-                      setBowlerId(null);
-                      player1IdRef.current = null;
-                      player2IdRef.current = null;
-                      openModal("playerSelectModal");
-                    }}
-                  >
-                    ⚡ Super Over
-                  </button>
+                    {/* Super Over */}
+                    <button
+                      disabled={isWaiting}
+                      className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => {
+                        setIsWaiting(true);
+                        socketRef.current.send(
+                          JSON.stringify({
+                            ...data,
+                            eventType: "Super_Over",
+                            event: "0",
+                            comment: "",
+                            undo: false,
+                          }),
+                        );
+                        // Teams stay the same — last batting team bats in SO
+                        setIsSuperOver(true);
+                        setIsSuperOverPending(false);
+                        setIsSuperOverInnings(1);
+                        setStrikerId(null);
+                        setNonStrikerId(null);
+                        setBowlerId(null);
+                        player1IdRef.current = null;
+                        player2IdRef.current = null;
+                        openModal("playerSelectModal");
+                      }}
+                    >
+                      ⚡ Super Over
+                    </button>
+
+                    {/* Undo */}
+                    <button
+                      disabled={isWaiting}
+                      className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => {
+                        setIsWaiting(true);
+                        socketRef.current.send(
+                          JSON.stringify(handleUndo(data)),
+                        );
+                        setData((prev) => ({ ...prev, eventType: "" }));
+                        openModal("mainModal");
+                      }}
+                    >
+                      Undo Last Ball
+                    </button>
+                  </>
                 )}
 
-                {/* ── Undo ── */}
-                <button
-                  className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
-                  onClick={() => {
-                    setIsWaiting(true);
-                    socketRef.current.send(JSON.stringify(handleUndo(data)));
-                    setData((prev) => ({ ...prev, eventType: "" }));
-                    openModal("mainModal");
-                  }}
-                >
-                  Undo Last Ball
-                </button>
+                {/* ── PHASE B: Super Over in progress — end SO innings ── */}
+                {isSuperOver && (
+                  <>
+                    <p className="text-white text-lg font-semibold text-center">
+                      {isSuperOverInnings === 1
+                        ? "⚡ End Super Over Innings 1?"
+                        : "⚡ End Super Over — End Match?"}
+                    </p>
+
+                    {/* End SO Innings 1 → switch teams → pick new players */}
+                    {isSuperOverInnings === 1 && (
+                      <button
+                        disabled={isWaiting}
+                        className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => {
+                          const newBattingId = bowlingTeamId;
+                          const newBowlingId = battingTeamId;
+                          setBattingTeamId(newBattingId);
+                          setBowlingTeamId(newBowlingId);
+                          setIsSuperOverInnings(2);
+                          setStrikerId(null);
+                          setNonStrikerId(null);
+                          setBowlerId(null);
+                          player1IdRef.current = null;
+                          player2IdRef.current = null;
+                          fetchTeamPlayersForSuperOver(newBattingId);
+                          setIsWaiting(true);
+                          socketRef.current.send(
+                            JSON.stringify({
+                              ...data,
+                              eventType: "End_Innings",
+                              event: "0",
+                              comment: "",
+                              undo: false,
+                              superOver: true,
+                              firstInnings: true,
+                            }),
+                          );
+                          openModal("playerSelectModal");
+                        }}
+                      >
+                        End Super Over Innings
+                      </button>
+                    )}
+
+                    {/* End SO Innings 2 → match over */}
+                    {isSuperOverInnings === 2 && (
+                      <button
+                        disabled={isWaiting}
+                        className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => {
+                          isEndingMatch.current = true;
+                          setIsWaiting(true);
+                          socketRef.current.send(
+                            JSON.stringify({
+                              ...data,
+                              eventType: "End_Innings",
+                              event: "0",
+                              comment: "",
+                              undo: false,
+                              superOver: true,
+                              firstInnings: false,
+                            }),
+                          );
+                          openModal("mainModal");
+                        }}
+                      >
+                        End Match
+                      </button>
+                    )}
+
+                    {/* Undo */}
+                    <button
+                      disabled={isWaiting}
+                      className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => {
+                        setIsWaiting(true);
+                        socketRef.current.send(
+                          JSON.stringify(handleUndo(data)),
+                        );
+                        setData((prev) => ({ ...prev, eventType: "" }));
+                        openModal("mainModal");
+                      }}
+                    >
+                      Undo Last Ball
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

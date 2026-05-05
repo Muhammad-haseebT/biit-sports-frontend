@@ -53,6 +53,7 @@ export default function MatchScoreRoute() {
   } = location.state || {};
 
   // Toss / scorer
+  const [futsalHalfMins, setFutsalHalfMins] = useState(20);
   const [tossWinner, setTossWinner] = useState(null);
   const [tossWinnerId, setTossWinnerId] = useState(null);
   const [decision, setDecision] = useState(null);
@@ -66,6 +67,8 @@ export default function MatchScoreRoute() {
   const [team2Playing, setTeam2Playing] = useState(new Set());
   const [bdFormat, setBdFormat] = useState("singles"); // "singles" | "doubles"
   const [ttFormat, setTtFormat] = useState("singles");
+  const [ludoFormat, setLudoFormat] = useState("1v1"); // "1v1" | "2v2"
+  const [chessFormat, setChessFormat] = useState("1v1");
   const [squadLoaded, setSquadLoaded] = useState(false);
   // Volleyball config
   const [vbSets, setVbSets] = useState(3);
@@ -95,7 +98,7 @@ export default function MatchScoreRoute() {
   const isTOW = currentSport === "Tug Of War";
   const isLudo = currentSport === "Ludo";
   const isChess = currentSport === "Chess";
-  const needsLineup = isFutsal || isVB || isBD || isTT;
+  const needsLineup = isFutsal || isVB || isBD || isTT || isLudo || isChess;
   useEffect(() => {
     if (!needsLineup || status !== "UPCOMING") return;
     Promise.all([
@@ -118,6 +121,8 @@ export default function MatchScoreRoute() {
   const maxSelect = (sport) => {
     if (sport === "bd") return bdFormat === "singles" ? 1 : 2;
     if (sport === "tt") return ttFormat === "singles" ? 1 : 2;
+    if (sport === "ludo") return ludoFormat === "1v1" ? 1 : 2;
+    if (sport === "chess") return chessFormat === "1v1" ? 1 : 2;
     return Infinity;
   };
   if (!location.state) {
@@ -569,11 +574,18 @@ export default function MatchScoreRoute() {
             <DetailCard
               icon={Hash}
               label="Half Duration"
-              value="25 min"
+              value={futsalHalfMins}
               accent="text-emerald-500"
             />
           </div>
           <PlayerLinePicker sport="futsal" accentColor="text-emerald-600" />
+          <NumStepper
+            label="Half Duration (minutes)"
+            value={futsalHalfMins}
+            onChange={setFutsalHalfMins}
+            min={5}
+            accent="text-green-600"
+          />
           <TossButtons
             accentActive="text-emerald-600"
             hoverBorder="hover:border-emerald-200"
@@ -600,9 +612,10 @@ export default function MatchScoreRoute() {
               try {
                 await startmatch(matchId, {
                   tossWinnerId,
-                  decision: "KICKOFF",
+                  decision: "KICK",
                   scorerId: scorerUsername,
                   sportId,
+                  halfDurationMins: futsalHalfMins, // ← add this
                   team1PlayingIds: [...team1Playing],
                   team2PlayingIds: [...team2Playing],
                 });
@@ -1130,6 +1143,9 @@ export default function MatchScoreRoute() {
             team2Id={team2Id}
             team1Name={team1Name}
             team2Name={team2Name}
+            format={ludoFormat}
+            players1={squadTeam1.filter((p) => team1Playing.has(p.id))}
+            players2={squadTeam2.filter((p) => team2Playing.has(p.id))}
             scorerId={match?.scorerId}
             mediaScorerUsername={match?.mediaScorerUsername}
           />
@@ -1141,8 +1157,8 @@ export default function MatchScoreRoute() {
             shadow="shadow-orange-500/10"
             vs="bg-orange-600"
             subtitle="Ludo Setup"
-            c1="bg-orange-50 dark:bg-orange-900/20 text-orange-600 border-orange-100 dark:border-orange-900/30"
-            c2="bg-blue-50 dark:bg-blue-900/20 text-blue-600 border-blue-100 dark:border-blue-900/30"
+            c1="bg-orange-50 dark:bg-orange-900/20 text-orange-600 border-orange-100"
+            c2="bg-blue-50 dark:bg-blue-900/20 text-blue-600 border-blue-100"
           />
           <div className="grid grid-cols-2 gap-3">
             <DetailCard
@@ -1170,10 +1186,115 @@ export default function MatchScoreRoute() {
               accent="text-orange-500"
             />
           </div>
+          {/* FORMAT PICKER */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700">
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
+              Match Format
+            </p>
+            <div className="flex gap-3">
+              {["1v1", "2v2"].map((fmt) => (
+                <button
+                  key={fmt}
+                  onClick={() => {
+                    setLudoFormat(fmt);
+                    setTeam1Playing(new Set());
+                    setTeam2Playing(new Set());
+                  }}
+                  className={`flex-1 py-2 rounded-xl font-bold text-sm border-2 transition-all ${
+                    ludoFormat === fmt
+                      ? "bg-orange-600 text-white border-orange-600"
+                      : "bg-white dark:bg-slate-700 text-slate-500 border-slate-200"
+                  }`}
+                >
+                  {fmt}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-slate-400 mt-2 text-center">
+              {ludoFormat === "1v1"
+                ? "1 player per team — first to 4 home runs wins"
+                : "2 players per team — first to 8 home runs wins"}
+            </p>
+          </div>
+
+          {/* PLAYER SELECTION */}
+          {squadLoaded && (
+            <div className="space-y-3">
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                Select Players (
+                {ludoFormat === "1v1" ? "1 per team" : "2 per team"})
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {/* Team 1 */}
+                <div>
+                  <p className="text-xs font-bold text-orange-600 mb-2">
+                    {team1Name}
+                  </p>
+                  <div className="space-y-1">
+                    {squadTeam1.map((p) => {
+                      const selected = team1Playing.has(p.id);
+                      const maxed =
+                        !selected && team1Playing.size >= maxSelect("ludo");
+                      return (
+                        <button
+                          key={p.id}
+                          disabled={maxed}
+                          onClick={() => togglePlayer(setTeam1Playing, p.id)}
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                            selected
+                              ? "bg-orange-600 text-white border-orange-600"
+                              : maxed
+                                ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                                : "bg-white dark:bg-slate-800 text-slate-700 border-slate-200 dark:border-slate-600"
+                          }`}
+                        >
+                          {selected ? "✓ " : ""}
+                          {p.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Team 2 */}
+                <div>
+                  <p className="text-xs font-bold text-blue-600 mb-2">
+                    {team2Name}
+                  </p>
+                  <div className="space-y-1">
+                    {squadTeam2.map((p) => {
+                      const selected = team2Playing.has(p.id);
+                      const maxed =
+                        !selected && team2Playing.size >= maxSelect("ludo");
+                      return (
+                        <button
+                          key={p.id}
+                          disabled={maxed}
+                          onClick={() => togglePlayer(setTeam2Playing, p.id)}
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                            selected
+                              ? "bg-blue-600 text-white border-blue-600"
+                              : maxed
+                                ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                                : "bg-white dark:bg-slate-800 text-slate-700 border-slate-200 dark:border-slate-600"
+                          }`}
+                        >
+                          {selected ? "✓ " : ""}
+                          {p.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <TossButtons
             accentActive="text-orange-600"
             hoverBorder="hover:border-orange-200"
           />
+
           <div className="space-y-2">
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <User size={14} /> Scorer Username
@@ -1182,15 +1303,20 @@ export default function MatchScoreRoute() {
               type="text"
               value={scorerUsername}
               onChange={(e) => setScorerUsername(e.target.value)}
-              className={`w-full py-3 px-4 rounded-2xl text-sm font-bold border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300`}
+              className="w-full py-3 px-4 rounded-2xl text-sm font-bold border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300"
               placeholder="Enter scorer username"
             />
           </div>
+
           <StartBtn
             label="🎲 Start Ludo Match"
             bg="bg-orange-600"
             shadow="shadow-orange-500/40"
-            disabled={!tossWinner}
+            disabled={
+              !tossWinner ||
+              team1Playing.size < maxSelect("ludo") ||
+              team2Playing.size < maxSelect("ludo")
+            }
             onClick={async () => {
               setStarting(true);
               try {
@@ -1199,6 +1325,8 @@ export default function MatchScoreRoute() {
                   decision: "START",
                   scorerId: scorerUsername,
                   sportId,
+                  team1PlayingIds: [...team1Playing],
+                  team2PlayingIds: [...team2Playing],
                 });
                 navigate(-1);
               } catch (err) {
@@ -1235,8 +1363,8 @@ export default function MatchScoreRoute() {
             shadow="shadow-slate-500/10"
             vs="bg-slate-700"
             subtitle="Chess Setup"
-            c1="bg-slate-50 dark:bg-slate-900/20 text-slate-700 border-slate-100 dark:border-slate-900/30"
-            c2="bg-gray-50 dark:bg-gray-900/20 text-gray-700 border-gray-100 dark:border-gray-900/30"
+            c1="bg-slate-50 dark:bg-slate-900/20 text-slate-700 border-slate-100"
+            c2="bg-gray-50 dark:bg-gray-900/20 text-gray-700 border-gray-100"
           />
           <div className="grid grid-cols-2 gap-3">
             <DetailCard
@@ -1264,10 +1392,110 @@ export default function MatchScoreRoute() {
               accent="text-slate-500"
             />
           </div>
+          {/* FORMAT PICKER */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-slate-100 dark:border-slate-700">
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
+              Match Format
+            </p>
+            <div className="flex gap-3">
+              {["1v1", "2v2"].map((fmt) => (
+                <button
+                  key={fmt}
+                  onClick={() => {
+                    setChessFormat(fmt);
+                    setTeam1Playing(new Set());
+                    setTeam2Playing(new Set());
+                  }}
+                  className={`flex-1 py-2 rounded-xl font-bold text-sm border-2 transition-all ${
+                    chessFormat === fmt
+                      ? "bg-slate-700 text-white border-slate-700"
+                      : "bg-white dark:bg-slate-700 text-slate-500 border-slate-200"
+                  }`}
+                >
+                  {fmt}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* PLAYER SELECTION */}
+          {squadLoaded && (
+            <div className="space-y-3">
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                Select Players (
+                {chessFormat === "1v1" ? "1 per team" : "2 per team"})
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {/* Team 1 */}
+                <div>
+                  <p className="text-xs font-bold text-slate-600 mb-2">
+                    {team1Name}
+                  </p>
+                  <div className="space-y-1">
+                    {squadTeam1.map((p) => {
+                      const selected = team1Playing.has(p.id);
+                      const maxed =
+                        !selected && team1Playing.size >= maxSelect("chess");
+                      return (
+                        <button
+                          key={p.id}
+                          disabled={maxed}
+                          onClick={() => togglePlayer(setTeam1Playing, p.id)}
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                            selected
+                              ? "bg-slate-700 text-white border-slate-700"
+                              : maxed
+                                ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                                : "bg-white dark:bg-slate-800 text-slate-700 border-slate-200 dark:border-slate-600"
+                          }`}
+                        >
+                          {selected ? "✓ " : ""}
+                          {p.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Team 2 */}
+                <div>
+                  <p className="text-xs font-bold text-gray-600 mb-2">
+                    {team2Name}
+                  </p>
+                  <div className="space-y-1">
+                    {squadTeam2.map((p) => {
+                      const selected = team2Playing.has(p.id);
+                      const maxed =
+                        !selected && team2Playing.size >= maxSelect("chess");
+                      return (
+                        <button
+                          key={p.id}
+                          disabled={maxed}
+                          onClick={() => togglePlayer(setTeam2Playing, p.id)}
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                            selected
+                              ? "bg-gray-700 text-white border-gray-700"
+                              : maxed
+                                ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                                : "bg-white dark:bg-slate-800 text-slate-700 border-slate-200 dark:border-slate-600"
+                          }`}
+                        >
+                          {selected ? "✓ " : ""}
+                          {p.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <TossButtons
             accentActive="text-slate-700"
             hoverBorder="hover:border-slate-300"
           />
+
           <div className="space-y-2">
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <User size={14} /> Scorer Username
@@ -1276,15 +1504,20 @@ export default function MatchScoreRoute() {
               type="text"
               value={scorerUsername}
               onChange={(e) => setScorerUsername(e.target.value)}
-              className={`w-full py-3 px-4 rounded-2xl text-sm font-bold border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 `}
+              className="w-full py-3 px-4 rounded-2xl text-sm font-bold border-2 border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300"
               placeholder="Enter scorer username"
             />
           </div>
+
           <StartBtn
             label="♟️ Start Chess Match"
             bg="bg-slate-700"
             shadow="shadow-slate-500/40"
-            disabled={!tossWinner}
+            disabled={
+              !tossWinner ||
+              team1Playing.size < maxSelect("chess") ||
+              team2Playing.size < maxSelect("chess")
+            }
             onClick={async () => {
               setStarting(true);
               try {
@@ -1293,6 +1526,8 @@ export default function MatchScoreRoute() {
                   decision: "WHITE",
                   scorerId: scorerUsername,
                   sportId,
+                  team1PlayingIds: [...team1Playing],
+                  team2PlayingIds: [...team2Playing],
                 });
                 navigate(-1);
               } catch (err) {
