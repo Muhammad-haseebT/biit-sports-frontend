@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import Swal from "sweetalert2";
@@ -9,6 +8,8 @@ import {
   WizardHeader,
   UI_CLASSES,
 } from "../common/ScoringUI";
+import FavouritePlayerModal from "../cricket/modals/FavouritePlayerModal";
+import { getMatchAccess } from "../../../utils/accessControl";
 
 function useMatchTimer(startTime, status) {
   const [elapsed, setElapsed] = useState(0);
@@ -50,10 +51,15 @@ export default function LudoScoring({
   format = "1v1", // "1v1" | "2v2"
   players1 = [],
   players2 = [],
+  status,
+  scorerId,
+  mediaScorerUsername,
 }) {
   const navigate = useNavigate();
   const wsRef = useRef(null);
-  const isAdmin = useRef(false);
+  const isAdmin = useRef(
+    getMatchAccess(scorerId, mediaScorerUsername).canEditMatch,
+  );
 
   // FIX: prop-based max as initial fallback; server value overrides once received
   const PROP_MAX = format === "2v2" ? 8 : 4;
@@ -72,6 +78,7 @@ export default function LudoScoring({
   const [toast, setToast] = useState(null);
   const [waiting, setWaiting] = useState(false);
   const [modal, setModal] = useState(null);
+  const [showFav, setShowFav] = useState(false);
 
   const timer = useMatchTimer(score.matchStartTime, score.status);
   const isCompleted = score.status === "COMPLETED";
@@ -80,11 +87,14 @@ export default function LudoScoring({
   const MAX_HOME_RUNS = score.maxHomeRuns || PROP_MAX;
 
   useEffect(() => {
-    try {
-      const u = JSON.parse(Cookies.get("account") || "{}");
-      if (u.role === "ADMIN" || u.role === "SCORER") isAdmin.current = true;
-    } catch {}
-  }, []);
+    const access = getMatchAccess(scorerId, mediaScorerUsername);
+    isAdmin.current = access.canEditMatch;
+
+    if (status === "COMPLETED") {
+      setActiveTab("Scoring");
+      setShowFav(true);
+    }
+  }, [scorerId, mediaScorerUsername, status]);
 
   useEffect(() => {
     const ws = new WebSocket(
@@ -100,7 +110,10 @@ export default function LudoScoring({
       setScore((prev) => ({ ...prev, ...d }));
       setWaiting(false);
       if (d.comment === "UNDO") showToast("↩ Undo done", "info");
-      if (d.status === "COMPLETED") showToast("🎲 Match Complete!", "info");
+      if (d.status === "COMPLETED") {
+        showToast("🎲 Match Complete!", "info");
+        setShowFav(true);
+      }
     };
     ws.onerror = () => showToast("WebSocket error", "error");
     ws.onclose = () => (wsRef.current = null);
@@ -389,6 +402,21 @@ export default function LudoScoring({
             )}
           </div>
         </PanelWrapper>
+      )}
+      {showFav && (
+        <FavouritePlayerModal
+          matchId={matchId}
+          team1Id={team1Id}
+          team2Id={team2Id}
+          team1Name={team1Name}
+          team2Name={team2Name}
+          team1Players={players1}
+          team2Players={players2}
+          onClose={() => {
+            setShowFav(false);
+            setActiveTab("Info");
+          }}
+        />
       )}
     </div>
   );

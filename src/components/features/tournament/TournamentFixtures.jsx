@@ -4,8 +4,12 @@ import { getMatchesByTournamentId } from "../../../api/matchApi";
 import Loading from "../../common/LoadingSpinner";
 import { getTeamsByTournamentId } from "../../../api/teamApi";
 import { createMatch, updateMatch } from "../../../api/matchApi";
+import {
+  getAccountFromCookie,
+  isAdminAccount,
+} from "../../../utils/accessControl";
 
-function FixtureCard({ fixture, onEdit, sportId }) {
+function FixtureCard({ fixture, onEdit, sportId, canEdit }) {
   return (
     <div className="bg-gray-100 rounded-xl p-3 mb-3 shadow-sm border border-red-600">
       <div className="flex justify-between items-start">
@@ -20,14 +24,14 @@ function FixtureCard({ fixture, onEdit, sportId }) {
             Venue: {fixture.venue} | {sportId == 1 && `${fixture.overs} Overs`}
           </div>
         </div>
-        <div className="ml-2">
+        {canEdit && <div className="ml-2">
           <button
             className="bg-red-600 text-white px-2 py-1 rounded"
             onClick={() => onEdit(fixture)}
           >
             ✎
           </button>
-        </div>
+        </div>}
       </div>
     </div>
   );
@@ -40,6 +44,7 @@ export default function TournamentFixtures({ tournamentId, sportId }) {
   const [teams, setTeams] = useState([]);
   const [matchId, setMatchId] = useState("");
   const [check, setCheck] = useState(true);
+  const isAdmin = isAdminAccount(getAccountFromCookie());
 
   const venues = [
     "DPS Rawalpindi",
@@ -155,6 +160,7 @@ export default function TournamentFixtures({ tournamentId, sportId }) {
                 fixture={f}
                 onEdit={handleEdit}
                 sportId={sportId}
+                canEdit={isAdmin}
               />
             ))
           ) : (
@@ -164,14 +170,14 @@ export default function TournamentFixtures({ tournamentId, sportId }) {
       )}
 
       {/* Floating Action Button */}
-      <div className="fixed bottom-6 right-6">
+      {isAdmin && <div className="fixed bottom-6 right-6">
         <button
           onClick={handleCreate}
           className="bg-red-600 text-white rounded-full p-3 shadow-lg hover:bg-red-700 transition"
         >
           <Plus size={30} />
         </button>
-      </div>
+      </div>}
 
       {/* Modal for Creating Fixture */}
       {modalOpen && (

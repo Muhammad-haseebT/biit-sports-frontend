@@ -6,6 +6,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoadingSpinner from "../../common/LoadingSpinner";
 import MediaViewer from "../../common/MediaViewer";
+import { getAccountFromCookie, isAdminAccount } from "../../../utils/accessControl";
 
 export default function TournamentDetailComponent({
   option,
@@ -23,11 +24,14 @@ export default function TournamentDetailComponent({
   const [activeTab, setActiveTab] = useState("tournaments"); // 'tournaments' | 'media'
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
+  const isAdmin = isAdminAccount(getAccountFromCookie());
 
   const handleAddSports = () => {
+    if (!isAdmin) return;
     navigate("/sports-selection", { state: { seasonID: seasonID } });
   };
   const handleAddTournament = () => {
+    if (!isAdmin) return;
     navigate("/create-tournament", {
       state: { seasonID: seasonID, sportID: sportID },
     });
@@ -142,7 +146,7 @@ export default function TournamentDetailComponent({
               </div>
 
               {/* Add Button - Only for tournaments tab */}
-              <div className="mt-4">
+              {isAdmin && <div className="mt-4">
                 <button
                   className="bg-red-600 text-white p-4 rounded-full hover:bg-red-700 transition-colors fixed bottom-4 right-4 shadow-lg"
                   onClick={() =>
@@ -153,7 +157,7 @@ export default function TournamentDetailComponent({
                 >
                   <Plus size={28} strokeWidth={3} />
                 </button>
-              </div>
+              </div>}
             </>
           ) : (
             /* Media Gallery Grid */

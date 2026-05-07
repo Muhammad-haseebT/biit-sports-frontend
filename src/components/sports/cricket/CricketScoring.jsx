@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import Cookies from "js-cookie";
 import { ArrowLeft, Dot, Camera, Star, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BiCricketBall } from "react-icons/bi";
@@ -19,6 +18,7 @@ import MatchBalls from "./modals/MatchBalls";
 import Media from "./modals/Media";
 import FavouritePlayerModal from "./modals/FavouritePlayerModal";
 import MoreModal from "./modals/MoreModal";
+import { getMatchAccess } from "../../../utils/accessControl";
 
 // ─── Helper: close all modals ────────────────────────────────────
 const ALL_MODALS_OFF = {
@@ -149,22 +149,17 @@ export default function CricketScoring({
 
   useEffect(() => {
     try {
-      const account = Cookies.get("account");
-      if (account) {
-        const parsedUser = JSON.parse(account);
-        setUser(parsedUser);
-
-        const role = parsedUser.role?.toUpperCase();
-        const username = parsedUser.username;
-
-        const a = role === "ADMIN";
-        const s = a || username == scorerId;
-        const m = a || username == mediaScorerUsername;
-
-        rolesRef.current = { isAdmin: a, isScorer: s, isMediaPerson: m };
-        setIsAdmin(a);
-        setIsScorer(s);
-        setIsMediaPerson(m);
+      const access = getMatchAccess(scorerId, mediaScorerUsername);
+      if (access.account) {
+        setUser(access.account);
+        rolesRef.current = {
+          isAdmin: access.isAdmin,
+          isScorer: access.isScorer,
+          isMediaPerson: access.isMediaPerson,
+        };
+        setIsAdmin(access.isAdmin);
+        setIsScorer(access.isScorer);
+        setIsMediaPerson(access.isMediaPerson);
       }
       if (status == "COMPLETED") {
         fetchPlayers();
@@ -173,6 +168,8 @@ export default function CricketScoring({
     } catch (error) {
       console.error("Error parsing user cookie:", error);
     }
+    // Run once on mount to mirror the original web scorer lifecycle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchPlayers = async () => {
@@ -221,6 +218,28 @@ export default function CricketScoring({
     return receivedData;
   };
 
+  const hydrateSuperOverState = (receivedData) => {
+    if (!receivedData?.superOver) return false;
+
+    setIsSuperOver(true);
+    setIsSuperOverPending(false);
+
+    const restoredSuperOverInnings =
+      receivedData.firstInnings === false ? 2 : 1;
+    setIsSuperOverInnings(restoredSuperOverInnings);
+
+    const originalBowlingTeamId = bTeamId === team1Id ? team2Id : team1Id;
+    if (restoredSuperOverInnings === 2) {
+      setBattingTeamId(originalBowlingTeamId);
+      setBowlingTeamId(bTeamId);
+    } else {
+      setBattingTeamId(bTeamId);
+      setBowlingTeamId(originalBowlingTeamId);
+    }
+
+    return true;
+  };
+
   useEffect(() => {
     setBattingTeamId(bTeamId);
 
@@ -239,6 +258,7 @@ export default function CricketScoring({
         console.log("Received:", receivedData);
 
         const normalized = normalizeStats(receivedData);
+        const superOverRestored = hydrateSuperOverState(normalized);
         setData(normalized);
         setIsWaiting(false);
         if (normalized.availableBatters?.length >= 0) {
@@ -247,7 +267,7 @@ export default function CricketScoring({
         if (normalized.availableBowlers?.length >= 0) {
           setAvailableBowlers(normalized.availableBowlers);
         }
-        handleModalLogic(normalized);
+        handleModalLogic(normalized, superOverRestored);
 
         // Match ended
         if (isEndingMatch.current) {
@@ -271,14 +291,44 @@ export default function CricketScoring({
         }
       };
     }
+    // Socket should be created once for this mounted match screen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ─────────────────────────────────────────────────────────────
   // MODAL LOGIC — all modal state goes through openModal()
   // ─────────────────────────────────────────────────────────────
-  const handleModalLogic = (receivedData) => {
+  const handleModalLogic = (receivedData, superOverRestored = false) => {
     const { isAdmin, isScorer, isMediaPerson } = rolesRef.current;
     if (!isAdmin && !isScorer && !isMediaPerson) return;
+
+    if (superOverRestored) {
+      if (
+        receivedData.balls === 0 &&
+        receivedData.overs === 0 &&
+        receivedData.wickets === 0 &&
+        receivedData.runs === 0 &&
+        (!receivedData.batsmanId ||
+          !receivedData.nonStrikerId ||
+          !receivedData.bowlerId)
+      ) {
+        openModal("playerSelectModal");
+        return;
+      }
+
+      if (receivedData.comment === "End_Innings") {
+        openModal("end_InningsAndSuperOverModal");
+        return;
+      }
+
+      if (receivedData.balls === 0 && receivedData.overs !== 0) {
+        openModal("bowlerModal");
+        return;
+      }
+
+      openModal("mainModal");
+      return;
+    }
 
     // Tie detected — backend says Super Over is possible
     // Do NOT set isSuperOver here; wait for user choice
@@ -450,6 +500,18 @@ export default function CricketScoring({
   } = modals;
 
   const canEdit = isAdmin || isScorer || isMediaPerson;
+  const regularBattingTeamName = data.firstInnings
+    ? battingTeamName
+    : battingTeamName === team1Name
+      ? team2Name
+      : team1Name;
+  const activeBattingTeamName =
+    String(battingTeamId) === String(team1Id)
+      ? team1Name
+      : String(battingTeamId) === String(team2Id)
+        ? team2Name
+        : regularBattingTeamName;
+  const inningsLabel = data.firstInnings ? "First Innings" : "Second Innings";
 
   return (
     <>
@@ -513,19 +575,11 @@ export default function CricketScoring({
             <div>
               <h1 className="text-3xl font-semibold text-red-600">
                 {isSuperOver
-                  ? "⚡ Super Over"
-                  : data.firstInnings
-                    ? battingTeamName
-                    : battingTeamName === team1Name
-                      ? team2Name
-                      : team1Name}
+                  ? `${activeBattingTeamName || "Batting Team"} - Super Over`
+                  : regularBattingTeamName}
               </h1>
               <h2 className="text-xl font-semibold mt-2">
-                {isSuperOver
-                  ? "Super Over"
-                  : data.firstInnings
-                    ? "First Innings"
-                    : "Second Innings"}
+                {isSuperOver ? `Super Over - ${inningsLabel}` : inningsLabel}
               </h2>
               <h3 className="text-3xl font-semibold mt-2">
                 {data.runs}/{data.wickets}

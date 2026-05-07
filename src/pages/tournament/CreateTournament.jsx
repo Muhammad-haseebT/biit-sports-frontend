@@ -8,11 +8,13 @@ import {
   createTournamentAPi,
   updateTournamentAPi,
 } from "../../api/tournamentAPi";
+import { getAccountFromCookie, isAdminAccount } from "../../utils/accessControl";
 
 export default function CreateTournament() {
   const today = new Date().toISOString().split("T")[0];
   const { state } = useLocation();
   const navigate = useNavigate();
+  const isAdmin = isAdminAccount(getAccountFromCookie());
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -29,6 +31,11 @@ export default function CreateTournament() {
   const tournamentId = state.tournamentId;
 
   const handleSubmit = async () => {
+    if (!isAdmin) {
+      navigate("/home");
+      return;
+    }
+
     setLoading(true);
     try {
       console.log("Tournament Data:", formData);

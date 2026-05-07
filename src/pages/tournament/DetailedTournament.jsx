@@ -13,6 +13,7 @@ import MediaViewer from "../../components/common/MediaViewer";
 import { ImageIcon, Pencil } from "lucide-react";
 import TournamentStatsTab from "../../components/features/tournament/TournamentStatsTab";
 import CreateTournament from "./CreateTournament";
+import { getAccountFromCookie, isAdminAccount } from "../../utils/accessControl";
 
 export default function DetailedTournament() {
   const { state } = useLocation();
@@ -31,6 +32,7 @@ export default function DetailedTournament() {
   const [mediaPage, setMediaPage] = useState(0);
   const [hasMoreMedia, setHasMoreMedia] = useState(true);
   const [loadingMoreMedia, setLoadingMoreMedia] = useState(false);
+  const isAdmin = isAdminAccount(getAccountFromCookie());
   const sports = [
     "cricket",
     "futsal",
@@ -96,6 +98,8 @@ export default function DetailedTournament() {
   };
 
   const handleEditClick = () => {
+    if (!isAdmin) return;
+
     console.log(state.tournamentId);
     navigate("/create-tournament", {
       state: { tournamentId: state.tournamentId, type: "edit" },
@@ -115,15 +119,17 @@ export default function DetailedTournament() {
           <h1 className="text-white font-bold text-2xl">
             {state.tournamentName || "Tournament"}
           </h1>
-          <button
-            className="text-white cursor-pointer"
-            onClick={handleEditClick}
-          >
-            <Pencil
-              className="text-white cursor-pointer absolute right-10 top-7"
-              size={24}
-            />
-          </button>
+          {isAdmin && (
+            <button
+              className="text-white cursor-pointer"
+              onClick={handleEditClick}
+            >
+              <Pencil
+                className="text-white cursor-pointer absolute right-10 top-7"
+                size={24}
+              />
+            </button>
+          )}
         </div>
       </div>
 

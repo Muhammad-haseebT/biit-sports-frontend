@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { getPlayersByTeamId } from "../../../api/teamApi";
 import Media from "../cricket/modals/Media";
+import FavouritePlayerModal from "../cricket/modals/FavouritePlayerModal";
 import {
   ArrowLeft,
   Camera,
@@ -18,6 +18,7 @@ import {
   WizardHeader,
   UI_CLASSES,
 } from "../common/ScoringUI";
+import { getMatchAccess } from "../../../utils/accessControl";
 
 const FOUL_LIMIT = 5;
 
@@ -67,7 +68,9 @@ export default function FutsalScoring({
 }) {
   const navigate = useNavigate();
   const socketRef = useRef(null);
-  const isAdminRef = useRef(false);
+  const isAdminRef = useRef(
+    getMatchAccess(scorerId, mediaScorerUsername).canEditMatch,
+  );
 
   const [score, setScore] = useState({
     team1Score: 0,
@@ -118,19 +121,22 @@ export default function FutsalScoring({
   const [team2Active, setTeam2Active] = useState([]);
 
   useEffect(() => {
-    try {
-      const acc = Cookies.get("account");
-      if (acc) {
-        const u = JSON.parse(acc);
-        if (u.role === "ADMIN" || u.role === "SCORER")
-          isAdminRef.current = true;
-      }
-    } catch {}
-  }, []);
+    const access = getMatchAccess(scorerId, mediaScorerUsername);
+    isAdminRef.current = access.canEditMatch;
+  }, [scorerId, mediaScorerUsername]);
 
   useEffect(() => {
-    if (score.status === "COMPLETED") setActiveTab("Scoring");
+    if (score.status === "COMPLETED") {
+      setActiveTab("Scoring");
+      setActiveModal("favPlayerModal");
+    }
   }, [score.status]);
+
+  useEffect(() => {
+    if (status === "COMPLETED") {
+      setActiveModal("favPlayerModal");
+    }
+  }, [status]);
 
   const fetchPlayers = useCallback(async () => {
     const [p1, p2] = await Promise.all([
@@ -1105,6 +1111,21 @@ export default function FutsalScoring({
             </button>
           </div>
         </div>
+      )}
+      {activeModal === "favPlayerModal" && (
+        <FavouritePlayerModal
+          matchId={matchId}
+          team1Id={team1Id}
+          team2Id={team2Id}
+          team1Name={team1Name}
+          team2Name={team2Name}
+          team1Players={team1Players}
+          team2Players={team2Players}
+          onClose={() => {
+            closeModal();
+            setActiveTab("Summary");
+          }}
+        />
       )}
     </div>
   );

@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from "react";
-import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { getPlayersByTeamId } from "../../../api/teamApi";
 import Media from "../cricket/modals/Media";
+import FavouritePlayerModal from "../cricket/modals/FavouritePlayerModal";
 import {
   ArrowLeft,
   Camera,
@@ -20,6 +20,7 @@ import {
   ScoreCircles,
   UI_CLASSES,
 } from "../common/ScoringUI";
+import { getMatchAccess } from "../../../utils/accessControl";
 
 // ─── EVENT CONFIG ─────────────────────────────────────────────────
 const EV = {
@@ -84,7 +85,9 @@ export default function VolleyballScoring({
 }) {
   const navigate = useNavigate();
   const wsRef = useRef(null);
-  const isAdmin = useRef(false);
+  const isAdmin = useRef(
+    getMatchAccess(scorerId, mediaScorerUsername).canEditMatch,
+  );
 
   const [score, setScore] = useState({
     team1Points: 0,
@@ -133,15 +136,22 @@ export default function VolleyballScoring({
   const timer = useSetTimer(score.setStartTime, score.status);
 
   useEffect(() => {
-    try {
-      const u = JSON.parse(Cookies.get("account") || "{}");
-      if (u.role === "ADMIN" || u.role === "SCORER") isAdmin.current = true;
-    } catch {}
-  }, []);
+    const access = getMatchAccess(scorerId, mediaScorerUsername);
+    isAdmin.current = access.canEditMatch;
+  }, [scorerId, mediaScorerUsername]);
 
   useEffect(() => {
-    if (score.status === "COMPLETED") setActiveTab("Scoring");
+    if (score.status === "COMPLETED") {
+      setActiveTab("Scoring");
+      setModal("favPlayerModal");
+    }
   }, [score.status]);
+
+  useEffect(() => {
+    if (status === "COMPLETED") {
+      setModal("favPlayerModal");
+    }
+  }, [status]);
 
   useEffect(() => {
     (async () => {
@@ -1027,6 +1037,21 @@ export default function VolleyballScoring({
             </button>
           </div>
         </div>
+      )}
+      {modal === "favPlayerModal" && (
+        <FavouritePlayerModal
+          matchId={matchId}
+          team1Id={team1Id}
+          team2Id={team2Id}
+          team1Name={team1Name}
+          team2Name={team2Name}
+          team1Players={team1P}
+          team2Players={team2P}
+          onClose={() => {
+            closeModal();
+            setActiveTab("Summary");
+          }}
+        />
       )}
     </div>
   );

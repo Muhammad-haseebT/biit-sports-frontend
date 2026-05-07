@@ -18,6 +18,11 @@ import Request from "../pages/requests/Request";
 import Stats from "../pages/stats/Stats";
 import MatchScoreRoute from "../pages/match/MatchScoreRoute";
 import FutsalMatch from "../components/sports/football/FutsalScoring.jsx";
+import { getAccountFromCookie, isAdminAccount } from "../utils/accessControl";
+
+function AdminOnly({ children }) {
+  return isAdminAccount(getAccountFromCookie()) ? children : <Navigate to="/home" />;
+}
 
 function AppRoutes() {
   return (
@@ -37,12 +42,33 @@ function AppRoutes() {
       <Route path="/sports" element={<Sports />} />
       <Route path="/seasons" element={<Seasons />} />
       <Route path="/matches" element={<Matches />} />
-      <Route path="/manage-accounts" element={<ManageAccounts />} />
+      <Route
+        path="/manage-accounts"
+        element={
+          <AdminOnly>
+            <ManageAccounts />
+          </AdminOnly>
+        }
+      />
       <Route path="/my-scorer" element={<MyScorer />} />
       <Route path="/tournament-detail" element={<TournamentDetail />} />
       <Route path="/detailed-tournament" element={<DetailedTournament />} />
-      <Route path="/create-tournament" element={<CreateTournament />} />
-      <Route path="/sports-selection" element={<SportSelection />} />
+      <Route
+        path="/create-tournament"
+        element={
+          <AdminOnly>
+            <CreateTournament />
+          </AdminOnly>
+        }
+      />
+      <Route
+        path="/sports-selection"
+        element={
+          <AdminOnly>
+            <SportSelection />
+          </AdminOnly>
+        }
+      />
       <Route
         path="/sport-tournament-detail"
         element={<SportTournamentDetail />}

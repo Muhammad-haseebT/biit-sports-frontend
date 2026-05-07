@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock } from "lucide-react";
 import {
@@ -8,6 +7,9 @@ import {
   WizardHeader,
   UI_CLASSES,
 } from "../common/ScoringUI";
+import FavouritePlayerModal from "../cricket/modals/FavouritePlayerModal";
+import { getPlayersByTeamId } from "../../../api/teamApi";
+import { getMatchAccess } from "../../../utils/accessControl";
 
 function useMatchTimer(startTime, status) {
   const [elapsed, setElapsed] = useState(0);
@@ -39,14 +41,19 @@ const RESULT_LABELS = {
 
 export default function ChessScoring({
   matchId,
+  status,
   team1Id,
   team2Id,
   team1Name,
   team2Name,
+  scorerId,
+  mediaScorerUsername,
 }) {
   const navigate = useNavigate();
   const wsRef = useRef(null);
-  const isAdmin = useRef(false);
+  const isAdmin = useRef(
+    getMatchAccess(scorerId, mediaScorerUsername).canEditMatch,
+  );
 
   const [score, setScore] = useState({
     status: "LIVE",
@@ -65,16 +72,36 @@ export default function ChessScoring({
   // pendingDraw: true | false — set when user clicks draw
   const [pendingWinner, setPendingWinner] = useState(null);
   const [pendingDraw, setPendingDraw] = useState(false);
+  const [team1P, setTeam1P] = useState([]);
+  const [team2P, setTeam2P] = useState([]);
+  const [showFavModal, setShowFavModal] = useState(false);
 
   const matchTimer = useMatchTimer(score.matchStartTime, score.status);
   const isCompleted = score.status === "COMPLETED";
 
   useEffect(() => {
-    try {
-      const u = JSON.parse(Cookies.get("account") || "{}");
-      if (u.role === "ADMIN" || u.role === "SCORER") isAdmin.current = true;
-    } catch {}
-  }, []);
+    const access = getMatchAccess(scorerId, mediaScorerUsername);
+    isAdmin.current = access.canEditMatch;
+
+    if (status === "COMPLETED") {
+      setActiveTab("Scoring");
+      setShowFavModal(true);
+      fetchPlayers();
+    }
+  }, [scorerId, mediaScorerUsername, status]);
+
+  const fetchPlayers = async () => {
+    const [a, b] = await Promise.all([
+      getPlayersByTeamId(team1Id),
+      getPlayersByTeamId(team2Id),
+    ]);
+    setTeam1P(a || []);
+    setTeam2P(b || []);
+  };
+
+  useEffect(() => {
+    fetchPlayers();
+  }, [team1Id, team2Id]);
 
   useEffect(() => {
     const ws = new WebSocket(
@@ -91,7 +118,10 @@ export default function ChessScoring({
       setScore((prev) => ({ ...prev, ...d }));
       setWaiting(false);
       if (d.comment === "UNDO") showToast("↩ Undo done", "info");
-      if (d.status === "COMPLETED") showToast("♟️ Match Complete!", "info");
+      if (d.status === "COMPLETED") {
+        showToast("♟️ Match Complete!", "info");
+        setShowFavModal(true);
+      }
     };
     ws.onerror = () => showToast("WebSocket error", "error");
     ws.onclose = () => (wsRef.current = null);
@@ -448,6 +478,21 @@ export default function ChessScoring({
             )}
           </div>
         </PanelWrapper>
+      )}
+      {showFavModal && (
+        <FavouritePlayerModal
+          matchId={matchId}
+          team1Id={team1Id}
+          team2Id={team2Id}
+          team1Name={team1Name}
+          team2Name={team2Name}
+          team1Players={team1P}
+          team2Players={team2P}
+          onClose={() => {
+            setShowFavModal(false);
+            setActiveTab("Info");
+          }}
+        />
       )}
     </div>
   );

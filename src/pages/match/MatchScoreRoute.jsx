@@ -22,6 +22,7 @@ import TableTennisScoring from "../../components/sports/tabletennis/TableTennisS
 import TugOfWarScoring from "../../components/sports/TugOfWar/TugOfWarScoring.jsx";
 import LudoScoring from "../../components/sports/ludo/LudoScoring.jsx";
 import ChessScoring from "../../components/sports/chess/ChessScoring.jsx";
+import { getMatchAccess } from "../../utils/accessControl";
 // Sport index matches DB sportId
 const SPORTS = [
   "Cricket", // 1
@@ -99,6 +100,10 @@ export default function MatchScoreRoute() {
   const isLudo = currentSport === "Ludo";
   const isChess = currentSport === "Chess";
   const needsLineup = isFutsal || isVB || isBD || isTT || isLudo || isChess;
+  const { canEditMatch } = getMatchAccess(
+    match?.scorerId,
+    match?.mediaScorerUsername,
+  );
   useEffect(() => {
     if (!needsLineup || status !== "UPCOMING") return;
     Promise.all([
@@ -129,6 +134,27 @@ export default function MatchScoreRoute() {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500">
         No match data found.
+      </div>
+    );
+  }
+
+  if (status === "UPCOMING" && !canEditMatch) {
+    return (
+      <div className="h-screen w-full bg-[#f8f9fa] dark:bg-[#0f172a] text-[#1e293b] dark:text-[#f1f5f9] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-6 text-center shadow-xl">
+          <AlertTriangle className="mx-auto text-amber-500 mb-3" size={36} />
+          <h2 className="text-xl font-black mb-2">Viewer Access</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-300">
+            This match is not live yet. Only admin, assigned scorer, or assigned
+            media person can set up and start it.
+          </p>
+          <button
+            onClick={() => navigate(-1)}
+            className="mt-5 bg-red-600 text-white px-5 py-2 rounded-xl font-bold"
+          >
+            Go Back
+          </button>
+        </div>
       </div>
     );
   }

@@ -7,12 +7,15 @@ import { createSeason } from "../../api/seasonApi";
 import { ToastContainer, toast } from "react-toastify";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import Cookies from "js-cookie";
+import { getAccountFromCookie, isAdminAccount } from "../../utils/accessControl";
+
 export default function Seasons() {
   const navigate = useNavigate();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [seasons, setSeasons] = useState([]);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const isAdmin = isAdminAccount(getAccountFromCookie());
 
   useEffect(() => {
     fetchSeasons();
@@ -30,6 +33,11 @@ export default function Seasons() {
   };
 
   const handleCreateSeason = () => {
+    if (!isAdmin) {
+      toast.error("Only admin can create seasons.");
+      return;
+    }
+
     const createNewSeason = async () => {
       try {
         const seasonData = {
@@ -91,16 +99,16 @@ export default function Seasons() {
         </div>
       )}
       {/* border radius circle */}
-      <div className="mt-4">
+      {isAdmin && <div className="mt-4">
         <button
           className="bg-red-600 text-white p-4 rounded-full hover:bg-red-700 transition-colors fixed bottom-4 right-4 shadow-lg"
           onClick={() => setCreateModalOpen(true)}
         >
           <Plus size={28} strokeWidth={3} />
         </button>
-      </div>
+      </div>}
 
-      {createModalOpen && (
+      {isAdmin && createModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 bg-black/50 transition-opacity duration-300">
           <div
             className={`bg-white p-6 rounded shadow-lg w-[90vw] max-w-sm md:w-96 transform transition-all duration-300 ease-out relative

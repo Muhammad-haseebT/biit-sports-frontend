@@ -20,7 +20,7 @@ export default function MyScorer() {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-4 mt-3 text-center text-[#E31212]">
-        My Scorer
+        My Scoring Assignments
       </h1>
       {/* Back Button */}
       <button

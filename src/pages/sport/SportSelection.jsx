@@ -13,10 +13,12 @@ import Chess from "../../assets/Chess.png";
 import Cricket from "../../assets/Cricket.png";
 import { add_Sports_To_Season } from "../../api/seasonApi";
 import { ToastContainer, toast } from "react-toastify";
+import { getAccountFromCookie, isAdminAccount } from "../../utils/accessControl";
 
 export default function SportSelection() {
   const navigate = useNavigate();
   const { state } = useLocation();
+  const isAdmin = isAdminAccount(getAccountFromCookie());
   const [sports, setSports] = useState([
     { id: 1, name: "Cricket", img: Cricket, selected: false },
     { id: 2, name: "Futsal", img: Futsal, selected: false },
@@ -32,6 +34,8 @@ export default function SportSelection() {
   const selectedSports = sports.filter((sport) => sport.selected);
 
   const toggleSport = (id) => {
+    if (!isAdmin) return;
+
     setSports(
       sports.map((sport) =>
         sport.id === id ? { ...sport, selected: !sport.selected } : sport,
@@ -40,6 +44,11 @@ export default function SportSelection() {
   };
 
   const handleAdd = async () => {
+    if (!isAdmin) {
+      toast.error("Only admin can add sports to a season.");
+      return;
+    }
+
     console.log("Selected Sports:", selectedSports);
     try {
       const sportsData = {
@@ -91,8 +100,10 @@ export default function SportSelection() {
             {sports.map((sport) => (
               <div
                 key={sport.id}
-                onClick={() => toggleSport(sport.id)}
-                className={`relative bg-white border-2 rounded-2xl p-6 cursor-pointer hover:shadow-lg transition ${
+              onClick={() => toggleSport(sport.id)}
+              className={`relative bg-white border-2 rounded-2xl p-6 transition ${
+                isAdmin ? "cursor-pointer hover:shadow-lg" : "cursor-default"
+              } ${
                   sport.selected ? "border-red-600" : "border-gray-200"
                 }`}
               >
@@ -115,7 +126,7 @@ export default function SportSelection() {
           </div>
 
           {/* Add Button */}
-          <button
+          {isAdmin && <button
             onClick={handleAdd}
             disabled={selectedSports.length === 0}
             className={`w-full mt-6 py-3 rounded-xl font-semibold transition ${
@@ -125,7 +136,7 @@ export default function SportSelection() {
             }`}
           >
             Add {selectedSports.length > 0 && `(${selectedSports.length})`}
-          </button>
+          </button>}
         </div>
       </div>
     </div>

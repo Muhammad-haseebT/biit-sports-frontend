@@ -1,11 +1,11 @@
 import { useEffect, useState, useRef } from "react";
-import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import Media from "../cricket/modals/Media";
-// import FavouritePlayerModal from "./modals/FavouritePlayerModal";
+import FavouritePlayerModal from "../cricket/modals/FavouritePlayerModal";
 import { ArrowLeft, Trophy, RotateCcw } from "lucide-react";
 import { getPlayersByTeamId } from "../../../api/teamApi";
 import { PanelWrapper, PanelHeading, ScoreCircles, UI_CLASSES } from "../common/ScoringUI";
+import { getMatchAccess } from "../../../utils/accessControl";
 
 function useRoundTimer(roundStartTime, status) {
   const [elapsed, setElapsed] = useState(0);
@@ -41,7 +41,9 @@ export default function TugOfWarScoring({
 }) {
   const navigate = useNavigate();
   const wsRef = useRef(null);
-  const isAdmin = useRef(false);
+  const isAdmin = useRef(
+    getMatchAccess(scorerId, mediaScorerUsername).canEditMatch,
+  );
 
   const [score, setScore] = useState({
     team1Rounds: 0,
@@ -67,11 +69,14 @@ export default function TugOfWarScoring({
   const timer = useRoundTimer(score.roundStartTime, score.status);
 
   useEffect(() => {
-    try {
-      const u = JSON.parse(Cookies.get("account") || "{}");
-      if (u.role === "ADMIN" || u.role === "SCORER") isAdmin.current = true;
-    } catch {}
-  }, []);
+    const access = getMatchAccess(scorerId, mediaScorerUsername);
+    isAdmin.current = access.canEditMatch;
+
+    if (status === "COMPLETED") {
+      setActiveTab("Scoring");
+      setShowFav(true);
+    }
+  }, [scorerId, mediaScorerUsername, status]);
 
   useEffect(() => {
     (async () => {
@@ -469,12 +474,21 @@ export default function TugOfWarScoring({
           onClose={() => setMediaId(null)}
         />
       )}
-      {/* {showFav && (
-        <FavouritePlayerModal matchId={matchId} team1Id={team1Id} team2Id={team2Id}
-          team1Name={team1Name} team2Name={team2Name}
-          team1Players={team1P} team2Players={team2P}
-          onClose={() => setShowFav(false)} />
-      )} */}
+      {showFav && (
+        <FavouritePlayerModal
+          matchId={matchId}
+          team1Id={team1Id}
+          team2Id={team2Id}
+          team1Name={team1Name}
+          team2Name={team2Name}
+          team1Players={team1P}
+          team2Players={team2P}
+          onClose={() => {
+            setShowFav(false);
+            setActiveTab("Info");
+          }}
+        />
+      )}
     </div>
   );
 }
