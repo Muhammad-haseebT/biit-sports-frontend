@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import Cookies from "js-cookie";
 import { ArrowLeft, Dot, Camera, Star, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BiCricketBall } from "react-icons/bi";
@@ -18,7 +19,6 @@ import MatchBalls from "./modals/MatchBalls";
 import Media from "./modals/Media";
 import FavouritePlayerModal from "./modals/FavouritePlayerModal";
 import MoreModal from "./modals/MoreModal";
-import { getMatchAccess } from "../../../utils/accessControl";
 
 // ─── Helper: close all modals ────────────────────────────────────
 const ALL_MODALS_OFF = {
@@ -67,6 +67,7 @@ export default function CricketScoring({
   const player2IdRef = useRef(null);
   const socketRef = useRef(null);
   const isEndingMatch = useRef(false);
+  const sentEndInningsRef = useRef(false);
   const rolesRef = useRef({
     isAdmin: false,
     isScorer: false,
@@ -149,17 +150,22 @@ export default function CricketScoring({
 
   useEffect(() => {
     try {
-      const access = getMatchAccess(scorerId, mediaScorerUsername);
-      if (access.account) {
-        setUser(access.account);
-        rolesRef.current = {
-          isAdmin: access.isAdmin,
-          isScorer: access.isScorer,
-          isMediaPerson: access.isMediaPerson,
-        };
-        setIsAdmin(access.isAdmin);
-        setIsScorer(access.isScorer);
-        setIsMediaPerson(access.isMediaPerson);
+      const account = Cookies.get("account");
+      if (account) {
+        const parsedUser = JSON.parse(account);
+        setUser(parsedUser);
+
+        const role = parsedUser.role?.toUpperCase();
+        const username = parsedUser.username;
+
+        const a = role === "ADMIN";
+        const s = a || username == scorerId;
+        const m = a || username == mediaScorerUsername;
+
+        rolesRef.current = { isAdmin: a, isScorer: s, isMediaPerson: m };
+        setIsAdmin(a);
+        setIsScorer(s);
+        setIsMediaPerson(m);
       }
       if (status == "COMPLETED") {
         fetchPlayers();
@@ -224,17 +230,16 @@ export default function CricketScoring({
     setIsSuperOver(true);
     setIsSuperOverPending(false);
 
-    const restoredSuperOverInnings =
-      receivedData.firstInnings === false ? 2 : 1;
+    const restoredSuperOverInnings = receivedData.firstInnings === false ? 2 : 1;
     setIsSuperOverInnings(restoredSuperOverInnings);
 
     const originalBowlingTeamId = bTeamId === team1Id ? team2Id : team1Id;
     if (restoredSuperOverInnings === 2) {
-      setBattingTeamId(originalBowlingTeamId);
-      setBowlingTeamId(bTeamId);
-    } else {
       setBattingTeamId(bTeamId);
       setBowlingTeamId(originalBowlingTeamId);
+    } else {
+      setBattingTeamId(originalBowlingTeamId);
+      setBowlingTeamId(bTeamId);
     }
 
     return true;
@@ -253,19 +258,34 @@ export default function CricketScoring({
         socketRef.current = ws;
       };
 
-      ws.onmessage = (event) => {
+      ws.onmessage = async (event) => {
         const receivedData = JSON.parse(event.data);
-        console.log("Received:", receivedData);
+
+        // Detect innings change BEFORE normalizeStats to avoid stale player refs
+        const inningsChanged =
+          data.firstInnings !== receivedData.firstInnings;
+
+        if (inningsChanged) {
+          // Reset stale state from previous innings
+          setAvailableBatters([]);
+          setAvailableBowlers([]);
+          player1IdRef.current = null;
+          player2IdRef.current = null;
+          await fetchTeamPlayers();
+        }
 
         const normalized = normalizeStats(receivedData);
         const superOverRestored = hydrateSuperOverState(normalized);
         setData(normalized);
         setIsWaiting(false);
-        if (normalized.availableBatters?.length >= 0) {
-          setAvailableBatters(normalized.availableBatters);
-        }
-        if (normalized.availableBowlers?.length >= 0) {
-          setAvailableBowlers(normalized.availableBowlers);
+
+        if (!inningsChanged) {
+          if (Array.isArray(normalized.availableBatters)) {
+            setAvailableBatters(normalized.availableBatters);
+          }
+          if (Array.isArray(normalized.availableBowlers)) {
+            setAvailableBowlers(normalized.availableBowlers);
+          }
         }
         handleModalLogic(normalized, superOverRestored);
 
@@ -302,15 +322,29 @@ export default function CricketScoring({
     const { isAdmin, isScorer, isMediaPerson } = rolesRef.current;
     if (!isAdmin && !isScorer && !isMediaPerson) return;
 
+    // Handle error comments from backend
+    if (
+      receivedData.comment === "Error no current State" ||
+      receivedData.comment?.startsWith("Error")
+    ) {
+      if (
+        receivedData.balls === 0 &&
+        receivedData.overs === 0 &&
+        receivedData.wickets === 0 &&
+        receivedData.runs === 0
+      ) {
+        openModal("playerSelectModal");
+      }
+      return;
+    }
+
     if (superOverRestored) {
       if (
         receivedData.balls === 0 &&
         receivedData.overs === 0 &&
         receivedData.wickets === 0 &&
         receivedData.runs === 0 &&
-        (!receivedData.batsmanId ||
-          !receivedData.nonStrikerId ||
-          !receivedData.bowlerId)
+        (!receivedData.batsmanId || !receivedData.nonStrikerId || !receivedData.bowlerId)
       ) {
         openModal("playerSelectModal");
         return;
@@ -331,7 +365,6 @@ export default function CricketScoring({
     }
 
     // Tie detected — backend says Super Over is possible
-    // Do NOT set isSuperOver here; wait for user choice
     if (receivedData.comment === "Super_Over") {
       setIsSuperOverPending(true);
       openModal("end_InningsAndSuperOverModal");
@@ -343,7 +376,12 @@ export default function CricketScoring({
       return;
     }
 
+    // End_Innings — swallow echo if we just sent it
     if (receivedData.comment === "End_Innings") {
+      if (sentEndInningsRef.current) {
+        sentEndInningsRef.current = false;
+        return;
+      }
       openModal("end_InningsModal");
       return;
     }
@@ -358,11 +396,18 @@ export default function CricketScoring({
       return;
     }
 
-    openModal("mainModal");
-
+    // New over — bowler selection (early return, no flicker)
     if (receivedData.balls === 0 && receivedData.overs !== 0) {
       openModal("bowlerModal");
+      return;
     }
+
+    openModal("mainModal");
+
+    // Sync player IDs from server data
+    if (receivedData.batsmanId) setStrikerId(receivedData.batsmanId);
+    if (receivedData.nonStrikerId) setNonStrikerId(receivedData.nonStrikerId);
+    if (receivedData.bowlerId) setBowlerId(receivedData.bowlerId);
   };
 
   const handleStartMatch = () => {
@@ -406,6 +451,43 @@ export default function CricketScoring({
         runs: 0,
         ballsBowled: 0,
       },
+    }));
+
+    openModal("mainModal");
+  };
+
+  // Dedicated bowler confirmation — preserves existing batsman stats
+  const confirmBowler = () => {
+    if (!bowlerId) {
+      alert("Please select a bowler!");
+      return;
+    }
+
+    const bowlerPlayer =
+      (isSuperOver && availableBowlers.length > 0
+        ? availableBowlers
+        : data.firstInnings
+          ? team2Players
+          : team1Players
+      ).find((p) => p.id == bowlerId);
+
+    player1IdRef.current = null;
+    player2IdRef.current = null;
+
+    setData((prev) => ({
+      ...prev,
+      bowlerId: Number(bowlerId),
+      batsmanId: Number(strikerId),
+      nonStrikerId: Number(nonStrikerId),
+      bowlerStats: {
+        playerId: Number(bowlerId),
+        playerName: bowlerPlayer?.name || "Bowler",
+        wickets: 0,
+        runsConceded: 0,
+        ballsBowled: 0,
+        economy: 0,
+      },
+      // batsman1Stats and batsman2Stats are preserved from ...prev
     }));
 
     openModal("mainModal");
@@ -579,7 +661,9 @@ export default function CricketScoring({
                   : regularBattingTeamName}
               </h1>
               <h2 className="text-xl font-semibold mt-2">
-                {isSuperOver ? `Super Over - ${inningsLabel}` : inningsLabel}
+                {isSuperOver
+                  ? `Super Over - ${inningsLabel}`
+                  : inningsLabel}
               </h2>
               <h3 className="text-3xl font-semibold mt-2">
                 {data.runs}/{data.wickets}
@@ -1013,9 +1097,9 @@ export default function CricketScoring({
                   </select>
                   <button
                     className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
-                    onClick={handleStartMatch}
+                    onClick={confirmBowler}
                   >
-                    Continue
+                    Confirm Bowler
                   </button>
                 </div>
               </div>
@@ -1066,6 +1150,7 @@ export default function CricketScoring({
                         isEndingMatch.current = true;
                         setIsWaiting(true);
                       }
+                      sentEndInningsRef.current = true;
                       socketRef.current.send(
                         JSON.stringify(handleEndInnings(data)),
                       );
@@ -1345,7 +1430,7 @@ export default function CricketScoring({
             </div>
           )}
         </div>
-        {end_InningsAndSuperOverModal && (
+        {activeTab === "Scoring" && end_InningsAndSuperOverModal && (
           <div className="mt-5">
             <div className="bg-red-600 p-3 h-89.5">
               <div className="flex flex-col space-y-2 space-x-2 mt-5">
