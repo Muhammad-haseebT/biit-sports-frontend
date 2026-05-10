@@ -230,7 +230,8 @@ export default function CricketScoring({
     setIsSuperOver(true);
     setIsSuperOverPending(false);
 
-    const restoredSuperOverInnings = receivedData.firstInnings === false ? 2 : 1;
+    const restoredSuperOverInnings =
+      receivedData.firstInnings === false ? 2 : 1;
     setIsSuperOverInnings(restoredSuperOverInnings);
 
     const originalBowlingTeamId = bTeamId === team1Id ? team2Id : team1Id;
@@ -262,8 +263,7 @@ export default function CricketScoring({
         const receivedData = JSON.parse(event.data);
 
         // Detect innings change BEFORE normalizeStats to avoid stale player refs
-        const inningsChanged =
-          data.firstInnings !== receivedData.firstInnings;
+        const inningsChanged = data.firstInnings !== receivedData.firstInnings;
 
         if (inningsChanged) {
           // Reset stale state from previous innings
@@ -289,8 +289,12 @@ export default function CricketScoring({
         }
         handleModalLogic(normalized, superOverRestored);
 
-        // Match ended
-        if (isEndingMatch.current) {
+        // Match ended logic
+        if (
+          normalized.status === "COMPLETED" ||
+          normalized.matchEnd === true ||
+          isEndingMatch.current
+        ) {
           isEndingMatch.current = false;
           openModal("favPlayerModal");
         }
@@ -322,6 +326,12 @@ export default function CricketScoring({
     const { isAdmin, isScorer, isMediaPerson } = rolesRef.current;
     if (!isAdmin && !isScorer && !isMediaPerson) return;
 
+    // If match is completed, don't show any scoring modals
+    if (receivedData.status === "COMPLETED") {
+      openModal("favPlayerModal");
+      return;
+    }
+
     // Handle error comments from backend
     if (
       receivedData.comment === "Error no current State" ||
@@ -344,7 +354,9 @@ export default function CricketScoring({
         receivedData.overs === 0 &&
         receivedData.wickets === 0 &&
         receivedData.runs === 0 &&
-        (!receivedData.batsmanId || !receivedData.nonStrikerId || !receivedData.bowlerId)
+        (!receivedData.batsmanId ||
+          !receivedData.nonStrikerId ||
+          !receivedData.bowlerId)
       ) {
         openModal("playerSelectModal");
         return;
@@ -463,13 +475,13 @@ export default function CricketScoring({
       return;
     }
 
-    const bowlerPlayer =
-      (isSuperOver && availableBowlers.length > 0
+    const bowlerPlayer = (
+      isSuperOver && availableBowlers.length > 0
         ? availableBowlers
         : data.firstInnings
           ? team2Players
           : team1Players
-      ).find((p) => p.id == bowlerId);
+    ).find((p) => p.id == bowlerId);
 
     player1IdRef.current = null;
     player2IdRef.current = null;
@@ -661,9 +673,7 @@ export default function CricketScoring({
                   : regularBattingTeamName}
               </h1>
               <h2 className="text-xl font-semibold mt-2">
-                {isSuperOver
-                  ? `Super Over - ${inningsLabel}`
-                  : inningsLabel}
+                {isSuperOver ? `Super Over - ${inningsLabel}` : inningsLabel}
               </h2>
               <h3 className="text-3xl font-semibold mt-2">
                 {data.runs}/{data.wickets}
