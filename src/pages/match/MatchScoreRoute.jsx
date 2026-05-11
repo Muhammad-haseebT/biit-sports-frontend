@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { startmatch } from "../../api/matchApi";
+import { startmatch, abondonMatch } from "../../api/matchApi";
 import { getPlayersByTeamId } from "../../api/teamApi";
 import {
   Trophy,
@@ -166,9 +166,20 @@ export default function MatchScoreRoute() {
       icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Yes, abandon it!",
-    }).then((r) => {
-      if (r.isConfirmed)
-        Swal.fire("Abandoned!", "Match has been abandoned", "success");
+    }).then(async (r) => {
+      if (!r.isConfirmed) return;
+      try {
+        await abondonMatch(matchId);
+        Swal.fire("Abandoned!", "Match has been abandoned", "success").then(
+          () => navigate(-1),
+        );
+      } catch (err) {
+        Swal.fire({
+          title: "Error",
+          text: err?.response?.data?.message || "Failed to abandon match.",
+          icon: "error",
+        });
+      }
     });
 
   const Spinner = () => (

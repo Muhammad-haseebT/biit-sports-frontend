@@ -86,3 +86,8 @@ export const checkVoted = (matchId, accountId) =>
       params: { matchId, accountId },
     })
     .then((r) => r.data);
+
+export const abondonMatch = async (matchId) => {
+  const res = await axios.put(`${BASE_URL}/match/abandon/${matchId}`);
+  return res.data;
+};

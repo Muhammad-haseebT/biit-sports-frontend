@@ -724,14 +724,6 @@ export default function TableTennisScoring({
                           : "—"}
                         ' G{ev.gameNumber}
                       </p>
-                      {ev.id && (
-                        <button
-                          className="text-red-600 mt-1 flex items-center gap-1 justify-end text-sm"
-                          onClick={() => setMediaId(ev.id)}
-                        >
-                          <Camera size={16} /> View
-                        </button>
-                      )}
                     </div>
                   </div>
                 );

@@ -870,14 +870,6 @@ export default function BadmintonScoring({
                       <p className="font-semibold text-gray-700">
                         {mins}' {ev.gameNumber ? `G${ev.gameNumber}` : ""}
                       </p>
-                      {ev.id && (
-                        <button
-                          className="text-red-600 mt-1 flex items-center gap-1 justify-end text-sm"
-                          onClick={() => setMediaId(ev.id)}
-                        >
-                          <Camera size={16} /> View
-                        </button>
-                      )}
                     </div>
                   </div>
                 );

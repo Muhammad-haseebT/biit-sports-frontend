@@ -927,14 +927,6 @@ export default function FutsalScoring({
                       {Math.floor(ev.eventTimeSeconds / 60)}'{" "}
                       {ev.half === 3 ? "ET" : ev.half ? `H${ev.half}` : ""}
                     </p>
-                    {ev.id && (
-                      <button
-                        className="text-red-600 mt-1 flex items-center gap-1 justify-end text-sm"
-                        onClick={() => setSelectedEventId(ev.id)}
-                      >
-                        <Camera size={16} /> View
-                      </button>
-                    )}
                   </div>
                 </div>
               ))}

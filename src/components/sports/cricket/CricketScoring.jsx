@@ -259,14 +259,15 @@ export default function CricketScoring({
         socketRef.current = ws;
       };
 
+      // ── ws.onmessage ke andar, yahan change karo ──
+
       ws.onmessage = async (event) => {
         const receivedData = JSON.parse(event.data);
+        console.log(receivedData);
 
-        // Detect innings change BEFORE normalizeStats to avoid stale player refs
         const inningsChanged = data.firstInnings !== receivedData.firstInnings;
 
         if (inningsChanged) {
-          // Reset stale state from previous innings
           setAvailableBatters([]);
           setAvailableBowlers([]);
           player1IdRef.current = null;
@@ -287,17 +288,16 @@ export default function CricketScoring({
             setAvailableBowlers(normalized.availableBowlers);
           }
         }
-        handleModalLogic(normalized, superOverRestored);
 
-        // Match ended logic
-        if (
-          normalized.status === "COMPLETED" ||
-          normalized.matchEnd === true ||
-          isEndingMatch.current
-        ) {
+        // ✅ PEHLE matchEnd check karo — handleModalLogic se pehle
+        if (normalized.matchEnd === true || normalized.status === "COMPLETED") {
           isEndingMatch.current = false;
+          await fetchPlayers(); // ✅ correct team mapping restore karo pehle
           openModal("favPlayerModal");
+          return;
         }
+
+        handleModalLogic(normalized, superOverRestored);
       };
 
       ws.onclose = () => {
@@ -617,15 +617,6 @@ export default function CricketScoring({
           onClick={() => navigate(-1)}
         />
         <h1 className="text-white font-semibold text-2xl ml-2">Match Center</h1>
-
-        {status === "LIVE" && (
-          <button
-            className="ml-auto mr-4 p-1"
-            onClick={() => openModal("favPlayerModal")}
-          >
-            <Heart size={26} className="text-white" />
-          </button>
-        )}
       </div>
 
       <div className="bg-white min-h-screen text-gray-900">
@@ -1157,7 +1148,6 @@ export default function CricketScoring({
                     className="bg-white text-red-600 p-1 rounded-lg text-2xl h-10"
                     onClick={() => {
                       if (data.firstInnings === false) {
-                        isEndingMatch.current = true;
                         setIsWaiting(true);
                       }
                       sentEndInningsRef.current = true;

@@ -4,7 +4,12 @@ import Media from "../cricket/modals/Media";
 import FavouritePlayerModal from "../cricket/modals/FavouritePlayerModal";
 import { ArrowLeft, Trophy, RotateCcw } from "lucide-react";
 import { getPlayersByTeamId } from "../../../api/teamApi";
-import { PanelWrapper, PanelHeading, ScoreCircles, UI_CLASSES } from "../common/ScoringUI";
+import {
+  PanelWrapper,
+  PanelHeading,
+  ScoreCircles,
+  UI_CLASSES,
+} from "../common/ScoringUI";
 import { getMatchAccess } from "../../../utils/accessControl";
 
 function useRoundTimer(roundStartTime, status) {
@@ -203,7 +208,9 @@ export default function TugOfWarScoring({
                   <p className="text-sm font-bold text-blue-600 mb-2">
                     {team1Name}
                   </p>
-                  <ScoreCircles size="lg" showCheckmark={true}
+                  <ScoreCircles
+                    size="lg"
+                    showCheckmark={true}
                     won={score.team1Rounds || 0}
                     toWin={rtw}
                     color="blue"
@@ -216,7 +223,9 @@ export default function TugOfWarScoring({
                   <p className="text-sm font-bold text-rose-600 mb-2">
                     {team2Name}
                   </p>
-                  <ScoreCircles size="lg" showCheckmark={true}
+                  <ScoreCircles
+                    size="lg"
+                    showCheckmark={true}
                     won={score.team2Rounds || 0}
                     toWin={rtw}
                     color="rose"
@@ -245,7 +254,9 @@ export default function TugOfWarScoring({
                   <p className="text-base sm:text-xl font-bold text-blue-600 truncate">
                     {team1Name}
                   </p>
-                  <ScoreCircles size="lg" showCheckmark={true}
+                  <ScoreCircles
+                    size="lg"
+                    showCheckmark={true}
                     won={score.team1Rounds || 0}
                     toWin={rtw}
                     color="blue"
@@ -264,7 +275,9 @@ export default function TugOfWarScoring({
                   <p className="text-base sm:text-xl font-bold text-rose-600 truncate">
                     {team2Name}
                   </p>
-                  <ScoreCircles size="lg" showCheckmark={true}
+                  <ScoreCircles
+                    size="lg"
+                    showCheckmark={true}
                     won={score.team2Rounds || 0}
                     toWin={rtw}
                     color="rose"
@@ -346,7 +359,10 @@ export default function TugOfWarScoring({
                   >
                     ✅ YES — Record Round Win
                   </button>
-                  <button className={UI_CLASSES.backBtn} onClick={() => setConfirm(null)}>
+                  <button
+                    className={UI_CLASSES.backBtn}
+                    onClick={() => setConfirm(null)}
+                  >
                     Cancel
                   </button>
                 </div>
@@ -429,7 +445,11 @@ export default function TugOfWarScoring({
                     ),
                     icon: "📊",
                   },
-                  { label: "Current Round", value: score.currentRound, icon: "🔄" },
+                  {
+                    label: "Current Round",
+                    value: score.currentRound,
+                    icon: "🔄",
+                  },
                   { label: "Rounds to Win", value: rtw, icon: "🏆" },
                   { label: "Best of", value: totalR, icon: "🔢" },
                   {
